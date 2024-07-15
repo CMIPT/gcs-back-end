@@ -1,0 +1,3 @@
+[submodule "3rdparty/docker-script"]
+	path = 3rdparty/docker-script
+	url = https://github.com/CMIPT/docker-script.git
