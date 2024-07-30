@@ -19,6 +19,13 @@ public class SwaggerTmpControllerTests {
 
     @Test
     public void testGetUser() {
-        webClient.get().uri("/api/users/1").exchange().expectStatus().isOk().expectBody(Boolean.class).isEqualTo(true);
+        webClient
+                .get()
+                .uri("/api/users/1")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(Boolean.class)
+                .isEqualTo(true);
     }
 }
