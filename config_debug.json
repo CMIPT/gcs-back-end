@@ -2,7 +2,7 @@
     "deploy": true,
     "createGitUser": false,
     "deployWithDocker": false,
-    "repositoryDirecotry": "~/.local/gcs/repository",
+    "repositoryDirectory": "~/.local/gcs/repository",
     "serviceUser": "gcs",
     "servicePassword": "gcs",
     "serviceName": "gcs",
