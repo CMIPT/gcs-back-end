@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class SwaggerTmpController {
 
     @GetMapping("/users/{id}")
-    public void getUser(@PathVariable Long id) {
+    public boolean getUser(@PathVariable Long id) {
         // implementation
+        return true;
     }
 }
