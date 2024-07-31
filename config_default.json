@@ -1,0 +1,30 @@
+{
+    "deploy": true,
+    "debug": false,
+    "runTest": false,
+    "createGitUser": true,
+    "deployWithDocker": true,
+    "repositoryDirectory": "/home/git/repositories",
+    "postgresPassword": null,
+    "serviceEnable": true,
+    "serviceName": "gcs",
+    "serviceSuffix": "service",
+    "serviceDescription": "Git server center back-end service",
+    "servicePIDFile": "/var/run/gcs.pid",
+    "serviceUser": "gcs",
+    "serviceUserPassword": null,
+    "serviceWorkingDirectory": "/opt/gcs",
+    "serviceRestartPolicy": "always",
+    "serviceRestartDelaySecond": 5,
+    "serviceStartJavaCommand": "/usr/bin/java",
+    "serviceStartJavaArgs": [
+        "-jar"
+    ],
+    "serviceStartJarFile": "/opt/gcs/gcs.jar",
+    "serviceAfter": [
+        "network.target"
+    ],
+    "serviceWantedBy": [
+        "multi-user.target"
+    ]
+}

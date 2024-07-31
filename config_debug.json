@@ -1,12 +1,7 @@
 {
-    "deploy": true,
     "createGitUser": false,
     "deployWithDocker": false,
     "repositoryDirectory": "~/.local/gcs/repository",
-    "serviceUser": "gcs",
-    "servicePassword": "gcs",
-    "serviceName": "gcs",
-    "postgresPassword": null,
     "debug": true,
     "runTest": true
 }
