@@ -10,15 +10,31 @@
     </parent>
     <groupId>edu.cmipt</groupId>
     <artifactId>gcs</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <name>gcs</name>
     <description>The back end of git center server</description>
     <url/>
     <licenses>
-        <license/>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
     </licenses>
     <developers>
-        <developer/>
+        <developer>
+            <name>Kaiser</name>
+            <email>kaiserqzyue@gmail.com</email>
+            <url>https://github.com/Kaiser-Yang</url>
+            <roles>
+                <role>Project Manager</role>
+                <role>Architect</role>
+                <role>Developer</role>
+            </roles>
+            <organization>CMIPT</organization>
+            <organizationUrl>https://github.com/CMIPT</organizationUrl>
+            <timezone>8</timezone>
+        </developer>
     </developers>
     <scm>
         <connection/>
@@ -36,7 +52,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
