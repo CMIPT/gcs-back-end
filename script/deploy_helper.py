@@ -15,9 +15,9 @@ import logging
 
 def setup_logger(log_level=logging.INFO):
     """
-    配置全局日志系统。
+    Configure the global logging system.
 
-    :param log_level: 设置日志记录级别，默认为 INFO 级别。
+    :param log_level: Set the logging level, defaulting to INFO.
     """
     logging.basicConfig(level=log_level,
                         format='%(asctime)s - %(levelname)s - %(message)s',
@@ -26,11 +26,11 @@ def setup_logger(log_level=logging.INFO):
 
 def command_checker(status_code: int, message: str, expected_code: int = 0):
     """
-    检查命令执行的状态码是否符合预期。
+    Check if the command execution status code meets the expected value.
 
-    :param status_code: 实际命令执行的状态码
-    :param message: 要记录的日志信息
-    :param expected_code: 预期的状态码，默认为0
+    :param status_code: The actual status code of the command execution.
+    :param message: The log message to be recorded.
+    :param expected_code: The expected status code, defaulting to 0.
     """
     if status_code != expected_code:
         logging.error(f"Command failed: {message} Expected status code {expected_code}, got status code {status_code}.")
