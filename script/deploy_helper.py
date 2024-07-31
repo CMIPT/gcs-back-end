@@ -10,6 +10,31 @@ import json
 from types import SimpleNamespace
 import os
 import subprocess
+import logging
+
+
+def setup_logger(log_level=logging.INFO):
+    """
+    配置全局日志系统。
+
+    :param log_level: 设置日志记录级别，默认为 INFO 级别。
+    """
+    logging.basicConfig(level=log_level,
+                        format='%(asctime)s - %(levelname)s - %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
+
+
+def command_checker(status_code: int, message: str, expected_code: int = 0):
+    """
+    检查命令执行的状态码是否符合预期。
+
+    :param status_code: 实际命令执行的状态码
+    :param message: 要记录的日志信息
+    :param expected_code: 预期的状态码，默认为0
+    """
+    if status_code != expected_code:
+        logging.error(f"Command failed: {message} Expected status code {expected_code}, got status code {status_code}.")
+        exit(status_code)
 
 
 # open config_path and default_config_path
@@ -65,8 +90,7 @@ WantedBy={wanted_by}
 """
     res = os.system(
         f'echo "{gcs_file_content}" | sudo tee {service_full_path}')
-    if res != 0:
-        exit(res)
+    command_checker(res, f"echo \"{gcs_file_content}\" | sudo tee {service_full_path} failed", 0)
 
 
 # TODO: add checker to check
@@ -75,18 +99,14 @@ def deploy_on_ubuntu(config):
         return -1
     if config.runTest:
         res = os.system('mvn test')
-        if res != 0:
-            print("Test failed.")
-            return res
+        command_checker(res, "mvn test failed.", 0)
     if config.deploy:
         res = subprocess.run('bash script/get_jar_position.sh', shell=True,
                              capture_output=True, text=True)
-        if res.returncode != 0:
-            return res.returncode
+        command_checker(res.returncode, "script/get_jar_position.sh failed.", 0)
         package_path = res.stdout.strip()
         res = os.system('mvn package')
-        if res != 0:
-            return res
+        command_checker(res, "mvn package failed.", 0)
 
         if os.system(f"cat /etc/passwd | grep -w -E '^{config.serviceUser}'") != 0:
             os.system(f'sudo useradd {config.serviceUser}')
@@ -103,44 +123,51 @@ def deploy_on_ubuntu(config):
         if not os.path.exists(os.path.dirname(config.serviceStartJarFile)):
             os.system(f'sudo mkdir -p {os.path.dirname(config.serviceStartJarFile)}')
         res = os.system(f'sudo cp {package_path} {config.serviceStartJarFile}')
-        if res != 0:
-            return res
+        command_checker(res, f"sudo cp {package_path} failed", 0)
         create_systemd_service(config)
         if config.serviceEnable:
             res = os.system(f'sudo systemctl enable {config.serviceName}')
-            if res != 0:
-                return res
+            command_checker(res, f"sudo systemctl enable {config.serviceName} failed", 0)
         else:
             res = os.system(f'sudo systemctl disable {config.serviceName}')
-            if res != 0:
-                return res
+            command_checker(res, f"sudo systemctl disable {config.serviceName} failed", 0)
         res = os.system(f'sudo systemctl start {config.serviceName}')
-        if res != 0:
-            return res
+        command_checker(res, f"sudo systemctl start {config.serviceName} failed", 0)
         # TODO: finish deploy on docker
 
 
 # TODO: add checker to check
 def clean(config):
-    os.system(f'sudo systemctl disable {config.serviceName}')
-    os.system(f'sudo systemctl stop {config.serviceName}')
+    res = os.system(f'sudo systemctl disable {config.serviceName}')
+    command_checker(res, f"sudo systemctl disable {config.serviceName} failed", 0)
+    res = os.system(f'sudo systemctl stop {config.serviceName}')
+    command_checker(res, f"sudo systemctl stop {config.serviceName} failed", 0)
     if os.path.exists(f'/etc/systemd/system/{config.serviceName}.{config.serviceSuffix}'):
-        os.system(
+        res = os.system(
             f'sudo rm -rf /etc/systemd/system/{config.serviceName}.{config.serviceSuffix} && '
             f'sudo systemctl daemon-reload')
-    os.system(f'sudo systemctl reset-failed {config.serviceName}')
+        command_checker(res, f"sudo rm -rf /etc/systemd/system/{config.serviceName}.{config.serviceSuffix} && \
+                             sudo systemctl daemon-reload failed", 0)
+    res = os.system(f'sudo systemctl reset-failed {config.serviceName}')
+    command_checker(res, f"sudo systemctl reset-failed {config.serviceName} failed", 0)
     if os.path.exists(f'{config.serviceWorkingDirectory}'):
-        os.system(f'sudo rm -rf {config.serviceWorkingDirectory}')
+        res = os.system(f'sudo rm -rf {config.serviceWorkingDirectory}')
+        command_checker(res, f"sudo rm -rf {config.serviceWorkingDirectory} failed", 0)
     if os.path.exists(f'{config.serviceStartJarFile}'):
-        os.system(f'sudo rm -rf {config.serviceStartJarFile}')
+        res = os.system(f'sudo rm -rf {config.serviceStartJarFile}')
+        command_checker(res, f"sudo rm -rf {config.serviceStartJarFile} failed", 0)
     if os.path.exists(f'{config.servicePIDFile}'):
-        os.system(f'sudo rm -rf {config.servicePIDFile}')
+        res = os.system(f'sudo rm -rf {config.servicePIDFile}')
+        command_checker(res, f"sudo rm -rf {config.servicePIDFile} failed", 0)
     if os.system(f"cat /etc/passwd | grep -w -E '^{config.serviceUser}'") == 0:
-        os.system(f'sudo userdel {config.serviceUser}')
-    os.system(f'mvn clean')
+        res = os.system(f'sudo userdel {config.serviceUser}')
+        command_checker(res, f"sudo userdel {config.serviceUser} failed", 0)
+    res = os.system(f'mvn clean')
+    command_checker(res, f"mvn clean failed", 0)
 
 
 if __name__ == "__main__":
+    setup_logger()
     parser = argparse.ArgumentParser(
         description="Deploy the project when the environment is ready.")
     parser.add_argument('--config-path', nargs='?', default='../config.json',
