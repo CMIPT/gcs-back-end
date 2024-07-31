@@ -38,6 +38,13 @@ fi
 if ! command -v mvn; then
     install_package maven
 fi
+if ! command -v systemctl; then
+    install_package systemd
+fi
 
-python script/deploy_helper.py -f "$config_file" -d ubuntu || \
-    log_error "Failed to run deploy_helper.py $config_file"
+log_info "Deploying..."
+python script/deploy_helper.py \
+    --config-path "$config_file" \
+    --distro ubuntu \
+    --default-config-path ./config_default.json || \
+    log_error "Failed to run deploy_helper.py for deploying the environment"
