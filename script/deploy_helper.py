@@ -57,7 +57,7 @@ PIDFile={config.servicePIDFile}
 User={config.serviceUser}
 WorkingDirectory={config.serviceWorkingDirectory}
 Restart={config.serviceRestartPolicy}
-RestartSec={config.serviceRestartDelaySecond}
+RestartSec={config.serviceRestartDelaySeconds}
 ExecStart={exec_start}
 
 [Install]
@@ -74,18 +74,18 @@ def deploy_on_ubuntu(config):
     if config == None:
         return -1
     skip_test = ""
-    if not config.runTest:
+    if config.skipTest:
         skip_test = "-Dmaven.test.skip=true"
-    if config.deploy:
-        res = subprocess.run('bash script/get_jar_position.sh', shell=True,
-                             capture_output=True, text=True)
-        if res.returncode != 0:
-            return res.returncode
-        package_path = res.stdout.strip()
-        res = os.system(f'mvn package {skip_test}')
-        if res != 0:
-            return res
+    res = subprocess.run('bash script/get_jar_position.sh', shell=True,
+                         capture_output=True, text=True)
+    if res.returncode != 0:
+        return res.returncode
+    package_path = res.stdout.strip()
+    res = os.system(f'mvn package {skip_test}')
+    if res != 0:
+        return res
 
+    if config.deploy:
         if os.system(f"cat /etc/passwd | grep -w -E '^{config.serviceUser}'") != 0:
             os.system(f'sudo useradd {config.serviceUser}')
             if config.serviceUserPassword == None or config.serviceUserPassword == "":

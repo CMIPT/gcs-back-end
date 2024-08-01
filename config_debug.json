@@ -3,5 +3,5 @@
     "deployWithDocker": false,
     "repositoryDirectory": "~/.local/gcs/repository",
     "debug": true,
-    "runTest": true
+    "skipTest": false
 }

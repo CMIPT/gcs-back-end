@@ -1,7 +1,7 @@
 {
     "deploy": true,
     "debug": false,
-    "runTest": false,
+    "skipTest": true,
     "createGitUser": true,
     "deployWithDocker": true,
     "repositoryDirectory": "/home/git/repositories",
@@ -15,7 +15,7 @@
     "serviceUserPassword": null,
     "serviceWorkingDirectory": "/opt/gcs",
     "serviceRestartPolicy": "always",
-    "serviceRestartDelaySecond": 5,
+    "serviceRestartDelaySeconds": 5,
     "serviceStartJavaCommand": "/usr/bin/java",
     "serviceStartJavaArgs": [
         "-jar"
