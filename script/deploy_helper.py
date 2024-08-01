@@ -47,7 +47,7 @@ def create_systemd_service(config):
     after = parse_iterable_into_str(config.serviceAfter)
     service_full_path = f'/etc/systemd/system/{config.serviceName}.{config.serviceSuffix}'
     gcs_file_content = \
-        f"""\
+f"""\
 [Unit]
 Description={config.serviceDescription}
 After={after}
@@ -73,18 +73,16 @@ WantedBy={wanted_by}
 def deploy_on_ubuntu(config):
     if config == None:
         return -1
-    if config.runTest:
-        res = os.system('mvn test')
-        if res != 0:
-            print("Test failed.")
-            return res
+    skip_test = ""
+    if not config.runTest:
+        skip_test = "-Dmaven.test.skip=true"
     if config.deploy:
         res = subprocess.run('bash script/get_jar_position.sh', shell=True,
                              capture_output=True, text=True)
         if res.returncode != 0:
             return res.returncode
         package_path = res.stdout.strip()
-        res = os.system('mvn package')
+        res = os.system(f'mvn package {skip_test}')
         if res != 0:
             return res
 
