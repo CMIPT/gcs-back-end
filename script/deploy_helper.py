@@ -33,7 +33,7 @@ def command_checker(status_code: int, message: str, expected_code: int = 0):
     :param expected_code: The expected status code, defaulting to 0.
     """
     if status_code != expected_code:
-        logging.error(f"Command failed: {message} Expected status code {expected_code}, got status code {status_code}.")
+        logging.error(f"The command below failed:\n\t {message} \nExpected status code {expected_code}, got status code {status_code}.")
         exit(status_code)
 
 
@@ -90,7 +90,7 @@ WantedBy={wanted_by}
 """
     res = os.system(
         f'echo "{gcs_file_content}" | sudo tee {service_full_path}')
-    command_checker(res, f"echo \"{gcs_file_content}\" | sudo tee {service_full_path} failed", 0)
+    command_checker(res, f"echo \"{gcs_file_content}\" | sudo tee {service_full_path}")
 
 
 # TODO: add checker to check
@@ -125,51 +125,50 @@ def deploy_on_ubuntu(config):
         if not os.path.exists(os.path.dirname(config.serviceStartJarFile)):
             os.system(f'sudo mkdir -p {os.path.dirname(config.serviceStartJarFile)}')
         res = os.system(f'sudo cp {package_path} {config.serviceStartJarFile}')
-        command_checker(res, f"sudo cp {package_path} failed", 0)
+        command_checker(res, f"sudo cp {package_path}")
         create_systemd_service(config)
         if config.serviceEnable:
             res = os.system(f'sudo systemctl enable {config.serviceName}')
-            command_checker(res, f"sudo systemctl enable {config.serviceName} failed", 0)
+            command_checker(res, f"sudo systemctl enable {config.serviceName}")
         else:
             res = os.system(f'sudo systemctl disable {config.serviceName}')
-            command_checker(res, f"sudo systemctl disable {config.serviceName} failed", 0)
+            command_checker(res, f"sudo systemctl disable {config.serviceName}")
         res = os.system(f'sudo systemctl start {config.serviceName}')
-        command_checker(res, f"sudo systemctl start {config.serviceName} failed", 0)
+        command_checker(res, f"sudo systemctl start {config.serviceName}")
         # TODO: finish deploy on docker
 
 
 # TODO: add checker to check
 def clean(config):
     res = os.system(f'sudo systemctl disable {config.serviceName}')
-    command_checker(res, f"sudo systemctl disable {config.serviceName} failed", 0)
+    command_checker(res, f"sudo systemctl disable {config.serviceName}")
     res = os.system(f'sudo systemctl stop {config.serviceName}')
-    command_checker(res, f"sudo systemctl stop {config.serviceName} failed", 0)
+    command_checker(res, f"sudo systemctl stop {config.serviceName}")
     if os.path.exists(f'/etc/systemd/system/{config.serviceName}.{config.serviceSuffix}'):
         res = os.system(
             f'sudo rm -rf /etc/systemd/system/{config.serviceName}.{config.serviceSuffix} && '
             f'sudo systemctl daemon-reload')
-        command_checker(res, f"sudo rm -rf /etc/systemd/system/{config.serviceName}.{config.serviceSuffix} && \
-                             sudo systemctl daemon-reload failed", 0)
+        command_checker(res, f"sudo rm -rf /etc/systemd/system/{config.serviceName}.{config.serviceSuffix} &&\n"
+                             f"\tsudo systemctl daemon-reload")
     res = os.system(f'sudo systemctl reset-failed {config.serviceName}')
-    command_checker(res, f"sudo systemctl reset-failed {config.serviceName} failed", 0)
+    command_checker(res, f"sudo systemctl reset-failed {config.serviceName}")
     if os.path.exists(f'{config.serviceWorkingDirectory}'):
         res = os.system(f'sudo rm -rf {config.serviceWorkingDirectory}')
-        command_checker(res, f"sudo rm -rf {config.serviceWorkingDirectory} failed", 0)
+        command_checker(res, f"sudo rm -rf {config.serviceWorkingDirectory}")
     if os.path.exists(f'{config.serviceStartJarFile}'):
         res = os.system(f'sudo rm -rf {config.serviceStartJarFile}')
-        command_checker(res, f"sudo rm -rf {config.serviceStartJarFile} failed", 0)
+        command_checker(res, f"sudo rm -rf {config.serviceStartJarFile}")
     if os.path.exists(f'{config.servicePIDFile}'):
         res = os.system(f'sudo rm -rf {config.servicePIDFile}')
-        command_checker(res, f"sudo rm -rf {config.servicePIDFile} failed", 0)
+        command_checker(res, f"sudo rm -rf {config.servicePIDFile}")
     if os.system(f"cat /etc/passwd | grep -w -E '^{config.serviceUser}'") == 0:
         res = os.system(f'sudo userdel {config.serviceUser}')
-        command_checker(res, f"sudo userdel {config.serviceUser} failed", 0)
+        command_checker(res, f"sudo userdel {config.serviceUser}")
     res = os.system(f'mvn clean')
-    command_checker(res, f"mvn clean failed", 0)
+    command_checker(res, f"mvn clean")
 
 
 if __name__ == "__main__":
-    setup_logger()
     parser = argparse.ArgumentParser(
         description="Deploy the project when the environment is ready.")
     parser.add_argument('--config-path', nargs='?', default='../config.json',
@@ -179,7 +178,21 @@ if __name__ == "__main__":
     parser.add_argument('--default-config-path', nargs='?', default='../config_default.json',
                         type=str, help="Linux distribution")
     parser.add_argument('--clean', action='store_true', help="Clean up the project")
+    parser.add_argument('--log-level', nargs='?', default='INFO',
+                    type=str, help=(
+                        "Set the logging level. Possible values are: "
+                        "'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'. "
+                        "Default is 'INFO'.\n"
+                        "- DEBUG: Detailed information, typically of interest only when diagnosing problems.\n"
+                        "- INFO: Confirmation that things are working as expected.\n"
+                        "- WARNING: An indication that something unexpected happened, or indicative of some problem in the near future (e.g., 'disk space low'). The software is still working as expected.\n"
+                        "- ERROR: Due to a more serious problem, the software has not been able to perform some function.\n"
+                        "- CRITICAL: A very serious error, indicating that the program itself may be unable to continue running."
+                    ))
     args = parser.parse_args()
+    if args.log_level.upper() not in logging._nameToLevel:
+        raise ValueError(f"Invalid log level: {args.log_level}")
+    setup_logger(getattr(logging, args.log_level.upper()))
     if args.clean:
         clean(load_config_file_as_obj(args.config_path, args.default_config_path))
     elif args.distro == 'ubuntu':
