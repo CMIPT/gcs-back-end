@@ -20,7 +20,7 @@ def setup_logger(log_level=logging.INFO):
     :param log_level: Set the logging level, defaulting to INFO.
     """
     logging.basicConfig(level=log_level,
-                        format='%(asctime)s - %(levelname)s - %(message)s',
+                        format='%(asctime)s -%(levelname)s- in %(filename)s:%(message)s', 
                         datefmt='%Y-%m-%d %H:%M:%S')
 
 
@@ -33,7 +33,7 @@ def command_checker(status_code: int, message: str, expected_code: int = 0):
     :param expected_code: The expected status code, defaulting to 0.
     """
     if status_code != expected_code:
-        logging.error(f"The command below failed:\n\t {message} \nExpected status code {expected_code}, got status code {status_code}.")
+        logging.error(message)
         exit(status_code)
 
 
@@ -90,7 +90,10 @@ WantedBy={wanted_by}
 """
     res = os.system(
         f'echo "{gcs_file_content}" | sudo tee {service_full_path}')
-    command_checker(res, f"echo \"{gcs_file_content}\" | sudo tee {service_full_path}")
+    command_checker(res, f"""
+The command below failed:
+\techo \"{gcs_file_content}\" | sudo tee {service_full_path}
+Expected status code 0, got status code {res}.""")
 
 
 # TODO: add checker to check
@@ -111,9 +114,17 @@ def deploy_on_ubuntu(config):
 
     if config.deploy:
         if os.system(f"cat /etc/passwd | grep -w -E '^{config.serviceUser}'") != 0:
-            os.system(f'sudo useradd {config.serviceUser}')
+            res = os.system(f'sudo useradd {config.serviceUser}')
+            command_checker(res, f"""
+The command below failed:
+\tsudo useradd {config.serviceUser}
+Expected status code 0, got status code {res}.""")
             if config.serviceUserPassword == None or config.serviceUserPassword == "":
-                os.system(f'sudo passwd -d {config.serviceUser}')
+                res = os.system(f'sudo passwd -d {config.serviceUser}')
+                command_checker(res, f"""
+The command below failed:
+\tsudo passwd -d {config.serviceUser}
+Expected status code 0, got status code {res}.""")
             else:
                 process = subprocess.Popen(['sudo', 'chpasswd'], stdin=subprocess.PIPE,
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -123,49 +134,92 @@ def deploy_on_ubuntu(config):
                 process.communicate()
 
         if not os.path.exists(os.path.dirname(config.serviceStartJarFile)):
-            os.system(f'sudo mkdir -p {os.path.dirname(config.serviceStartJarFile)}')
+            res = os.system(f'sudo mkdir -p {os.path.dirname(config.serviceStartJarFile)}')
+            command_checker(res, f"""
+The command below failed:
+\tsudo mkdir -p {os.path.dirname(config.serviceStartJarFile)}
+Expected status code 0, got status code {res}.""")
         res = os.system(f'sudo cp {package_path} {config.serviceStartJarFile}')
-        command_checker(res, f"sudo cp {package_path}")
+        command_checker(res, f"""
+The command below failed:
+\tsudo cp {package_path} {config.serviceStartJarFile}
+Expected status code 0, got status code {res}.""")
         create_systemd_service(config)
         if config.serviceEnable:
             res = os.system(f'sudo systemctl enable {config.serviceName}')
-            command_checker(res, f"sudo systemctl enable {config.serviceName}")
+            command_checker(res, f"""
+The command below failed:
+\tsudo systemctl enable {config.serviceName}
+Expected status code 0, got status code {res}.""")
         else:
             res = os.system(f'sudo systemctl disable {config.serviceName}')
-            command_checker(res, f"sudo systemctl disable {config.serviceName}")
+            command_checker(res, f"""
+The command below failed:
+\tsudo systemctl disable {config.serviceName}
+Expected status code 0, got status code {res}.""")
         res = os.system(f'sudo systemctl start {config.serviceName}')
-        command_checker(res, f"sudo systemctl start {config.serviceName}")
+        command_checker(res, f"""
+The command below failed:
+\tsudo systemctl start {config.serviceName}
+Expected status code 0, got status code {res}.""")
         # TODO: finish deploy on docker
 
 
 # TODO: add checker to check
 def clean(config):
     res = os.system(f'sudo systemctl disable {config.serviceName}')
-    command_checker(res, f"sudo systemctl disable {config.serviceName}")
+    command_checker(res, f"""
+The command below failed:
+\tsudo systemctl disable {config.serviceName}
+Expected status code 0, got status code {res}.""")
     res = os.system(f'sudo systemctl stop {config.serviceName}')
-    command_checker(res, f"sudo systemctl stop {config.serviceName}")
+    command_checker(res, f"""
+The command below failed:
+\tsudo systemctl stop {config.serviceName}
+Expected status code 0, got status code {res}.""")
     if os.path.exists(f'/etc/systemd/system/{config.serviceName}.{config.serviceSuffix}'):
         res = os.system(
             f'sudo rm -rf /etc/systemd/system/{config.serviceName}.{config.serviceSuffix} && '
             f'sudo systemctl daemon-reload')
-        command_checker(res, f"sudo rm -rf /etc/systemd/system/{config.serviceName}.{config.serviceSuffix} &&\n"
-                             f"\tsudo systemctl daemon-reload")
+        command_checker(res, f"""
+The command below failed:
+\tsudo rm -rf /etc/systemd/system/{config.serviceName}.{config.serviceSuffix} && \
+\tsudo systemctl daemon-reload
+Expected status code 0, got status code {res}.""")
     res = os.system(f'sudo systemctl reset-failed {config.serviceName}')
-    command_checker(res, f"sudo systemctl reset-failed {config.serviceName}")
+    command_checker(res, f"""
+The command below failed:
+\tsudo systemctl reset-failed {config.serviceName}
+Expected status code 0, got status code {res}.""")
     if os.path.exists(f'{config.serviceWorkingDirectory}'):
         res = os.system(f'sudo rm -rf {config.serviceWorkingDirectory}')
-        command_checker(res, f"sudo rm -rf {config.serviceWorkingDirectory}")
+        command_checker(res, f"""
+The command below failed:
+\tsudo rm -rf {config.serviceWorkingDirectory}
+Expected status code 0, got status code {res}.""")
     if os.path.exists(f'{config.serviceStartJarFile}'):
         res = os.system(f'sudo rm -rf {config.serviceStartJarFile}')
-        command_checker(res, f"sudo rm -rf {config.serviceStartJarFile}")
+        command_checker(res, f"""
+The command below failed:
+\tsudo rm -rf {config.serviceStartJarFile}
+Expected status code 0, got status code {res}.""")
     if os.path.exists(f'{config.servicePIDFile}'):
         res = os.system(f'sudo rm -rf {config.servicePIDFile}')
-        command_checker(res, f"sudo rm -rf {config.servicePIDFile}")
+        command_checker(res, f"""
+The command below failed:
+\tsudo rm -rf {config.servicePIDFile}
+Expected status code 0, got status code {res}.""")
     if os.system(f"cat /etc/passwd | grep -w -E '^{config.serviceUser}'") == 0:
         res = os.system(f'sudo userdel {config.serviceUser}')
-        command_checker(res, f"sudo userdel {config.serviceUser}")
+        command_checker(res, f"""
+The command below failed:
+\tsudo userdel {config.serviceUser}
+Expected status code 0, got status code {res}.""")
     res = os.system(f'mvn clean')
-    command_checker(res, f"mvn clean")
+    command_checker(res, f"""
+The command below failed:
+\tmvn clean
+Expected status code 0, got status code {res}.""")
 
 
 if __name__ == "__main__":
@@ -185,7 +239,7 @@ if __name__ == "__main__":
                         "Default is 'INFO'.\n"
                         "- DEBUG: Detailed information, typically of interest only when diagnosing problems.\n"
                         "- INFO: Confirmation that things are working as expected.\n"
-                        "- WARNING: An indication that something unexpected happened, or indicative of some problem in the near future (e.g., 'disk space low'). The software is still working as expected.\n"
+                        "- WARNING: An indication that something unexpected happened, or indicative of some problem in the near future. The software is still working as expected.\n"
                         "- ERROR: Due to a more serious problem, the software has not been able to perform some function.\n"
                         "- CRITICAL: A very serious error, indicating that the program itself may be unable to continue running."
                     ))
