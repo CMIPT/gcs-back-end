@@ -46,6 +46,17 @@
             <organizationUrl>https://github.com/CMIPT</organizationUrl>
             <timezone>8</timezone>
         </developer>
+        <developer>
+            <name>Quentin</name>
+            <email>quentincheung261@gmail.com</email>
+            <url>https://github.com/Quentin9922</url>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <organization>CMIPT</organization>
+            <organizationUrl>https://github.com/CMIPT</organizationUrl>
+            <timezone>8</timezone>
+        </developer>
     </developers>
     <scm>
         <connection/>
