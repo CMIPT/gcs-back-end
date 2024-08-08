@@ -18,4 +18,5 @@ COMMENT ON COLUMN public.t_user.email IS 'Email address of the user.';
 COMMENT ON COLUMN public.t_user.user_password IS 'Password of the user, stored as an MD5 hash.';
 COMMENT ON COLUMN public.t_user.gmt_created IS 'Timestamp when the user record was created.';
 COMMENT ON COLUMN public.t_user.gmt_updated IS 'Timestamp when the user record was last updated.';
-COMMENT ON COLUMN public.t_user.gmt_deleted IS 'Timestamp when the user record was deleted.';
+COMMENT ON COLUMN public.t_user.gmt_deleted IS 'Timestamp when the user record was deleted.
+If set to NULL, it indicates that the user information not been deleted.';

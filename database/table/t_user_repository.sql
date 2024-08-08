@@ -16,4 +16,5 @@ COMMENT ON COLUMN public.t_user_repository.user_id IS 'ID of the user.';
 COMMENT ON COLUMN public.t_user_repository.repository_id IS 'ID of the repository.';
 COMMENT ON COLUMN public.t_user_repository.gmt_created IS 'Timestamp when the relationship was created.';
 COMMENT ON COLUMN public.t_user_repository.gmt_updated IS 'Timestamp when the relationship was last updated.';
-COMMENT ON COLUMN public.t_user_repository.gmt_deleted IS 'Timestamp when the relationship was deleted.';
+COMMENT ON COLUMN public.t_user_repository.gmt_deleted IS 'Timestamp when the relationship was deleted.
+If set to NULL, it indicates that this table has not been deleted.';
