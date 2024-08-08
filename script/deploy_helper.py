@@ -11,6 +11,7 @@ from types import SimpleNamespace
 import os
 import subprocess
 import logging
+import inspect
 
 
 def setup_logger(log_level=logging.INFO):
@@ -20,7 +21,7 @@ def setup_logger(log_level=logging.INFO):
     :param log_level: Set the logging level, defaulting to INFO.
     """
     logging.basicConfig(level=log_level,
-                        format='%(asctime)s -%(levelname)s- in %(filename)s:%(message)s', 
+                        format='%(asctime)s -%(levelname)s- in %(filename)s:%(caller_lineno)d  %(message)s', 
                         datefmt='%Y-%m-%d %H:%M:%S')
 
 
@@ -33,7 +34,8 @@ def command_checker(status_code: int, message: str, expected_code: int = 0):
     :param expected_code: The expected status code, defaulting to 0.
     """
     if status_code != expected_code:
-        logging.error(message)
+        caller_frame = inspect.currentframe().f_back
+        logging.error(message, extra={'caller_lineno': caller_frame.f_lineno})
         exit(status_code)
 
 
@@ -88,12 +90,10 @@ ExecStart={exec_start}
 [Install]
 WantedBy={wanted_by}
 """
-    res = os.system(
-        f'echo "{gcs_file_content}" | sudo tee {service_full_path}')
-    command_checker(res, f"""
-The command below failed:
-\techo \"{gcs_file_content}\" | sudo tee {service_full_path}
-Expected status code 0, got status code {res}.""")
+    command = f'echo "{gcs_file_content}" | sudo tee {service_full_path}'
+    res = os.system(command)
+    message = message_tmp.format(command, res)
+    command_checker(res, message)
 
 
 # TODO: add checker to check
@@ -108,23 +108,22 @@ def deploy_on_ubuntu(config):
     if res.returncode != 0:
         return res.returncode
     package_path = res.stdout.strip()
-    res = os.system(f'mvn package {skip_test}')
-    if res != 0:
-        return res
+    command  = f'mvn package {skip_test}'
+    res = os.system(command)
+    message = message_tmp.format(command, res)
+    command_checker(res, message)
 
     if config.deploy:
         if os.system(f"cat /etc/passwd | grep -w -E '^{config.serviceUser}'") != 0:
-            res = os.system(f'sudo useradd {config.serviceUser}')
-            command_checker(res, f"""
-The command below failed:
-\tsudo useradd {config.serviceUser}
-Expected status code 0, got status code {res}.""")
+            command = f'sudo useradd {config.serviceUser}'
+            res = os.system(command)
+            message = message_tmp.format(command, res)
+            command_checker(res, message) 
             if config.serviceUserPassword == None or config.serviceUserPassword == "":
-                res = os.system(f'sudo passwd -d {config.serviceUser}')
-                command_checker(res, f"""
-The command below failed:
-\tsudo passwd -d {config.serviceUser}
-Expected status code 0, got status code {res}.""")
+                command =f'sudo passwd -d {config.serviceUser}'
+                res = os.system(command)
+                message = message_tmp.format(command, res)
+                command_checker(res, message)
             else:
                 process = subprocess.Popen(['sudo', 'chpasswd'], stdin=subprocess.PIPE,
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -134,95 +133,84 @@ Expected status code 0, got status code {res}.""")
                 process.communicate()
 
         if not os.path.exists(os.path.dirname(config.serviceStartJarFile)):
-            res = os.system(f'sudo mkdir -p {os.path.dirname(config.serviceStartJarFile)}')
-            command_checker(res, f"""
-The command below failed:
-\tsudo mkdir -p {os.path.dirname(config.serviceStartJarFile)}
-Expected status code 0, got status code {res}.""")
-        res = os.system(f'sudo cp {package_path} {config.serviceStartJarFile}')
-        command_checker(res, f"""
-The command below failed:
-\tsudo cp {package_path} {config.serviceStartJarFile}
-Expected status code 0, got status code {res}.""")
+            command  = f'sudo mkdir -p {os.path.dirname(config.serviceStartJarFile)}'
+            res = os.system(command)
+            message = message_tmp.format(command, res)
+            command_checker(res, message)
+        command = f'sudo cp {package_path} {config.serviceStartJarFile}'
+        res = os.system(command)
+        message = message_tmp.format(command, res)
+        command_checker(res, message)
         create_systemd_service(config)
         if config.serviceEnable:
-            res = os.system(f'sudo systemctl enable {config.serviceName}')
-            command_checker(res, f"""
-The command below failed:
-\tsudo systemctl enable {config.serviceName}
-Expected status code 0, got status code {res}.""")
+            command = f'sudo systemctl enable {config.serviceName}'
+            res = os.system(command)
+            message = message_tmp.format(command, res)
+            command_checker(res, message)
         else:
-            res = os.system(f'sudo systemctl disable {config.serviceName}')
-            command_checker(res, f"""
-The command below failed:
-\tsudo systemctl disable {config.serviceName}
-Expected status code 0, got status code {res}.""")
-        res = os.system(f'sudo systemctl start {config.serviceName}')
-        command_checker(res, f"""
-The command below failed:
-\tsudo systemctl start {config.serviceName}
-Expected status code 0, got status code {res}.""")
+            command = f'sudo systemctl disable {config.serviceName}'
+            res = os.system(command)
+            message = message_tmp.format(command, res)
+            command_checker(res, message)
+        command = f'sudo systemctl start {config.serviceName}'
+        res = os.system(command)
+        message = message_tmp.format(command, res)
+        command_checker(res, message)
         # TODO: finish deploy on docker
 
 
 # TODO: add checker to check
 def clean(config):
-    res = os.system(f'sudo systemctl disable {config.serviceName}')
-    command_checker(res, f"""
-The command below failed:
-\tsudo systemctl disable {config.serviceName}
-Expected status code 0, got status code {res}.""")
-    res = os.system(f'sudo systemctl stop {config.serviceName}')
-    command_checker(res, f"""
-The command below failed:
-\tsudo systemctl stop {config.serviceName}
-Expected status code 0, got status code {res}.""")
+    command = f'sudo systemctl disable {config.serviceName}'
+    res = os.system(command)
+    message = message_tmp.format(command, res)
+    command_checker(res, message)
+    command = f'sudo systemctl stop {config.serviceName}'
+    res = os.system(command)
+    message = message_tmp.format(command, res)
+    command_checker(res, message)
     if os.path.exists(f'/etc/systemd/system/{config.serviceName}.{config.serviceSuffix}'):
-        res = os.system(
-            f'sudo rm -rf /etc/systemd/system/{config.serviceName}.{config.serviceSuffix} && '
-            f'sudo systemctl daemon-reload')
-        command_checker(res, f"""
-The command below failed:
-\tsudo rm -rf /etc/systemd/system/{config.serviceName}.{config.serviceSuffix} && \
-\tsudo systemctl daemon-reload
-Expected status code 0, got status code {res}.""")
-    res = os.system(f'sudo systemctl reset-failed {config.serviceName}')
-    command_checker(res, f"""
-The command below failed:
-\tsudo systemctl reset-failed {config.serviceName}
-Expected status code 0, got status code {res}.""")
+        command = f'''sudo rm -rf /etc/systemd/system/{config.serviceName}.{config.serviceSuffix} && \\
+    sudo systemctl daemon-reload''' 
+        res = os.system(command)
+        message = message_tmp.format(command, res)
+        command_checker(res, message)
+    command = f'sudo systemctl reset-failed {config.serviceName}'
+    res = os.system(command)
+    message = message_tmp.format(command, res)
+    command_checker(res, message)
     if os.path.exists(f'{config.serviceWorkingDirectory}'):
-        res = os.system(f'sudo rm -rf {config.serviceWorkingDirectory}')
-        command_checker(res, f"""
-The command below failed:
-\tsudo rm -rf {config.serviceWorkingDirectory}
-Expected status code 0, got status code {res}.""")
+        command = f'sudo rm -rf {config.serviceWorkingDirectory}'
+        res = os.system(command)
+        message = message_tmp.format(command, res)
+        command_checker(res, message)
     if os.path.exists(f'{config.serviceStartJarFile}'):
-        res = os.system(f'sudo rm -rf {config.serviceStartJarFile}')
-        command_checker(res, f"""
-The command below failed:
-\tsudo rm -rf {config.serviceStartJarFile}
-Expected status code 0, got status code {res}.""")
+        command = f'sudo rm -rf {config.serviceStartJarFile}'
+        res = os.system(command)
+        message = message_tmp.format(command, res)
+        command_checker(res, message)
     if os.path.exists(f'{config.servicePIDFile}'):
-        res = os.system(f'sudo rm -rf {config.servicePIDFile}')
-        command_checker(res, f"""
-The command below failed:
-\tsudo rm -rf {config.servicePIDFile}
-Expected status code 0, got status code {res}.""")
+        command = f'sudo rm -rf {config.servicePIDFile}'
+        res = os.system(command)
+        message = message_tmp.format(command, res)
+        command_checker(res, message)
     if os.system(f"cat /etc/passwd | grep -w -E '^{config.serviceUser}'") == 0:
-        res = os.system(f'sudo userdel {config.serviceUser}')
-        command_checker(res, f"""
-The command below failed:
-\tsudo userdel {config.serviceUser}
-Expected status code 0, got status code {res}.""")
-    res = os.system(f'mvn clean')
-    command_checker(res, f"""
-The command below failed:
-\tmvn clean
-Expected status code 0, got status code {res}.""")
+        command = f'sudo userdel {config.serviceUser}'
+        res = os.system(command)
+        message = message_tmp.format(command, res)
+        command_checker(res, message)
+    command = f'mvn clean'
+    res = os.system(command)
+    message = message_tmp.format(command, res)
+    command_checker(res, message)
 
 
 if __name__ == "__main__":
+    message_tmp = '''\
+The command below failed:
+    {0}
+Expected status code 0, got status code {1}
+'''
     parser = argparse.ArgumentParser(
         description="Deploy the project when the environment is ready.")
     parser.add_argument('--config-path', nargs='?', default='../config.json',
