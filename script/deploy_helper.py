@@ -21,7 +21,7 @@ def setup_logger(log_level=logging.INFO):
     :param log_level: Set the logging level, defaulting to INFO.
     """
     logging.basicConfig(level=log_level,
-                        format='%(asctime)s -%(levelname)s- in %(filename)s:%(caller_lineno)d  %(message)s', 
+                        format='%(asctime)s -%(levelname)s- in %(pathname)s:%(caller_lineno)d: %(message)s', 
                         datefmt='%Y-%m-%d %H:%M:%S')
 
 
