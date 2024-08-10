@@ -2,8 +2,6 @@
 
 config_file=${1:-"config.json"}
 
-echo "Config file: ${config_file}"
-
 log_error () {
     echo -e "\e[31m[ERROR]: $1\e[0m"
     exit 1
@@ -12,6 +10,8 @@ log_error () {
 log_info () {
     echo "[INFO]: $1"
 }
+
+log_info "Config file: ${config_file}"
 
 apt_updated=false
 install_package() {
@@ -25,22 +25,7 @@ install_package() {
 }
 
 # install essential packages
-if ! command -v python || ! command -v python3; then
-    install_package python-is-python3
-fi
-if ! command -v psql; then
-    install_package postgresql
-    install_package postgresql-client
-fi
-if ! dpkg -l | grep jdk-17; then
-    install_package openjdk-17-jdk-headless
-fi
-if ! command -v mvn; then
-    install_package maven
-fi
-if ! command -v systemctl; then
-    install_package systemd
-fi
+install_package python-is-python3
 
 log_info "Deploying..."
 python script/deploy_helper.py \

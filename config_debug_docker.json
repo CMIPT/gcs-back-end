@@ -1,0 +1,6 @@
+{
+    "createGitUser": false,
+    "repositoryDirectory": "~/.local/gcs/repository",
+    "debug": true,
+    "skipTest": false
+}

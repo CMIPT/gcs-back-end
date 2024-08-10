@@ -4,27 +4,38 @@
     "skipTest": true,
     "createGitUser": true,
     "deployWithDocker": true,
+    "dockerName": "gcs-back-end",
+    "dockerImage": "ubuntu:20.04",
+    "dockerPortMapping": [
+        "8080:8080"
+    ],
+    "dockerWithGpu": false,
+    "dockerSrcPath": "/opt/gcs-back-end-src",
     "repositoryDirectory": "/home/git/repositories",
     "postgresPassword": null,
     "serviceEnable": true,
     "serviceName": "gcs",
-    "serviceSuffix": "service",
     "serviceDescription": "Git server center back-end service",
     "servicePIDFile": "/var/run/gcs.pid",
     "serviceUser": "gcs",
     "serviceUserPassword": null,
-    "serviceWorkingDirectory": "/opt/gcs",
-    "serviceRestartPolicy": "always",
-    "serviceRestartDelaySeconds": 5,
     "serviceStartJavaCommand": "/usr/bin/java",
     "serviceStartJavaArgs": [
         "-jar"
     ],
     "serviceStartJarFile": "/opt/gcs/gcs.jar",
+    "serviceSuffix": "service",
+    "serviceWorkingDirectory": "/opt/gcs",
+    "serviceRestartPolicy": "always",
+    "serviceRestartDelaySeconds": 5,
     "serviceAfter": [
         "network.target"
     ],
     "serviceWantedBy": [
         "multi-user.target"
-    ]
+    ],
+    "serviceSystemdDirectory": "/etc/systemd/system",
+    "serviceSysVInitDirectory": "/etc/init.d",
+    "serviceStartWithBoot": true,
+    "serviceLogFile": "/tmp/log/gcs.log"
 }
