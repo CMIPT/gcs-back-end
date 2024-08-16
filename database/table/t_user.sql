@@ -8,8 +8,6 @@ CREATE TABLE public.t_user (
   gmt_deleted timestamp without time zone
 );
 
-ALTER TABLE public.t_user OWNER TO postgres;
-
 COMMENT ON TABLE public.t_user IS 'Table for storing user information.';
 
 COMMENT ON COLUMN public.t_user.pk_user_id IS 'Primary key of the user table.';

@@ -1,6 +1,9 @@
 {
     "deploy": true,
-    "debug": false,
+    "profiles": [
+        "prod"
+    ],
+    "deployLogLevel": "info",
     "skipTest": true,
     "createGitUser": true,
     "deployWithDocker": true,
@@ -12,13 +15,12 @@
     "dockerWithGpu": false,
     "dockerSrcPath": "/opt/gcs-back-end-src",
     "repositoryDirectory": "/home/git/repositories",
-    "postgresPassword": null,
     "serviceEnable": true,
     "serviceName": "gcs",
     "serviceDescription": "Git server center back-end service",
     "servicePIDFile": "/var/run/gcs.pid",
     "serviceUser": "gcs",
-    "serviceUserPassword": null,
+    "serviceUserPassword": "gcs",
     "serviceStartJavaCommand": "/usr/bin/java",
     "serviceStartJavaArgs": [
         "-jar"
@@ -37,5 +39,11 @@
     "serviceSystemdDirectory": "/etc/systemd/system",
     "serviceSysVInitDirectory": "/etc/init.d",
     "serviceStartWithBoot": true,
-    "serviceLogFile": "/tmp/log/gcs.log"
+    "serviceLogFile": "/tmp/log/gcs.log",
+    "postgresUserPassword": "postgres",
+    "postgresqlUserName": "postgres",
+    "postgresqlUserPassword": "postgres",
+    "postgresqlDatabaseName": "gcs",
+    "postgresqlHost": "localhost",
+    "postgresqlPort": 5432
 }
