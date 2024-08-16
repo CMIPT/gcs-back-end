@@ -7,8 +7,6 @@ CREATE TABLE public.t_user_repository (
   gmt_deleted timestamp without time zone
 );
 
-ALTER TABLE public.t_user_repository OWNER TO postgres;
-
 COMMENT ON TABLE public.t_user_repository IS 'Table for storing relationships between users and repositories.';
 
 COMMENT ON COLUMN public.t_user_repository.pk_user_repository_id IS 'Primary key of the user_repository table.';

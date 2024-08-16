@@ -22,6 +22,7 @@ The command below failed:
     {0}
 Expected status code 0, got status code {1}
 '''
+application_config_file_path = 'src/main/resources/application.properties'
 
 
 def setup_logger(log_level=logging.INFO):
@@ -31,7 +32,8 @@ def setup_logger(log_level=logging.INFO):
     :param log_level: Set the logging level, defaulting to INFO.
     """
     logging.basicConfig(level=log_level,
-                        format='%(asctime)s -%(levelname)s- in %(pathname)s:%(caller_lineno)d: %(message)s',
+                        format='%(asctime)s -%(levelname)s- in %(pathname)s:%(caller_lineno)d: '
+                        '%(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 
 
@@ -83,8 +85,9 @@ def parse_iterable_into_str(iterable, sep=" "):
 
 def create_systemd_service(config):
     assert(config != None)
-    exec_start = parse_iterable_into_str(
-        [config.serviceStartJavaCommand] + config.serviceStartJavaArgs + [config.serviceStartJarFile])
+    exec_start = parse_iterable_into_str([config.serviceStartJavaCommand] +
+                                         config.serviceStartJavaArgs +
+                                         [config.serviceStartJarFile])
     wanted_by = parse_iterable_into_str(config.serviceWantedBy)
     after = parse_iterable_into_str(config.serviceAfter)
     service_full_path = f'{config.serviceSystemdDirectory}/{config.serviceName}.{config.serviceSuffix}'
@@ -129,8 +132,8 @@ LOGFILE={config.serviceLogFile}
     service_content = header + service_content
     log_debug(f"service_content:\n {service_content}")
 
-    res = os.system(
-        f"echo '{service_content}' | {sudo_cmd} tee {config.serviceSysVInitDirectory}/{config.serviceName}")
+    res = os.system(f"echo '{service_content}' | "
+                    f"{sudo_cmd} tee {config.serviceSysVInitDirectory}/{config.serviceName}")
     command_checker(res, f"Failed to create {config.serviceSysVInitDirectory}/{config.serviceName}")
     res = os.system(f'{sudo_cmd} chmod +x {config.serviceSysVInitDirectory}/{config.serviceName}')
     command_checker(
@@ -182,11 +185,148 @@ def deploy_with_sys_v_init(config):
         command_checker(res, f"Failed to start {config.serviceName} with boot")
 
 
+def active_profile(config):
+    profile_format = f"spring.profiles.active={parse_iterable_into_str(config.profiles, sep=',')}"
+    log_debug(f"Profile format: {profile_format}")
+    try:
+        lines = None
+        if os.path.exists(application_config_file_path):
+            with open(application_config_file_path, 'r') as f:
+                lines = f.readlines()
+        with open(application_config_file_path, 'w') as f:
+            if lines:
+                for line in lines:
+                    if not line.startswith('spring.profiles.active'):
+                        f.write(line)
+            f.write(profile_format)
+    except Exception as e:
+        command_checker(1, f"Error: {e}")
+
+
+def init_database(config):
+    create_or_update_user("postgres", config.postgresUserPassword)
+    res = os.system(f'{sudo_cmd} service postgresql start')
+    command_checker(res, "Failed to start postgresql")
+    # check if there is a user in database
+    process = subprocess.Popen(['su', '-c',
+                                f'psql -c "SELECT * FROM pg_user WHERE '
+                                f'usename=\'{config.postgresqlUserName}\';"',
+                                'postgres'],
+                               stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE, text=True, cwd='/tmp')
+    assert(process.stdin is not None)
+    process.stdin.write(f'{config.postgresqlUserPassword}')
+    process.stdin.flush()
+    out, err = process.communicate()
+    command_checker(process.returncode, f"Failed to check the user in database: {err}")
+    log_debug(f"Postgresql user info:\n {out}")
+    if out.find(config.postgresqlUserName) != -1:
+        # update the password
+        log_info(f"Updating the password of {config.postgresqlUserName} in database")
+        process = subprocess.Popen(['su', '-c',
+                                    f'psql -c "ALTER USER {config.postgresqlUserName} '
+                                    f'WITH PASSWORD \'{config.postgresqlUserPassword}\';"',
+                                    'postgres'],
+                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, text=True, cwd='/tmp')
+        assert(process.stdin is not None)
+        process.stdin.write(f'{config.postgresqlUserPassword}')
+        process.stdin.flush()
+        out, err = process.communicate()
+        command_checker(process.returncode, f"Failed to update the password in database: {err}")
+        log_info(f"Password of {config.postgresqlUserName} in database has been updated")
+    else:
+        # create the user in database
+        log_info(f"Creating the user in database: {config.postgresqlUserName}")
+        process = subprocess.Popen(['su', '-c',
+                                    f'psql -c "CREATE USER {config.postgresqlUserName} '
+                                    f'WITH PASSWORD \'{config.postgresqlUserPassword}\';"',
+                                    'postgres'],
+                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, text=True, cwd='/tmp')
+        assert(process.stdin is not None)
+        process.stdin.write(f'{config.postgresqlUserPassword}')
+        process.stdin.flush()
+        out, err = process.communicate()
+        command_checker(process.returncode, f"Failed to create the user in database: {err}")
+        log_info(f"User {config.postgresqlUserName} has been created in database")
+    # check if there is a database
+    process = subprocess.Popen(['su', '-c',
+                                f'psql -c "SELECT * FROM pg_database WHERE '
+                                f'datname=\'{config.postgresqlDatabaseName}\';"',
+                                'postgres'],
+                               stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE, text=True, cwd='/tmp')
+    assert(process.stdin is not None)
+    process.stdin.write(f'{config.postgresqlUserPassword}')
+    process.stdin.flush()
+    out, err = process.communicate()
+    command_checker(process.returncode, f"Failed to check the database: {err}")
+    log_debug(f"Postgresql database info:\n {out}")
+    if out.find(config.postgresqlDatabaseName) == -1:
+        # create the database
+        log_info(f"Creating the database: {config.postgresqlDatabaseName}")
+        process = subprocess.Popen(['su', '-c',
+                                    f'psql -c "CREATE DATABASE {config.postgresqlDatabaseName};"',
+                                    'postgres'],
+                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, text=True, cwd='/tmp')
+        assert(process.stdin is not None)
+        process.stdin.write(f'{config.postgresqlUserPassword}')
+        process.stdin.flush()
+        out, err = process.communicate()
+        command_checker(process.returncode, f"Failed to create the database: {err}")
+        log_info(f"Database {config.postgresqlDatabaseName} has been created")
+    # grant the user
+    log_info(f"Granting the user in database: {config.postgresqlUserName}")
+    process = subprocess.Popen(['su', '-c',
+                                f'psql -c "GRANT ALL PRIVILEGES ON DATABASE '
+                                f'{config.postgresqlDatabaseName} TO {config.postgresqlUserName};"',
+                                'postgres'],
+                               stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE, text=True, cwd='/tmp')
+    assert(process.stdin is not None)
+    process.stdin.write(f'{config.postgresqlUserPassword}')
+    process.stdin.flush()
+    out, err = process.communicate()
+    command_checker(process.returncode, f"Failed to grant the user in database: {err}")
+    log_info(f"User {config.postgresqlUserName} has been granted in database")
+    res = os.system(f'bash database/database_deploy.sh {config.postgresqlUserName} '
+                    f'{config.postgresqlDatabaseName} {config.postgresqlHost} '
+                    f'{config.postgresqlPort}  {config.postgresqlUserPassword}')
+    command_checker(res, f"Failed to deploy the database")
+
+
+def create_or_update_user(username, password):
+    if username == None or username == "":
+        return
+    if os.system(f"cat /etc/passwd | grep -w -E '^{username}'") != 0:
+        command = f'{sudo_cmd} useradd {username}'
+        res = os.system(command)
+        message = message_tmp.format(command, res)
+        command_checker(res, message)
+    if password == None or password == "":
+        command = f'{sudo_cmd} passwd -d {username}'
+        res = os.system(command)
+        message = message_tmp.format(command, res)
+        command_checker(res, message)
+    else:
+        process = subprocess.Popen([sudo_cmd, 'chpasswd'], stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        assert(process.stdin is not None)
+        process.stdin.write(f'{username}:{password}')
+        process.stdin.flush()
+        process.communicate()
+        command_checker(process.returncode, f"Failed to update the password of {username}")
+
+
 def deploy_on_ubuntu(config):
     assert(config != None)
     if config.inDocker:
         essential_packages.remove('systemd')
     apt_install_package(parse_iterable_into_str(essential_packages))
+    init_database(config)
+    active_profile(config)
     skip_test = ""
     if config.skipTest:
         skip_test = "-Dmaven.test.skip=true"
@@ -200,24 +340,7 @@ def deploy_on_ubuntu(config):
     command_checker(res, message)
 
     if config.deploy:
-        if os.system(f"cat /etc/passwd | grep -w -E '^{config.serviceUser}'") != 0:
-            command = f'{sudo_cmd} useradd {config.serviceUser}'
-            res = os.system(command)
-            message = message_tmp.format(command, res)
-            command_checker(res, message)
-            if config.serviceUserPassword == None or config.serviceUserPassword == "":
-                command = f'{sudo_cmd} passwd -d {config.serviceUser}'
-                res = os.system(command)
-                message = message_tmp.format(command, res)
-                command_checker(res, message)
-            else:
-                process = subprocess.Popen(['sudo', 'chpasswd'], stdin=subprocess.PIPE,
-                                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                assert(process.stdin is not None)
-                process.stdin.write(f'{config.serviceUser}:{config.serviceUserPassword}')
-                process.stdin.flush()
-                process.communicate()
-
+        create_or_update_user(config.serviceUser, config.serviceUserPassword)
         if not os.path.exists(os.path.dirname(config.serviceStartJarFile)):
             command = f'{sudo_cmd} mkdir -p {os.path.dirname(config.serviceStartJarFile)}'
             res = os.system(command)
@@ -333,9 +456,9 @@ def main():
     args = get_cli_args()
     if args.log_level.upper() not in logging._nameToLevel:
         raise ValueError(f"Invalid log level: {args.log_level}")
-    setup_logger(getattr(logging, args.log_level.upper()))
     config = load_config_file_as_obj(args.config_path, args.default_config_path)
     assert(config != None)
+    setup_logger(getattr(logging, config.deployLogLevel.upper()))
     setattr(config, 'inDocker', args.in_docker)
     setattr(config, 'configPath', args.config_path)
     setattr(config, 'defaultConfigPath', args.default_config_path)

@@ -12,8 +12,6 @@ CREATE TABLE public.t_repository (
   gmt_deleted timestamp without time zone
 );
 
-ALTER TABLE public.t_repository OWNER TO postgres;
-
 COMMENT ON TABLE public.t_repository IS 'Table for storing repository information.';
 
 COMMENT ON COLUMN public.t_repository.pk_repository_id IS 'Primary key of the repository table.';
