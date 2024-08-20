@@ -11,7 +11,7 @@ spring:
       max-wait: 6000 # unit: ms
       time-between-eviction-runs-millis: 60000
       min-evication-idle-time-millis: 600000 # min alive time of a connection
-      max-evication-idle-time-millis: 1200000 # max alive time of a connetcion
+      max-evication-idle-time-millis: 1200000 # max alive time of a connection
       validation-query: SELECT 1
       test-while-idle: true
       async-init: true
