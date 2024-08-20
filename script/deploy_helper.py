@@ -198,7 +198,7 @@ def activate_profile(config):
                 for line in lines:
                     if not line.startswith('spring.profiles.active'):
                         f.write(line)
-            f.write(profile_format)
+            f.write(profile_format + '\n')
     except Exception as e:
         command_checker(1, f"Error: {e}")
 
@@ -222,10 +222,9 @@ def config_datasource(config):
             if lines:
                 for line in lines:
                     if not line.startswith('spring.datasource.druid'):
-                        f.write(line)
+                        f.write(line + '\n')
             for key, value in datasource_map_config.items():
-                f.write(datasource_format.format(key, value))
-                f.write('\n')
+                f.write(datasource_format.format(key, value) + '\n')
                 log_debug(f"Datasource config: {datasource_format.format(key, value)}")
     except Exception as e:
         command_checker(1, f"Error: {e}")
