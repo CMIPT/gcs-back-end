@@ -215,7 +215,7 @@ def init_database(config):
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, text=True, cwd='/tmp')
     assert(process.stdin is not None)
-    process.stdin.write(f'{config.postgresqlUserPassword}')
+    process.stdin.write(f'{config.postgresUserPassword}')
     process.stdin.flush()
     out, err = process.communicate()
     command_checker(process.returncode, f"Failed to check the user in database: {err}")
@@ -230,7 +230,7 @@ def init_database(config):
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, text=True, cwd='/tmp')
         assert(process.stdin is not None)
-        process.stdin.write(f'{config.postgresqlUserPassword}')
+        process.stdin.write(f'{config.postgresUserPassword}')
         process.stdin.flush()
         out, err = process.communicate()
         command_checker(process.returncode, f"Failed to update the password in database: {err}")
@@ -245,7 +245,7 @@ def init_database(config):
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, text=True, cwd='/tmp')
         assert(process.stdin is not None)
-        process.stdin.write(f'{config.postgresqlUserPassword}')
+        process.stdin.write(f'{config.postgresUserPassword}')
         process.stdin.flush()
         out, err = process.communicate()
         command_checker(process.returncode, f"Failed to create the user in database: {err}")
@@ -258,7 +258,7 @@ def init_database(config):
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, text=True, cwd='/tmp')
     assert(process.stdin is not None)
-    process.stdin.write(f'{config.postgresqlUserPassword}')
+    process.stdin.write(f'{config.postgresUserPassword}')
     process.stdin.flush()
     out, err = process.communicate()
     command_checker(process.returncode, f"Failed to check the database: {err}")
@@ -272,7 +272,7 @@ def init_database(config):
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, text=True, cwd='/tmp')
         assert(process.stdin is not None)
-        process.stdin.write(f'{config.postgresqlUserPassword}')
+        process.stdin.write(f'{config.postgresUserPassword}')
         process.stdin.flush()
         out, err = process.communicate()
         command_checker(process.returncode, f"Failed to create the database: {err}")
@@ -286,7 +286,7 @@ def init_database(config):
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, text=True, cwd='/tmp')
     assert(process.stdin is not None)
-    process.stdin.write(f'{config.postgresqlUserPassword}')
+    process.stdin.write(f'{config.postgresUserPassword}')
     process.stdin.flush()
     out, err = process.communicate()
     command_checker(process.returncode, f"Failed to grant the user in database: {err}")
