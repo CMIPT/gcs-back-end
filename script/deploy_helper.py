@@ -185,7 +185,7 @@ def deploy_with_sys_v_init(config):
         command_checker(res, f"Failed to start {config.serviceName} with boot")
 
 
-def active_profile(config):
+def activate_profile(config):
     profile_format = f"spring.profiles.active={parse_iterable_into_str(config.profiles, sep=',')}"
     log_debug(f"Profile format: {profile_format}")
     try:
@@ -199,6 +199,34 @@ def active_profile(config):
                     if not line.startswith('spring.profiles.active'):
                         f.write(line)
             f.write(profile_format)
+    except Exception as e:
+        command_checker(1, f"Error: {e}")
+
+
+def config_datasource(config):
+    datasource_map_config = {
+        "username": config.postgresqlUserName,
+        "password": config.postgresqlUserPassword,
+        "url": f"jdbc:postgresql://{config.postgresqlHost}:{config.postgresqlPort}/{config.postgresqlDatabaseName}",
+        "stat-view-servlet.login-username": config.druidLoginUsername,
+        "stat-view-servlet.login-password": config.druidLoginPassword,
+    }
+    datasource_format = "spring.datasource.druid.{0}={1}"
+    log_debug(f"Datasource format: {datasource_format}")
+    try:
+        lines = None
+        if os.path.exists(application_config_file_path):
+            with open(application_config_file_path, 'r') as f:
+                lines = f.readlines()
+        with open(application_config_file_path, 'w') as f:
+            if lines:
+                for line in lines:
+                    if not line.startswith('spring.datasource.druid'):
+                        f.write(line)
+            for key, value in datasource_map_config.items():
+                f.write(datasource_format.format(key, value))
+                f.write('\n')
+                log_debug(f"Datasource config: {datasource_format.format(key, value)}")
     except Exception as e:
         command_checker(1, f"Error: {e}")
 
@@ -277,6 +305,9 @@ def init_database(config):
         out, err = process.communicate()
         command_checker(process.returncode, f"Failed to create the database: {err}")
         log_info(f"Database {config.postgresqlDatabaseName} has been created")
+        run_shell_script = True
+    else:
+        run_shell_script = False
     # grant the user
     log_info(f"Granting the user in database: {config.postgresqlUserName}")
     process = subprocess.Popen(['su', '-c',
@@ -291,10 +322,13 @@ def init_database(config):
     out, err = process.communicate()
     command_checker(process.returncode, f"Failed to grant the user in database: {err}")
     log_info(f"User {config.postgresqlUserName} has been granted in database")
-    res = os.system(f'bash database/database_deploy.sh {config.postgresqlUserName} '
-                    f'{config.postgresqlDatabaseName} {config.postgresqlHost} '
-                    f'{config.postgresqlPort}  {config.postgresqlUserPassword}')
-    command_checker(res, f"Failed to deploy the database")
+    # Do not run the shell script if the database had been created before
+    if run_shell_script:
+        res = os.system(f'bash database/database_deploy.sh {config.postgresqlUserName} '
+                        f'{config.postgresqlDatabaseName} {config.postgresqlHost} '
+                        f'{config.postgresqlPort}  {config.postgresqlUserPassword}')
+        command_checker(res, f"Failed to deploy the database")
+    config_datasource(config)
 
 
 def create_or_update_user(username, password):
@@ -326,7 +360,7 @@ def deploy_on_ubuntu(config):
         essential_packages.remove('systemd')
     apt_install_package(parse_iterable_into_str(essential_packages))
     init_database(config)
-    active_profile(config)
+    activate_profile(config)
     skip_test = ""
     if config.skipTest:
         skip_test = "-Dmaven.test.skip=true"

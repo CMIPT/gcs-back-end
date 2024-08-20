@@ -1,0 +1,6 @@
+debug: true
+spring:
+  datasource:
+    druid:
+      test-on-borrow: true
+      test-on-return: true

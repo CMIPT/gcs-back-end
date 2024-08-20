@@ -45,5 +45,7 @@
     "postgresqlUserPassword": "postgres",
     "postgresqlDatabaseName": "gcs",
     "postgresqlHost": "localhost",
-    "postgresqlPort": 5432
+    "postgresqlPort": 5432,
+    "druidLoginUsername": "druid",
+    "druidLoginPassword": "druid"
 }
