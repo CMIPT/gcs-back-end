@@ -11,16 +11,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-public class SwaggerTmpControllerTest {
+public class UserControllerTest {
 
     @Autowired private MockMvc mvc;
 
     @Test
-    public void testGetUser() throws Exception {
-        mvc.perform(MockMvcRequestBuilders.get("/api/users/1"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(equalTo("true")));
+    public void testCreateUser() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.post("/user").content("{\"name\": \"test\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(equalTo("")));
     }
 }
