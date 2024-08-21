@@ -17,7 +17,7 @@ DB_PORT=$4
 DB_PASSWORD=$5
 # Set the root directory where the SQL files are located
 ROOT_DIR="database"
-SUB_DIR_SEQUENCE=(sequence table constraint function trigger)
+SUB_DIR_SEQUENCE=(table constraint function trigger)
 
 TEMP_SQL_FILE="temp_sql_script.sql"
 
