@@ -1,6 +1,44 @@
 spring:
   application:
     name: gcs
+  datasource:
+    druid:
+      type: com.alibaba.druid.pool.DruidDataSource
+      driver-class-name: org.postgresql.Driver
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 6000 # unit: ms
+      time-between-eviction-runs-millis: 60000
+      min-evication-idle-time-millis: 600000 # min alive time of a connection
+      max-evication-idle-time-millis: 1200000 # max alive time of a connection
+      validation-query: SELECT 1
+      test-while-idle: true
+      async-init: true
+      keep-alive: true
+      filters:
+        stat:
+          enable: true
+          log-slow-sql: true
+          slow-sql-millis: 1000
+        wall:
+          enable: true
+          log-violation: true
+          throw-exception: false
+          config:
+            drop-table-allow: false
+            delete-allow: false
+      web-stat-filter:
+        enabled: true
+        url-pattern: /*
+        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
+        session-stat-enable: true
+        session-stat-max-count: 1000
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        reset-enable: false
+        allow: # empty means allow all
 
 logging:
   include-application-name: false

@@ -7,7 +7,7 @@
     "profiles": [
         "dev"
     ],
-    "postgresUserPassword": "test",
-    "postgresqlUserName": "test",
-    "postgresqlUserPassword": "test"
+    "postgresqlUserName": "gcs_debug",
+    "postgresqlUserPassword": "gcs_debug",
+    "postgresqlDatabaseName": "gcs_debug"
 }

@@ -41,4 +41,6 @@
 | `postgresqlDatabaseName`     | `string` | `"gcs"`                                | `Postgres` 数据库名称。 |
 | `postgresqlHost`             | `string` | `"localhost"`                          | `Postgres` 主机地址。 |
 | `postgresqlPort`             | `int`    | `5432`                                 | `Postgres` 端口。 |
+| `druidLoginUsername`         | `string` | `"druid"`                              | `Druid` 登录用户名。 |
+| `druidLoginPassword`         | `string` | `"druid"`                              | `Druid` 登录密码。 |
 
