@@ -40,5 +40,12 @@ spring:
         reset-enable: false
         allow: # empty means allow all
 
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: gmt_deleted
+      logic-delete-value: now()
+      logic-not-delete-value: "null"
+
 logging:
   include-application-name: false

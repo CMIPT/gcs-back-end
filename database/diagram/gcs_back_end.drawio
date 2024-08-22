@@ -287,7 +287,7 @@
             <mxRectangle width="30" height="30" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="6WugjG2xhQJgWSEuV__S-166" value="user_password character(128) NOT NULL" style="shape=partialRectangle;overflow=hidden;connectable=0;fillColor=none;align=left;strokeColor=inherit;top=0;left=0;bottom=0;right=0;spacingLeft=6;" parent="6WugjG2xhQJgWSEuV__S-164" vertex="1">
+        <mxCell id="6WugjG2xhQJgWSEuV__S-166" value="user_password character(32) NOT NULL" style="shape=partialRectangle;overflow=hidden;connectable=0;fillColor=none;align=left;strokeColor=inherit;top=0;left=0;bottom=0;right=0;spacingLeft=6;" parent="6WugjG2xhQJgWSEuV__S-164" vertex="1">
           <mxGeometry x="30" width="510" height="30" as="geometry">
             <mxRectangle width="510" height="30" as="alternateBounds" />
           </mxGeometry>
