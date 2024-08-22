@@ -1,6 +1,5 @@
 package edu.cmipt.gcs.dao;
 
-import com.baomidou.mybatisplus.core.toolkit.Assert;
 
 import edu.cmipt.gcs.pojo.user.UserPO;
 

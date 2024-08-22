@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import edu.cmipt.gcs.util.MD5Converter;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
 @Data
@@ -18,8 +20,7 @@ public class UserPO {
     private String userPassword;
     private LocalDateTime gmtCreated;
     private LocalDateTime gmtUpdated;
-    @TableLogic
-    private LocalDateTime gmtDeleted;
+    @TableLogic private LocalDateTime gmtDeleted;
 
     public UserPO(UserDTO userDTO) {
         this.id = userDTO.getId();
