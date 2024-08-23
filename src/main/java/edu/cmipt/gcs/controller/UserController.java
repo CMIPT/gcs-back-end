@@ -3,7 +3,7 @@ package edu.cmipt.gcs.controller;
 import edu.cmipt.gcs.pojo.user.UserDTO;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.service.UserService;
-
+import edu.cmipt.gcs.validation.group.CreateGroup;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,14 +32,7 @@ public class UserController {
         @ApiResponse(responseCode = "200", description = "User created successfully"),
         @ApiResponse(responseCode = "400", description = "User creation failed")
     })
-    public ResponseEntity<Void> createUser(@RequestBody UserDTO user) {
-        if (user == null
-                || user.getUsername() == null
-                || user.getEmail() == null
-                || user.getUserPassword() == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        // there may be some check before....
+    public ResponseEntity<Void> createUser(@Validated(CreateGroup.class) @RequestBody UserDTO user) {
         boolean res = userService.save(new UserPO(user));
         if (res) {
             return ResponseEntity.ok().build();
