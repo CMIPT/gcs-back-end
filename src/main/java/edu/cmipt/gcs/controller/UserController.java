@@ -4,6 +4,7 @@ import edu.cmipt.gcs.pojo.user.UserDTO;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.service.UserService;
 import edu.cmipt.gcs.validation.group.CreateGroup;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -32,7 +33,8 @@ public class UserController {
         @ApiResponse(responseCode = "200", description = "User created successfully"),
         @ApiResponse(responseCode = "400", description = "User creation failed")
     })
-    public ResponseEntity<Void> createUser(@Validated(CreateGroup.class) @RequestBody UserDTO user) {
+    public ResponseEntity<Void> createUser(
+            @Validated(CreateGroup.class) @RequestBody UserDTO user) {
         boolean res = userService.save(new UserPO(user));
         if (res) {
             return ResponseEntity.ok().build();
