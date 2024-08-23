@@ -39,6 +39,9 @@ spring:
         url-pattern: /druid/*
         reset-enable: false
         allow: # empty means allow all
+  messages:
+    basename: message/message
+    encoding: UTF-8
 
 mybatis-plus:
   global-config:
