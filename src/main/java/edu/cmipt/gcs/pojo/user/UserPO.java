@@ -24,9 +24,9 @@ public class UserPO {
 
     public UserPO(UserDTO userDTO, Long id) {
         this.id = id;
-        this.username = userDTO.getUsername();
-        this.email = userDTO.getEmail();
-        this.userPassword = MD5Converter.convertToMD5(userDTO.getUserPassword());
+        this.username = userDTO.username();
+        this.email = userDTO.email();
+        this.userPassword = MD5Converter.convertToMD5(userDTO.userPassword());
     }
 
     public UserPO(UserDTO userDTO) {
