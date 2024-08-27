@@ -1,6 +1,5 @@
 package edu.cmipt.gcs.pojo.user;
 
-import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.enumeration.TokenTypeEnum;
 import edu.cmipt.gcs.util.JwtUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,8 +14,8 @@ public record UserVO(
     public UserVO(UserPO userPO) {
         this(userPO.getId(), userPO.getUsername(), userPO.getEmail(),
                 JwtUtil.generateToken(
-                        userPO.getId(), ApplicationConstant.ACCESS_TOKEN_EXPIRATION, TokenTypeEnum.ACCESS_TOKEN),
+                        userPO.getId(), TokenTypeEnum.ACCESS_TOKEN),
                 JwtUtil.generateToken(
-                        userPO.getId(), ApplicationConstant.REFRESH_TOKEN_EXPIRATION, TokenTypeEnum.REFRESH_TOKEN));
+                        userPO.getId(), TokenTypeEnum.REFRESH_TOKEN));
     }
 }

@@ -3,9 +3,10 @@ package edu.cmipt.gcs.util;
 import java.util.Date;
 import java.util.List;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
+import javax.crypto.SecretKey;
 
+import io.jsonwebtoken.Jwts;
+import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.enumeration.TokenTypeEnum;
 
 /**
@@ -16,6 +17,9 @@ import edu.cmipt.gcs.enumeration.TokenTypeEnum;
 public class JwtUtil {
     private static final String TOKEN_TYPE_CLAIM = "tokenType";
     private static final String ID_CLAIM = "id";
+    // TODO: every restart of the server will invalidate all tokens, may need to
+    // change this
+    private static final SecretKey SECRET_KEY = Jwts.SIG.HS256.key().build();
 
     /**
      * Generate a token
@@ -23,37 +27,29 @@ public class JwtUtil {
      * @param claims
      * @return The generated access token
      */
-    public static String generateToken(long id, long expiration, TokenTypeEnum tokenType) {
+    public static String generateToken(long id, TokenTypeEnum tokenType) {
         return Jwts.builder().issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .expiration(new Date(System.currentTimeMillis()
+                        + (tokenType == TokenTypeEnum.ACCESS_TOKEN ? ApplicationConstant.ACCESS_TOKEN_EXPIRATION
+                                : ApplicationConstant.REFRESH_TOKEN_EXPIRATION)))
                 .claim(ID_CLAIM, id)
-                .claim(TOKEN_TYPE_CLAIM, tokenType)
-                .signWith(Jwts.SIG.HS256.key().build())
+                .claim(TOKEN_TYPE_CLAIM, tokenType.name())
+                .signWith(SECRET_KEY)
                 .compact();
     }
 
-    public static String getID(String token) throws ExpiredJwtException, Exception {
-        String id = null;
-        try {
-            id = Jwts.parser().verifyWith(Jwts.SIG.HS256.key().build()).build().parseSignedClaims(token).getPayload().get(ID_CLAIM, String.class);
-        } catch (ExpiredJwtException e) {
-            throw e;
-        } catch (Exception e) {
-            throw e;
-        }
-        return id;
+    public static String generateToken(String id, TokenTypeEnum tokenType) {
+        return generateToken(Long.valueOf(id), tokenType);
     }
 
-    public static TokenTypeEnum getTokenType(String token) throws ExpiredJwtException, Exception{
-        TokenTypeEnum tokenType = null;
-        try {
-            tokenType = Jwts.parser().verifyWith(Jwts.SIG.HS256.key().build()).build().parseSignedClaims(token).getPayload().get(TOKEN_TYPE_CLAIM, TokenTypeEnum.class);
-        } catch (ExpiredJwtException e) {
-            throw e;
-        } catch (Exception e) {
-            throw e;
-        }
-        return tokenType;
+    public static String getID(String token) {
+        return String.valueOf(Jwts.parser().verifyWith(SECRET_KEY).build().parseSignedClaims(token).getPayload()
+                .get(ID_CLAIM, Long.class));
+    }
+
+    public static TokenTypeEnum getTokenType(String token) {
+        return TokenTypeEnum.valueOf(Jwts.parser().verifyWith(SECRET_KEY).build().parseSignedClaims(token)
+                .getPayload().get(TOKEN_TYPE_CLAIM, String.class));
     }
 
     /**
