@@ -52,11 +52,11 @@ public class AuthenticationController {
     @Operation(summary = "Sign up a user", description = "Sign up a user with the given information", tags = {
             "Authentication", "Post Method" })
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User signed up successfully", content = @Content(schema = @Schema(implementation = UserVO.class))),
+            @ApiResponse(responseCode = "200", description = "User signed up successfully"),
             @ApiResponse(responseCode = "400", description = "User sign up failed", content = @Content(schema = @Schema(implementation = ErrorVO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<?> signUp(@Validated(CreateGroup.class) @RequestBody UserDTO user) {
+    public void signUp(@Validated(CreateGroup.class) @RequestBody UserDTO user) {
         QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
         wrapper.eq("username", user.username());
         if (userService.exists(wrapper)) {
@@ -71,7 +71,6 @@ public class AuthenticationController {
         if (!res) {
             throw new RuntimeException("Failed to sign up user");
         }
-        return ResponseEntity.ok(new UserVO(userService.getOne(wrapper)));
     }
 
     @PostMapping(ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH)
@@ -96,19 +95,18 @@ public class AuthenticationController {
     @Operation(summary = "Sign out", description = "Sign out with the given token", tags = { "Authentication",
             "Delete Method" })
     @ApiResponse(responseCode = "200", description = "User signed out successfully")
-    public ResponseEntity<Void> signOut(@RequestBody List<String> tokenList) {
+    public void signOut(@RequestBody List<String> tokenList) {
         JwtUtil.blacklistToken(tokenList);
-        return ResponseEntity.ok().build();
     }
 
     @GetMapping(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)
     @Operation(summary = "Refresh token", description = "Return an access token with given refresh token", tags = { "Authentication", "Get Method" })
-    @Parameter(name = "Token", description = "Refresh token", required = true, in = ParameterIn.HEADER, schema = @Schema(type = "string"))
+    @Parameter(name = "Token", description = "Refresh token", required = true, in = ParameterIn.HEADER, schema = @Schema(implementation = String.class))
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Token refreshed successfully", content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<?> refreshToken(@RequestHeader("Token") String token) {
-        return ResponseEntity.ok(JwtUtil.generateToken(JwtUtil.getID(token), TokenTypeEnum.ACCESS_TOKEN));
+    public String refreshToken(@RequestHeader("Token") String token) {
+        return JwtUtil.generateToken(JwtUtil.getID(token), TokenTypeEnum.ACCESS_TOKEN);
     }
 }

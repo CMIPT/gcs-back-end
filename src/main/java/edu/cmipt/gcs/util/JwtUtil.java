@@ -24,7 +24,8 @@ public class JwtUtil {
     /**
      * Generate a token
      *
-     * @param claims
+     * @param id       The id of the user
+     * @param tokenType The type of the token
      * @return The generated access token
      */
     public static String generateToken(long id, TokenTypeEnum tokenType) {
@@ -59,7 +60,7 @@ public class JwtUtil {
      * @param token
      */
     public static void blacklistToken(String token) {
-        // TODO: add token to blacklist
+        // TODO: add token to blacklist, we will consider this later
     }
 
     public static void blacklistToken(List<String> tokenList) {

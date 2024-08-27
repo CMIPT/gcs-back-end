@@ -3,6 +3,7 @@ package edu.cmipt.gcs.exception;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -56,6 +57,13 @@ public class GlobalExceptionHandler {
     public ErrorVO handleAccessDeniedException(AccessDeniedException e, HttpServletRequest request) {
         logger.error("Operation without previlege from {}", request.getRemoteAddr());
         return new ErrorVO(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ErrorVO handleHttpMessageNotReadableException(HttpMessageNotReadableException e, HttpServletRequest request) {
+        logger.error("Invalid input from {}:\n {}", request.getRemoteAddr(), e.getMessage());
+        return ErrorMessageUtil.generateError(e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

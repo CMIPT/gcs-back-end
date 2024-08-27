@@ -55,7 +55,6 @@ public class DevelopmentController {
             "Development", "Get Method" })
     @ApiResponse(responseCode = "200", description = "API paths retrieved successfully")
     public Map<String, String> getApiMap() {
-        System.out.println("apiPathConstant: " + apiPathConstant);
         return apiPathConstant;
     }
 
@@ -64,7 +63,6 @@ public class DevelopmentController {
             "Development", "Get Method" })
     @ApiResponse(responseCode = "200", description = "Error messages retrieved successfully")
     public Map<String, String> getErrorMessage() {
-        System.out.println("errorMessageConstant: " + errorMessageConstant);
         return errorMessageConstant;
     }
 }
