@@ -1,13 +1,14 @@
 package edu.cmipt.gcs.util;
 
+import edu.cmipt.gcs.constant.ApplicationConstant;
+import edu.cmipt.gcs.enumeration.TokenTypeEnum;
+
+import io.jsonwebtoken.Jwts;
+
 import java.util.Date;
 import java.util.List;
 
 import javax.crypto.SecretKey;
-
-import io.jsonwebtoken.Jwts;
-import edu.cmipt.gcs.constant.ApplicationConstant;
-import edu.cmipt.gcs.enumeration.TokenTypeEnum;
 
 /**
  * JwtUtil
@@ -24,15 +25,19 @@ public class JwtUtil {
     /**
      * Generate a token
      *
-     * @param id       The id of the user
+     * @param id The id of the user
      * @param tokenType The type of the token
      * @return The generated access token
      */
     public static String generateToken(long id, TokenTypeEnum tokenType) {
-        return Jwts.builder().issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis()
-                        + (tokenType == TokenTypeEnum.ACCESS_TOKEN ? ApplicationConstant.ACCESS_TOKEN_EXPIRATION
-                                : ApplicationConstant.REFRESH_TOKEN_EXPIRATION)))
+        return Jwts.builder()
+                .issuedAt(new Date())
+                .expiration(
+                        new Date(
+                                System.currentTimeMillis()
+                                        + (tokenType == TokenTypeEnum.ACCESS_TOKEN
+                                                ? ApplicationConstant.ACCESS_TOKEN_EXPIRATION
+                                                : ApplicationConstant.REFRESH_TOKEN_EXPIRATION)))
                 .claim(ID_CLAIM, id)
                 .claim(TOKEN_TYPE_CLAIM, tokenType.name())
                 .signWith(SECRET_KEY)
@@ -44,18 +49,28 @@ public class JwtUtil {
     }
 
     public static String getID(String token) {
-        return String.valueOf(Jwts.parser().verifyWith(SECRET_KEY).build().parseSignedClaims(token).getPayload()
-                .get(ID_CLAIM, Long.class));
+        return String.valueOf(
+                Jwts.parser()
+                        .verifyWith(SECRET_KEY)
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload()
+                        .get(ID_CLAIM, Long.class));
     }
 
     public static TokenTypeEnum getTokenType(String token) {
-        return TokenTypeEnum.valueOf(Jwts.parser().verifyWith(SECRET_KEY).build().parseSignedClaims(token)
-                .getPayload().get(TOKEN_TYPE_CLAIM, String.class));
+        return TokenTypeEnum.valueOf(
+                Jwts.parser()
+                        .verifyWith(SECRET_KEY)
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload()
+                        .get(TOKEN_TYPE_CLAIM, String.class));
     }
 
     /**
      * Add token to blacklist
-     * 
+     *
      * @author Kaiser
      * @param token
      */

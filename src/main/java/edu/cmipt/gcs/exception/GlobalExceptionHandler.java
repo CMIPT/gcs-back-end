@@ -1,5 +1,13 @@
 package edu.cmipt.gcs.exception;
 
+import edu.cmipt.gcs.constant.ErrorMessageConstant;
+import edu.cmipt.gcs.pojo.error.ErrorVO;
+import edu.cmipt.gcs.util.ErrorMessageUtil;
+
+import io.jsonwebtoken.JwtException;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -9,12 +17,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import edu.cmipt.gcs.constant.ErrorMessageConstant;
-import edu.cmipt.gcs.pojo.error.ErrorVO;
-import edu.cmipt.gcs.util.ErrorMessageUtil;
-import io.jsonwebtoken.JwtException;
-import jakarta.servlet.http.HttpServletRequest;
-
 /**
  * GlobalExceptionHandler Handles exceptions globally
  *
@@ -23,6 +25,7 @@ import jakarta.servlet.http.HttpServletRequest;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     /**
      * Handles MethodArgumentNotValidException
      *
@@ -40,7 +43,8 @@ public class GlobalExceptionHandler {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(IllegalArgumentException.class)
-    public ErrorVO handleIllegalArgumentException(IllegalArgumentException e, HttpServletRequest request) {
+    public ErrorVO handleIllegalArgumentException(
+            IllegalArgumentException e, HttpServletRequest request) {
         logger.error("Invalid input from {}:\n {}", request.getRemoteAddr(), e.getMessage());
         return new ErrorVO(e.getMessage());
     }
@@ -54,14 +58,16 @@ public class GlobalExceptionHandler {
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler(AccessDeniedException.class)
-    public ErrorVO handleAccessDeniedException(AccessDeniedException e, HttpServletRequest request) {
+    public ErrorVO handleAccessDeniedException(
+            AccessDeniedException e, HttpServletRequest request) {
         logger.error("Operation without previlege from {}", request.getRemoteAddr());
         return new ErrorVO(e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ErrorVO handleHttpMessageNotReadableException(HttpMessageNotReadableException e, HttpServletRequest request) {
+    public ErrorVO handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException e, HttpServletRequest request) {
         logger.error("Invalid input from {}:\n {}", request.getRemoteAddr(), e.getMessage());
         return ErrorMessageUtil.generateError(e.getMessage());
     }
