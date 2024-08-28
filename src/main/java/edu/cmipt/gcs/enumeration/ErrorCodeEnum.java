@@ -28,11 +28,13 @@ public enum ErrorCodeEnum {
     // code means the error code in the message.properties
     private String code;
 
-    ErrorCodeEnum(){}
+    ErrorCodeEnum() {}
 
     ErrorCodeEnum(String code) {
         this.code = code;
     }
 
-    public String getCode() { return code; }
+    public String getCode() {
+        return code;
+    }
 }

@@ -26,9 +26,9 @@ public class GlobalExceptionHandler {
 
     /**
      * Handles MethodArgumentNotValidException
-     * 
-     * This method is used to handle the MethodArgumentNotValidException, which is thrown when the
-     * validation of the request body fails.
+     *
+     * <p>This method is used to handle the MethodArgumentNotValidException, which is thrown when
+     * the validation of the request body fails.
      *
      * @param e MethodArgumentNotValidException
      */
@@ -49,7 +49,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorVO> handleHttpMessageNotReadableException(
             HttpMessageNotReadableException e, HttpServletRequest request) {
-        return handleGenericException(new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR), request);
+        return handleGenericException(
+                new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR), request);
     }
 
     @ExceptionHandler(GenericException.class)

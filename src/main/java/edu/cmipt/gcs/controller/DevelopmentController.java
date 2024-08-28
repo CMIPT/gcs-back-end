@@ -3,6 +3,7 @@ package edu.cmipt.gcs.controller;
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,7 +36,9 @@ public class DevelopmentController {
     @PostConstruct
     public void init() {
         for (ErrorCodeEnum code : ErrorCodeEnum.values()) {
-            if (code == ErrorCodeEnum.ZERO_PLACEHOLDER) { continue; }
+            if (code == ErrorCodeEnum.ZERO_PLACEHOLDER) {
+                continue;
+            }
             errorCodeConstant.put(code.ordinal(), code.name());
         }
         for (Field field : ApiPathConstant.class.getFields()) {

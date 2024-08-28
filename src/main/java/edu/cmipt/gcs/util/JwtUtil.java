@@ -4,6 +4,7 @@ import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.enumeration.TokenTypeEnum;
 import edu.cmipt.gcs.exception.GenericException;
+
 import io.jsonwebtoken.Jwts;
 
 import java.util.Date;
@@ -66,12 +67,12 @@ public class JwtUtil {
     public static TokenTypeEnum getTokenType(String token) {
         try {
             return TokenTypeEnum.valueOf(
-                Jwts.parser()
-                .verifyWith(SECRET_KEY)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get(TOKEN_TYPE_CLAIM, String.class));
+                    Jwts.parser()
+                            .verifyWith(SECRET_KEY)
+                            .build()
+                            .parseSignedClaims(token)
+                            .getPayload()
+                            .get(TOKEN_TYPE_CLAIM, String.class));
         } catch (Exception e) {
             throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
         }

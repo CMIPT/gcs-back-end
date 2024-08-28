@@ -1,10 +1,10 @@
 package edu.cmipt.gcs.util;
 
+import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
-
-import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,7 +23,8 @@ public class MessageSourceUtil {
         } catch (Exception e) {
             // ignore
         }
-        String message = messageSource.getMessage(code.getCode(), null, LocaleContextHolder.getLocale());
+        String message =
+                messageSource.getMessage(code.getCode(), null, LocaleContextHolder.getLocale());
         Pattern pattern = Pattern.compile("\\{.*?\\}");
         Matcher matcher = pattern.matcher(message);
         int i = 0;

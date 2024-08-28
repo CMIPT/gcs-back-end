@@ -24,7 +24,9 @@ public record UserDTO(
                         requiredMode = Schema.RequiredMode.NOT_REQUIRED,
                         accessMode = Schema.AccessMode.READ_ONLY)
                 @Null(groups = CreateGroup.class, message = "USERDTO_ID_NULL {UserDTO.id.Null}")
-                @NotNull(groups = UpdateGroup.class, message = "USERDTO_ID_NOTNULL {UserDTO.id.NotNull}")
+                @NotNull(
+                        groups = UpdateGroup.class,
+                        message = "USERDTO_ID_NOTNULL {UserDTO.id.NotNull}")
                 Long id,
         @Schema(
                         description = "Username",
