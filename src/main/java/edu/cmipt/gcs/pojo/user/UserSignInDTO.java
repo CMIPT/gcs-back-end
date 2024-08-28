@@ -21,5 +21,5 @@ public record UserSignInDTO(
                 @NotBlank(
                         message =
                                 "USERSIGNINDTO_USERPASSWORD_NOTBLANK"
-                                    + " {UserSignInDTO.userPassword.NotBlank}")
+                                        + " {UserSignInDTO.userPassword.NotBlank}")
                 String userPassword) {}
