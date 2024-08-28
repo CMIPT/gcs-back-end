@@ -23,8 +23,8 @@ public record UserDTO(
                         description = "User ID",
                         requiredMode = Schema.RequiredMode.NOT_REQUIRED,
                         accessMode = Schema.AccessMode.READ_ONLY)
-                @Null(groups = CreateGroup.class, message = "{UserDTO.id.Null}")
-                @NotNull(groups = UpdateGroup.class, message = "{UserDTO.id.NotNull}")
+                @Null(groups = CreateGroup.class, message = "USERDTO_ID_NULL {UserDTO.id.Null}")
+                @NotNull(groups = UpdateGroup.class, message = "USERDTO_ID_NOTNULL {UserDTO.id.NotNull}")
                 Long id,
         @Schema(
                         description = "Username",
@@ -34,10 +34,10 @@ public record UserDTO(
                         groups = {CreateGroup.class},
                         min = ValidationConstant.MIN_USERNAME_LENGTH,
                         max = ValidationConstant.MAX_USERNAME_LENGTH,
-                        message = "{UserDTO.username.Size}")
+                        message = "USERDTO_USERNAME_SIZE {UserDTO.username.Size}")
                 @NotBlank(
                         groups = {CreateGroup.class},
-                        message = "{UserDTO.username.NotBlank}")
+                        message = "USERDTO_USERNAME_NOTBLANK {UserDTO.username.NotBlank}")
                 String username,
         @Schema(
                         description = "Email",
@@ -45,10 +45,10 @@ public record UserDTO(
                         example = "admin@cmipt.edu")
                 @Email(
                         groups = {CreateGroup.class},
-                        message = "{UserDTO.email.Email}")
+                        message = "USERDTO_EMAIL_EMAIL {UserDTO.email.Email}")
                 @NotBlank(
                         groups = {CreateGroup.class},
-                        message = "{UserDTO.email.NotBlank}")
+                        message = "USERDTO_EMAIL_NOTBLANK {UserDTO.email.NotBlank}")
                 String email,
         @Schema(
                         description = "User Password (Unencrypted)",
@@ -58,8 +58,8 @@ public record UserDTO(
                         groups = {CreateGroup.class},
                         min = ValidationConstant.MIN_PASSWORD_LENGTH,
                         max = ValidationConstant.MAX_PASSWORD_LENGTH,
-                        message = "{UserDTO.userPassword.Size}")
+                        message = "USERDTO_USERPASSWORD_SIZE {UserDTO.userPassword.Size}")
                 @NotBlank(
                         groups = {CreateGroup.class},
-                        message = "{UserDTO.userPassword.NotBlank}")
+                        message = "USERDTO_USERPASSWORD_NOTBLANK {UserDTO.userPassword.NotBlank}")
                 String userPassword) {}

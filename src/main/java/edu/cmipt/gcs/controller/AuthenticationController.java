@@ -3,8 +3,10 @@ package edu.cmipt.gcs.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 
 import edu.cmipt.gcs.constant.ApiPathConstant;
-import edu.cmipt.gcs.constant.ErrorMessageConstant;
+import edu.cmipt.gcs.constant.HeaderParameter;
+import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.enumeration.TokenTypeEnum;
+import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.user.UserDTO;
 import edu.cmipt.gcs.pojo.user.UserPO;
@@ -65,12 +67,12 @@ public class AuthenticationController {
         QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
         wrapper.eq("username", user.username());
         if (userService.exists(wrapper)) {
-            throw new IllegalArgumentException(ErrorMessageConstant.USERNAME_ALREADY_EXISTS);
+            throw new GenericException(ErrorCodeEnum.USERNAME_ALREADY_EXISTS, user.username());
         }
         wrapper.clear();
         wrapper.eq("email", user.email());
         if (userService.exists(wrapper)) {
-            throw new IllegalArgumentException(ErrorMessageConstant.EMAIL_ALREADY_EXISTS);
+            throw new GenericException(ErrorCodeEnum.EMAIL_ALREADY_EXISTS, user.email());
         }
         boolean res = userService.save(new UserPO(user));
         if (!res) {
@@ -99,7 +101,7 @@ public class AuthenticationController {
         wrapper.eq("username", user.username());
         wrapper.eq("user_password", MD5Converter.convertToMD5(user.userPassword()));
         if (!userService.exists(wrapper)) {
-            throw new IllegalArgumentException(ErrorMessageConstant.WRONG_SIGN_IN_INFORMATION);
+            throw new GenericException(ErrorCodeEnum.WRONG_SIGN_IN_INFORMATION);
         }
         return ResponseEntity.ok(new UserVO(userService.getOne(wrapper)));
     }
@@ -120,7 +122,7 @@ public class AuthenticationController {
             description = "Return an access token with given refresh token",
             tags = {"Authentication", "Get Method"})
     @Parameter(
-            name = "Token",
+            name = HeaderParameter.TOKEN,
             description = "Refresh token",
             required = true,
             in = ParameterIn.HEADER,
@@ -132,7 +134,7 @@ public class AuthenticationController {
                 content = @Content(schema = @Schema(implementation = String.class))),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public String refreshToken(@RequestHeader("Token") String token) {
+    public String refreshToken(@RequestHeader(HeaderParameter.TOKEN) String token) {
         return JwtUtil.generateToken(JwtUtil.getID(token), TokenTypeEnum.ACCESS_TOKEN);
     }
 }

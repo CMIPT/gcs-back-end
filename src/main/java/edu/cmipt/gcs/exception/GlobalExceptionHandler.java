@@ -1,16 +1,14 @@
 package edu.cmipt.gcs.exception;
 
-import edu.cmipt.gcs.constant.ErrorMessageConstant;
+import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
-import edu.cmipt.gcs.util.ErrorMessageUtil;
-
-import io.jsonwebtoken.JwtException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -28,48 +26,47 @@ public class GlobalExceptionHandler {
 
     /**
      * Handles MethodArgumentNotValidException
+     * 
+     * This method is used to handle the MethodArgumentNotValidException, which is thrown when the
+     * validation of the request body fails.
      *
      * @param e MethodArgumentNotValidException
-     * @return Map<String, String>
      */
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ErrorVO handleMethodArgumentNotValidException(
+    public ResponseEntity<ErrorVO> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException e, HttpServletRequest request) {
-        String firstErrorMessage = e.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
-        logger.error("Invalid input from {}:\n {}", request.getRemoteAddr(), firstErrorMessage);
-        return ErrorMessageUtil.generateError(firstErrorMessage);
+        // we only handle one validation message
+        String codeAndMessage = e.getFieldError().getDefaultMessage();
+        int firstSpaceIndex = codeAndMessage.indexOf(" ");
+        // There must be a space and not at the end of the message
+        assert firstSpaceIndex != -1;
+        assert firstSpaceIndex != codeAndMessage.length() - 1;
+        var exception = new GenericException(codeAndMessage.substring(firstSpaceIndex + 1));
+        exception.setCode(ErrorCodeEnum.valueOf(codeAndMessage.substring(0, firstSpaceIndex)));
+        return handleGenericException(exception, request);
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ErrorVO handleIllegalArgumentException(
-            IllegalArgumentException e, HttpServletRequest request) {
-        logger.error("Invalid input from {}:\n {}", request.getRemoteAddr(), e.getMessage());
-        return new ErrorVO(e.getMessage());
-    }
-
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    @ExceptionHandler(JwtException.class)
-    public ErrorVO handleJwtException(JwtException e, HttpServletRequest request) {
-        logger.error("Invalid Token from {}", request.getRemoteAddr());
-        return new ErrorVO(ErrorMessageConstant.INVALID_TOKEN);
-    }
-
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    @ExceptionHandler(AccessDeniedException.class)
-    public ErrorVO handleAccessDeniedException(
-            AccessDeniedException e, HttpServletRequest request) {
-        logger.error("Operation without previlege from {}", request.getRemoteAddr());
-        return new ErrorVO(e.getMessage());
-    }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ErrorVO handleHttpMessageNotReadableException(
+    public ResponseEntity<ErrorVO> handleHttpMessageNotReadableException(
             HttpMessageNotReadableException e, HttpServletRequest request) {
-        logger.error("Invalid input from {}:\n {}", request.getRemoteAddr(), e.getMessage());
-        return ErrorMessageUtil.generateError(e.getMessage());
+        return handleGenericException(new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR), request);
+    }
+
+    @ExceptionHandler(GenericException.class)
+    public ResponseEntity<ErrorVO> handleGenericException(
+            GenericException e, HttpServletRequest request) {
+        logger.error("Error caused by {}:\n {}", request.getRemoteAddr(), e.getMessage());
+        switch (e.getCode()) {
+            case INVALID_TOKEN:
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ErrorVO(e.getCode(), e.getMessage()));
+            case ACCESS_DENIED:
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ErrorVO(e.getCode(), e.getMessage()));
+            default:
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ErrorVO(e.getCode(), e.getMessage()));
+        }
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
