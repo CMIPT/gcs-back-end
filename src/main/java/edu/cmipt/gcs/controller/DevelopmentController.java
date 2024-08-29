@@ -2,7 +2,7 @@ package edu.cmipt.gcs.controller;
 
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.ApplicationConstant;
-import edu.cmipt.gcs.constant.ErrorMessageConstant;
+import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,18 +29,17 @@ import java.util.Map;
 @Profile(ApplicationConstant.DEV_PROFILE)
 @Tag(name = "Development", description = "Some Useful APIs for Development")
 public class DevelopmentController {
-    private Map<String, String> errorMessageConstant = new HashMap<>();
+    private Map<Integer, String> errorCodeConstant = new HashMap<>();
 
     private Map<String, String> apiPathConstant = new HashMap<>();
 
     @PostConstruct
     public void init() {
-        for (Field field : ErrorMessageConstant.class.getFields()) {
-            try {
-                errorMessageConstant.put(field.getName(), (String) field.get(null));
-            } catch (Exception e) {
-                // impossible
+        for (ErrorCodeEnum code : ErrorCodeEnum.values()) {
+            if (code == ErrorCodeEnum.ZERO_PLACEHOLDER) {
+                continue;
             }
+            errorCodeConstant.put(code.ordinal(), code.name());
         }
         for (Field field : ApiPathConstant.class.getFields()) {
             try {
@@ -49,6 +48,7 @@ public class DevelopmentController {
                 }
             } catch (Exception e) {
                 // impossible
+                throw new RuntimeException(e);
             }
         }
     }
@@ -69,7 +69,7 @@ public class DevelopmentController {
             description = "Get all error messages in the application",
             tags = {"Development", "Get Method"})
     @ApiResponse(responseCode = "200", description = "Error messages retrieved successfully")
-    public Map<String, String> getErrorMessage() {
-        return errorMessageConstant;
+    public Map<Integer, String> getErrorMessage() {
+        return errorCodeConstant;
     }
 }

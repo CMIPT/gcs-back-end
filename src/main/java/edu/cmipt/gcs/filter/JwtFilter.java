@@ -1,8 +1,9 @@
 package edu.cmipt.gcs.filter;
 
 import edu.cmipt.gcs.constant.ApiPathConstant;
-import edu.cmipt.gcs.constant.ErrorMessageConstant;
-import edu.cmipt.gcs.exception.AccessDeniedException;
+import edu.cmipt.gcs.constant.HeaderParameter;
+import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.util.JwtUtil;
 
 import jakarta.servlet.FilterChain;
@@ -49,7 +50,7 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
         // throw exception if authorization failed
-        authorize(request, request.getHeader("Token"));
+        authorize(request, request.getHeader(HeaderParameter.TOKEN));
         filterChain.doFilter(request, response);
     }
 
@@ -59,7 +60,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 // ACCESS_TOKEN can not be used for refresh
                 if (request.getRequestURI()
                         .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)) {
-                    throw new AccessDeniedException(ErrorMessageConstant.ACCESS_DENIED);
+                    throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
                 }
                 String idInToken = JwtUtil.getID(token);
                 switch (request.getMethod()) {
@@ -69,22 +70,22 @@ public class JwtFilter extends OncePerRequestFilter {
                         // User can not update other user's information
                         if (request.getRequestURI().startsWith(ApiPathConstant.USER_API_PREFIX)
                                 && !idInToken.equals(getFromRequestBody(request, "id"))) {
-                            throw new AccessDeniedException(ErrorMessageConstant.ACCESS_DENIED);
+                            throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
                         }
                         break;
                     default:
-                        throw new AccessDeniedException(ErrorMessageConstant.ACCESS_DENIED);
+                        throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
                 }
                 break;
             case REFRESH_TOKEN:
                 // REFRESH_TOKEN can only be used for refresh
                 if (!request.getRequestURI()
                         .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)) {
-                    throw new AccessDeniedException(ErrorMessageConstant.ACCESS_DENIED);
+                    throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
                 }
                 break;
             default:
-                throw new AccessDeniedException(ErrorMessageConstant.ACCESS_DENIED);
+                throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
         }
     }
 
@@ -102,7 +103,7 @@ public class JwtFilter extends OncePerRequestFilter {
             return json.get(key).toString();
         } catch (Exception e) {
             // unlikely to happen
-            return null;
+            throw new RuntimeException(e);
         }
     }
 }

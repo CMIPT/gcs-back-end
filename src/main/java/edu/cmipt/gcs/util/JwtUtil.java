@@ -1,7 +1,9 @@
 package edu.cmipt.gcs.util;
 
 import edu.cmipt.gcs.constant.ApplicationConstant;
+import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.enumeration.TokenTypeEnum;
+import edu.cmipt.gcs.exception.GenericException;
 
 import io.jsonwebtoken.Jwts;
 
@@ -49,23 +51,31 @@ public class JwtUtil {
     }
 
     public static String getID(String token) {
-        return String.valueOf(
-                Jwts.parser()
-                        .verifyWith(SECRET_KEY)
-                        .build()
-                        .parseSignedClaims(token)
-                        .getPayload()
-                        .get(ID_CLAIM, Long.class));
+        try {
+            return String.valueOf(
+                    Jwts.parser()
+                            .verifyWith(SECRET_KEY)
+                            .build()
+                            .parseSignedClaims(token)
+                            .getPayload()
+                            .get(ID_CLAIM, Long.class));
+        } catch (Exception e) {
+            throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
+        }
     }
 
     public static TokenTypeEnum getTokenType(String token) {
-        return TokenTypeEnum.valueOf(
-                Jwts.parser()
-                        .verifyWith(SECRET_KEY)
-                        .build()
-                        .parseSignedClaims(token)
-                        .getPayload()
-                        .get(TOKEN_TYPE_CLAIM, String.class));
+        try {
+            return TokenTypeEnum.valueOf(
+                    Jwts.parser()
+                            .verifyWith(SECRET_KEY)
+                            .build()
+                            .parseSignedClaims(token)
+                            .getPayload()
+                            .get(TOKEN_TYPE_CLAIM, String.class));
+        } catch (Exception e) {
+            throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
+        }
     }
 
     /**
