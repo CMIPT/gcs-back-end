@@ -43,4 +43,4 @@
 | `postgresqlPort`             | `int`    | `5432`                                 | `Postgres` 端口。 |
 | `druidLoginUsername`         | `string` | `"druid"`                              | `Druid` 登录用户名。 |
 | `druidLoginPassword`         | `string` | `"druid"`                              | `Druid` 登录密码。 |
-
+| `frontEndUrl`                | `string` | `"http://localhost:3000"`              | 前端地址。 |

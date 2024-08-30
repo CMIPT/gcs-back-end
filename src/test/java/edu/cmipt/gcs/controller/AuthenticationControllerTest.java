@@ -195,7 +195,7 @@ public class AuthenticationControllerTest {
                         MockMvcRequestBuilders.get(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)
                                 .header(HeaderParameter.TOKEN, invalidToken))
                 .andExpectAll(
-                        status().isBadRequest(),
+                        status().isUnauthorized(),
                         content()
                                 .json(
                                         """
