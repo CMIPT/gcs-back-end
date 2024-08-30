@@ -353,6 +353,27 @@ def create_or_update_user(username, password):
         command_checker(process.returncode, f"Failed to update the password of {username}")
 
 
+def write_other_config(config):
+    other_config_map = {
+        "frontEndUrl": "front-end.url"
+    }
+    try:
+        lines = None
+        if os.path.exists(application_config_file_path):
+            with open(application_config_file_path, 'r') as f:
+                lines = f.readlines()
+        with open(application_config_file_path, 'w') as f:
+            if lines:
+                for line in lines:
+                    for _, value in other_config_map.items():
+                        if not line.startswith(value):
+                            f.write(line)
+            for key, value in other_config_map.items():
+                f.write(f"{value}={getattr(config, key)}\n")
+                log_debug(f"Other config: {value}={getattr(config, key)}")
+    except Exception as e:
+        command_checker(1, f"Error: {e}")
+
 def deploy_on_ubuntu(config):
     assert(config != None)
     if config.inDocker:
@@ -360,6 +381,7 @@ def deploy_on_ubuntu(config):
     apt_install_package(parse_iterable_into_str(essential_packages))
     init_database(config)
     activate_profile(config)
+    write_other_config(config)
     skip_test = ""
     if config.skipTest:
         skip_test = "-Dmaven.test.skip=true"

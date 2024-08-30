@@ -47,5 +47,6 @@
     "postgresqlHost": "localhost",
     "postgresqlPort": 5432,
     "druidLoginUsername": "druid",
-    "druidLoginPassword": "druid"
+    "druidLoginPassword": "druid",
+    "frontEndUrl": "http://localhost:3000"
 }
