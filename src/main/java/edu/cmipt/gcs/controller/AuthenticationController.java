@@ -106,9 +106,11 @@ public class AuthenticationController {
         }
         UserVO userVO = new UserVO(userService.getOne(wrapper));
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HeaderParameter.ACCESS_TOKEN, 
+        headers.add(
+                HeaderParameter.ACCESS_TOKEN,
                 JwtUtil.generateToken(userVO.id(), TokenTypeEnum.ACCESS_TOKEN));
-        headers.add(HeaderParameter.REFRESH_TOKEN,
+        headers.add(
+                HeaderParameter.REFRESH_TOKEN,
                 JwtUtil.generateToken(userVO.id(), TokenTypeEnum.REFRESH_TOKEN));
         return ResponseEntity.ok().headers(headers).body(userVO);
     }
@@ -143,7 +145,9 @@ public class AuthenticationController {
     })
     public ResponseEntity<Void> refreshToken(@RequestHeader(HeaderParameter.TOKEN) String token) {
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HeaderParameter.ACCESS_TOKEN, JwtUtil.generateToken(JwtUtil.getID(token), TokenTypeEnum.ACCESS_TOKEN));
+        headers.add(
+                HeaderParameter.ACCESS_TOKEN,
+                JwtUtil.generateToken(JwtUtil.getID(token), TokenTypeEnum.ACCESS_TOKEN));
         return ResponseEntity.ok().headers(headers).build();
     }
 }

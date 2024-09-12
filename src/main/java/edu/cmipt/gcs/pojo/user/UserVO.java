@@ -8,9 +8,6 @@ public record UserVO(
         @Schema(description = "Username", example = "admin") String username,
         @Schema(description = "Email", example = "admin@cmipt.edu") String email) {
     public UserVO(UserPO userPO) {
-        this(
-                userPO.getId(),
-                userPO.getUsername(),
-                userPO.getEmail());
+        this(userPO.getId(), userPO.getUsername(), userPO.getEmail());
     }
 }

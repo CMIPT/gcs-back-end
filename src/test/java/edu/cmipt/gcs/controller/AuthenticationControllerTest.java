@@ -1,16 +1,16 @@
 package edu.cmipt.gcs.controller;
 
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import edu.cmipt.gcs.constant.ApiPathConstant;
-import edu.cmipt.gcs.constant.TestConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
+import edu.cmipt.gcs.constant.TestConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.util.MessageSourceUtil;
 
@@ -45,7 +45,8 @@ public class AuthenticationControllerTest {
                 "userPassword": "%s"
             }
             """
-                    .formatted(TestConstant.USERNAME, TestConstant.EMAIL, TestConstant.USER_PASSWORD);
+                    .formatted(
+                            TestConstant.USERNAME, TestConstant.EMAIL, TestConstant.USER_PASSWORD);
     private static String userSignInDTO =
             """
             {
@@ -102,8 +103,7 @@ public class AuthenticationControllerTest {
     public void testSignInValid() throws Exception {
         var response =
                 mvc.perform(
-                                post(
-                                                ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH)
+                                post(ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(userSignInDTO))
                         .andExpectAll(
