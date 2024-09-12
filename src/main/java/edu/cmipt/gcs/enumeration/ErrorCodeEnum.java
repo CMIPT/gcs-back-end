@@ -23,7 +23,9 @@ public enum ErrorCodeEnum {
     INVALID_TOKEN("INVALID_TOKEN"),
     ACCESS_DENIED("ACCESS_DENIED"),
 
-    MESSAGE_CONVERSION_ERROR("MESSAGE_CONVERSION_ERROR");
+    MESSAGE_CONVERSION_ERROR("MESSAGE_CONVERSION_ERROR"),
+
+    USER_NOT_FOUND("USER_NOT_FOUND");
 
     // code means the error code in the message.properties
     private String code;

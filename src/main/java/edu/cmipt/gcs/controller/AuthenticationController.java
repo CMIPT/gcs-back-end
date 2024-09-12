@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -96,14 +97,20 @@ public class AuthenticationController {
                 content = @Content(schema = @Schema(implementation = ErrorVO.class))),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<?> signIn(@Validated @RequestBody UserSignInDTO user) {
+    public ResponseEntity<UserVO> signIn(@Validated @RequestBody UserSignInDTO user) {
         QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
         wrapper.eq("username", user.username());
         wrapper.eq("user_password", MD5Converter.convertToMD5(user.userPassword()));
         if (!userService.exists(wrapper)) {
             throw new GenericException(ErrorCodeEnum.WRONG_SIGN_IN_INFORMATION);
         }
-        return ResponseEntity.ok(new UserVO(userService.getOne(wrapper)));
+        UserVO userVO = new UserVO(userService.getOne(wrapper));
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HeaderParameter.ACCESS_TOKEN, 
+                JwtUtil.generateToken(userVO.id(), TokenTypeEnum.ACCESS_TOKEN));
+        headers.add(HeaderParameter.REFRESH_TOKEN,
+                JwtUtil.generateToken(userVO.id(), TokenTypeEnum.REFRESH_TOKEN));
+        return ResponseEntity.ok().headers(headers).body(userVO);
     }
 
     @DeleteMapping(ApiPathConstant.AUTHENTICATION_SIGN_OUT_API_PATH)
@@ -134,7 +141,9 @@ public class AuthenticationController {
                 content = @Content(schema = @Schema(implementation = String.class))),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public String refreshToken(@RequestHeader(HeaderParameter.TOKEN) String token) {
-        return JwtUtil.generateToken(JwtUtil.getID(token), TokenTypeEnum.ACCESS_TOKEN);
+    public ResponseEntity<Void> refreshToken(@RequestHeader(HeaderParameter.TOKEN) String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HeaderParameter.ACCESS_TOKEN, JwtUtil.generateToken(JwtUtil.getID(token), TokenTypeEnum.ACCESS_TOKEN));
+        return ResponseEntity.ok().headers(headers).build();
     }
 }
