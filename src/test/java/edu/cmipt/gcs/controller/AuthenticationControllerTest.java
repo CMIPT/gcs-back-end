@@ -1,14 +1,16 @@
 package edu.cmipt.gcs.controller;
 
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.jayway.jsonpath.JsonPath;
-
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
+import edu.cmipt.gcs.constant.TestConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.util.MessageSourceUtil;
 
@@ -22,9 +24,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.Ordered;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
-import java.util.Date;
 
 /**
  * Tests for AuthenticationController
@@ -34,12 +33,10 @@ import java.util.Date;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class AuthenticationControllerTest {
     @Autowired private MockMvc mvc;
 
-    private static String username = new Date().getTime() + "";
-    private static String userPassword = "123456";
-    private static String email = username + "@cmipt.edu";
     private static String userDTO =
             """
             {
@@ -48,7 +45,8 @@ public class AuthenticationControllerTest {
                 "userPassword": "%s"
             }
             """
-                    .formatted(username, email, userPassword);
+                    .formatted(
+                            TestConstant.USERNAME, TestConstant.EMAIL, TestConstant.USER_PASSWORD);
     private static String userSignInDTO =
             """
             {
@@ -56,9 +54,7 @@ public class AuthenticationControllerTest {
                 "userPassword": "%s"
             }
             """
-                    .formatted(username, userPassword);
-    private static String accessToken;
-    private static String refreshToken;
+                    .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD);
 
     private static String invalidUserDTO =
             """
@@ -75,7 +71,7 @@ public class AuthenticationControllerTest {
                 "userPassword": "%s"
             }
             """
-                    .formatted(username, userPassword + "wrong");
+                    .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD + "wrong");
 
     /**
      * Test sign in with invalid user information
@@ -88,7 +84,7 @@ public class AuthenticationControllerTest {
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public void testSignUpValid() throws Exception {
         mvc.perform(
-                        MockMvcRequestBuilders.post(ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH)
+                        post(ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(userDTO))
                 .andExpect(status().isOk());
@@ -105,24 +101,22 @@ public class AuthenticationControllerTest {
     @Test
     @Order(Ordered.HIGHEST_PRECEDENCE + 1)
     public void testSignInValid() throws Exception {
-        String jsonResponse =
+        var response =
                 mvc.perform(
-                                MockMvcRequestBuilders.post(
-                                                ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH)
+                                post(ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(userSignInDTO))
                         .andExpectAll(
                                 status().isOk(),
-                                jsonPath("$.username", is(username)),
-                                jsonPath("$.email", is(email)),
+                                jsonPath("$.username", is(TestConstant.USERNAME)),
+                                jsonPath("$.email", is(TestConstant.EMAIL)),
                                 jsonPath("$.id").isNumber(),
-                                jsonPath("$.accessToken").isString(),
-                                jsonPath("$.refreshToken").isString())
+                                header().exists(HeaderParameter.ACCESS_TOKEN),
+                                header().exists(HeaderParameter.REFRESH_TOKEN))
                         .andReturn()
-                        .getResponse()
-                        .getContentAsString();
-        accessToken = JsonPath.read(jsonResponse, "$.accessToken");
-        refreshToken = JsonPath.read(jsonResponse, "$.refreshToken");
+                        .getResponse();
+        TestConstant.ACCESS_TOKEN = response.getHeader(HeaderParameter.ACCESS_TOKEN);
+        TestConstant.REFRESH_TOKEN = response.getHeader(HeaderParameter.REFRESH_TOKEN);
     }
 
     /**
@@ -136,15 +130,15 @@ public class AuthenticationControllerTest {
     @Order(Ordered.HIGHEST_PRECEDENCE + 2)
     public void testRefreshValid() throws Exception {
         mvc.perform(
-                        MockMvcRequestBuilders.get(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)
-                                .header(HeaderParameter.TOKEN, refreshToken))
-                .andExpect(status().isOk());
+                        get(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)
+                                .header(HeaderParameter.TOKEN, TestConstant.REFRESH_TOKEN))
+                .andExpectAll(status().isOk(), header().exists(HeaderParameter.ACCESS_TOKEN));
     }
 
     @Test
     public void testSignInInvalid() throws Exception {
         mvc.perform(
-                        MockMvcRequestBuilders.post(ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH)
+                        post(ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(invalidUserSignInDTO))
                 .andExpectAll(
@@ -168,7 +162,7 @@ public class AuthenticationControllerTest {
     @Test
     public void testSignUpInvalid() throws Exception {
         mvc.perform(
-                        MockMvcRequestBuilders.post(ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH)
+                        post(ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(invalidUserDTO))
                 .andExpectAll(
@@ -192,7 +186,7 @@ public class AuthenticationControllerTest {
     public void testRefreshInvalid() throws Exception {
         String invalidToken = "This is a invalid token";
         mvc.perform(
-                        MockMvcRequestBuilders.get(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)
+                        get(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)
                                 .header(HeaderParameter.TOKEN, invalidToken))
                 .andExpectAll(
                         status().isUnauthorized(),

@@ -64,6 +64,9 @@ public class GlobalExceptionHandler {
             case ACCESS_DENIED:
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(new ErrorVO(e.getCode(), e.getMessage()));
+            case USER_NOT_FOUND:
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ErrorVO(e.getCode(), e.getMessage()));
             default:
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(new ErrorVO(e.getCode(), e.getMessage()));

@@ -19,4 +19,6 @@ public class ApiPathConstant {
             DEVELOPMENT_API_PREFIX + "/error";
 
     public static final String USER_API_PREFIX = ALL_API_PREFIX + "/user";
+
+    public static final String USER_GET_BY_NAME_API_PATH = USER_API_PREFIX + "/{username}";
 }
