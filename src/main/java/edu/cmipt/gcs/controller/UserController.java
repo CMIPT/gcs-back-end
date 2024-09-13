@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -93,10 +94,11 @@ public class UserController {
                 description = "Email is invalid",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public void checkEmailValidity(@RequestParam("email") 
-                                 @Email(message = "USERDTO_EMAIL_EMAIL {UserDTO.email.Email}")
-                                 @NotBlank(message = "USERDTO_EMAIL_NOTBLANK {UserDTO.email.NotBlank}")
-                                 String email) {
+    public void checkEmailValidity(
+            @RequestParam("email")
+                    @Email(message = "USERDTO_EMAIL_EMAIL {UserDTO.email.Email}")
+                    @NotBlank(message = "USERDTO_EMAIL_NOTBLANK {UserDTO.email.NotBlank}")
+                    String email) {
         QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
         wrapper.eq("email", email);
         if (userService.exists(wrapper)) {
@@ -123,14 +125,14 @@ public class UserController {
                 description = "Username is not valid",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public void checkUsernameValidity(@RequestParam("username")
-                @Size(
-                        min = ValidationConstant.MIN_USERNAME_LENGTH,
-                        max = ValidationConstant.MAX_USERNAME_LENGTH,
-                        message = "USERDTO_USERNAME_SIZE {UserDTO.username.Size}")
-                @NotBlank(
-                        message = "USERDTO_USERNAME_NOTBLANK {UserDTO.username.NotBlank}")
-                String username) {
+    public void checkUsernameValidity(
+            @RequestParam("username")
+                    @Size(
+                            min = ValidationConstant.MIN_USERNAME_LENGTH,
+                            max = ValidationConstant.MAX_USERNAME_LENGTH,
+                            message = "USERDTO_USERNAME_SIZE {UserDTO.username.Size}")
+                    @NotBlank(message = "USERDTO_USERNAME_NOTBLANK {UserDTO.username.NotBlank}")
+                    String username) {
         QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
         wrapper.eq("username", username);
         if (userService.exists(wrapper)) {

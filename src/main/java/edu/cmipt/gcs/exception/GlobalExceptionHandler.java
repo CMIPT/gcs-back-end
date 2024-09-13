@@ -42,9 +42,7 @@ public class GlobalExceptionHandler {
     /**
      * Handles ConstraintViolationException
      *
-     * <p>
-     * This method is used to handle the ConstraintViolationException, which is
-     * thrown when the
+     * <p>This method is used to handle the ConstraintViolationException, which is thrown when the
      * validation of the path variables or request parameters fails.
      *
      * @param e ConstraintViolationException
@@ -52,7 +50,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorVO> handleConstraintViolationException(
             ConstraintViolationException e, HttpServletRequest request) {
-        return handleValidationException(e.getConstraintViolations().iterator().next().getMessage(), request);
+        return handleValidationException(
+                e.getConstraintViolations().iterator().next().getMessage(), request);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -88,7 +87,8 @@ public class GlobalExceptionHandler {
         logger.error(e.getMessage());
     }
 
-    private ResponseEntity<ErrorVO> handleValidationException(String codeAndMessage, HttpServletRequest request) {
+    private ResponseEntity<ErrorVO> handleValidationException(
+            String codeAndMessage, HttpServletRequest request) {
         int firstSpaceIndex = codeAndMessage.indexOf(" ");
         // There must be a space and not at the end of the message
         assert firstSpaceIndex != -1;

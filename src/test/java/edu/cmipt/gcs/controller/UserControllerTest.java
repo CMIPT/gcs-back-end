@@ -6,8 +6,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.Date;
-
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
@@ -19,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Date;
 
 /**
  * Tests for UserController
@@ -70,17 +70,22 @@ public class UserControllerTest {
         mvc.perform(
                         get(ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH)
                                 .param("email", TestConstant.EMAIL))
-            .andExpectAll(status().isBadRequest(), content().json(
-                """
-                {
-                    "code": %d,
-                    "message": "%s"
-                }
-                """.formatted(
-                    ErrorCodeEnum.EMAIL_ALREADY_EXISTS.ordinal(),
-                    MessageSourceUtil.getMessage(ErrorCodeEnum.EMAIL_ALREADY_EXISTS, TestConstant.EMAIL)
-                )
-            ));
+                .andExpectAll(
+                        status().isBadRequest(),
+                        content()
+                                .json(
+                                        """
+                                        {
+                                            "code": %d,
+                                            "message": "%s"
+                                        }
+                                        """
+                                                .formatted(
+                                                        ErrorCodeEnum.EMAIL_ALREADY_EXISTS
+                                                                .ordinal(),
+                                                        MessageSourceUtil.getMessage(
+                                                                ErrorCodeEnum.EMAIL_ALREADY_EXISTS,
+                                                                TestConstant.EMAIL))));
     }
 
     @Test
@@ -88,7 +93,7 @@ public class UserControllerTest {
         mvc.perform(
                         get(ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH)
                                 .param("email", new Date().getTime() + "@cmipt.edu"))
-            .andExpectAll(status().isOk());
+                .andExpectAll(status().isOk());
     }
 
     @Test
@@ -96,17 +101,23 @@ public class UserControllerTest {
         mvc.perform(
                         get(ApiPathConstant.USER_CHECK_USERNAME_VALIDITY_API_PATH)
                                 .param("username", TestConstant.USERNAME))
-            .andExpectAll(status().isBadRequest(), content().json(
-                """
-                {
-                    "code": %d,
-                    "message": "%s"
-                }
-                """.formatted(
-                    ErrorCodeEnum.USERNAME_ALREADY_EXISTS.ordinal(),
-                    MessageSourceUtil.getMessage(ErrorCodeEnum.USERNAME_ALREADY_EXISTS, TestConstant.USERNAME)
-                )
-            ));
+                .andExpectAll(
+                        status().isBadRequest(),
+                        content()
+                                .json(
+                                        """
+                                        {
+                                            "code": %d,
+                                            "message": "%s"
+                                        }
+                                        """
+                                                .formatted(
+                                                        ErrorCodeEnum.USERNAME_ALREADY_EXISTS
+                                                                .ordinal(),
+                                                        MessageSourceUtil.getMessage(
+                                                                ErrorCodeEnum
+                                                                        .USERNAME_ALREADY_EXISTS,
+                                                                TestConstant.USERNAME))));
     }
 
     @Test
@@ -114,6 +125,6 @@ public class UserControllerTest {
         mvc.perform(
                         get(ApiPathConstant.USER_CHECK_USERNAME_VALIDITY_API_PATH)
                                 .param("username", new Date().getTime() + ""))
-            .andExpectAll(status().isOk());
+                .andExpectAll(status().isOk());
     }
 }
