@@ -37,7 +37,9 @@ public class JwtFilter extends OncePerRequestFilter {
                     ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH,
                     ApiPathConstant.AUTHENTICATION_SIGN_OUT_API_PATH,
                     ApiPathConstant.DEVELOPMENT_GET_API_MAP_API_PATH,
-                    ApiPathConstant.DEVELOPMENT_GET_ERROR_MESSAGE_API_PATH);
+                    ApiPathConstant.DEVELOPMENT_GET_ERROR_MESSAGE_API_PATH,
+                    ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH,
+                    ApiPathConstant.USER_CHECK_USERNAME_VALIDITY_API_PATH);
 
     @Override
     protected void doFilterInternal(
@@ -55,6 +57,9 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private void authorize(HttpServletRequest request, String token) {
+        if (token == null) {
+            throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
+        }
         switch (JwtUtil.getTokenType(token)) {
             case ACCESS_TOKEN:
                 // ACCESS_TOKEN can not be used for refresh
