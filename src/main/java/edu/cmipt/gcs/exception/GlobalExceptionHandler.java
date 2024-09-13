@@ -4,6 +4,7 @@ import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,15 +36,22 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorVO> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException e, HttpServletRequest request) {
-        // we only handle one validation message
-        String codeAndMessage = e.getFieldError().getDefaultMessage();
-        int firstSpaceIndex = codeAndMessage.indexOf(" ");
-        // There must be a space and not at the end of the message
-        assert firstSpaceIndex != -1;
-        assert firstSpaceIndex != codeAndMessage.length() - 1;
-        var exception = new GenericException(codeAndMessage.substring(firstSpaceIndex + 1));
-        exception.setCode(ErrorCodeEnum.valueOf(codeAndMessage.substring(0, firstSpaceIndex)));
-        return handleGenericException(exception, request);
+        return handleValidationException(e.getFieldError().getDefaultMessage(), request);
+    }
+
+    /**
+     * Handles ConstraintViolationException
+     *
+     * <p>This method is used to handle the ConstraintViolationException, which is thrown when the
+     * validation of the path variables or request parameters fails.
+     *
+     * @param e ConstraintViolationException
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorVO> handleConstraintViolationException(
+            ConstraintViolationException e, HttpServletRequest request) {
+        return handleValidationException(
+                e.getConstraintViolations().iterator().next().getMessage(), request);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -77,5 +85,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public void handleException(Exception e) {
         logger.error(e.getMessage());
+    }
+
+    private ResponseEntity<ErrorVO> handleValidationException(
+            String codeAndMessage, HttpServletRequest request) {
+        int firstSpaceIndex = codeAndMessage.indexOf(" ");
+        // There must be a space and not at the end of the message
+        assert firstSpaceIndex != -1;
+        assert firstSpaceIndex != codeAndMessage.length() - 1;
+        var exception = new GenericException(codeAndMessage.substring(firstSpaceIndex + 1));
+        exception.setCode(ErrorCodeEnum.valueOf(codeAndMessage.substring(0, firstSpaceIndex)));
+        return handleGenericException(exception, request);
     }
 }

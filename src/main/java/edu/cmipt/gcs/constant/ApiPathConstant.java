@@ -20,5 +20,8 @@ public class ApiPathConstant {
 
     public static final String USER_API_PREFIX = ALL_API_PREFIX + "/user";
 
-    public static final String USER_GET_BY_NAME_API_PATH = USER_API_PREFIX + "/{username}";
+    public static final String USER_GET_USER_BY_NAME_API_PATH = USER_API_PREFIX + "/{username}";
+    public static final String USER_CHECK_EMAIL_VALIDITY_API_PATH = USER_API_PREFIX + "/email";
+    public static final String USER_CHECK_USERNAME_VALIDITY_API_PATH =
+            USER_API_PREFIX + "/username";
 }
