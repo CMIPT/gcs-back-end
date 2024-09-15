@@ -8,6 +8,7 @@ import jakarta.validation.ConstraintViolationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.json.JsonParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -79,6 +80,14 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(new ErrorVO(e.getCode(), e.getMessage()));
         }
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(JsonParseException.class)
+    public void handleJsonParseException(JsonParseException e, HttpServletRequest request) {
+        GenericException exception = new GenericException(e.getMessage());
+        exception.setCode(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+        handleGenericException(exception, request);
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

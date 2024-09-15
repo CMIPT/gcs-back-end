@@ -19,6 +19,7 @@ import edu.cmipt.gcs.validation.group.CreateGroup;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -105,13 +106,7 @@ public class AuthenticationController {
             throw new GenericException(ErrorCodeEnum.WRONG_SIGN_IN_INFORMATION);
         }
         UserVO userVO = new UserVO(userService.getOne(wrapper));
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(
-                HeaderParameter.ACCESS_TOKEN,
-                JwtUtil.generateToken(userVO.id(), TokenTypeEnum.ACCESS_TOKEN));
-        headers.add(
-                HeaderParameter.REFRESH_TOKEN,
-                JwtUtil.generateToken(userVO.id(), TokenTypeEnum.REFRESH_TOKEN));
+        HttpHeaders headers = JwtUtil.generateHeaders(userVO.id());
         return ResponseEntity.ok().headers(headers).body(userVO);
     }
 
@@ -130,12 +125,20 @@ public class AuthenticationController {
             summary = "Refresh token",
             description = "Return an access token with given refresh token",
             tags = {"Authentication", "Get Method"})
-    @Parameter(
-            name = HeaderParameter.TOKEN,
-            description = "Refresh token",
-            required = true,
-            in = ParameterIn.HEADER,
-            schema = @Schema(implementation = String.class))
+    @Parameters({
+        @Parameter(
+                name = HeaderParameter.ACCESS_TOKEN,
+                description = "Access token",
+                required = true,
+                in = ParameterIn.HEADER,
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = HeaderParameter.REFRESH_TOKEN,
+                description = "Refresh token",
+                required = true,
+                in = ParameterIn.HEADER,
+                schema = @Schema(implementation = String.class))
+    })
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -143,11 +146,9 @@ public class AuthenticationController {
                 content = @Content(schema = @Schema(implementation = String.class))),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<Void> refreshToken(@RequestHeader(HeaderParameter.TOKEN) String token) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(
-                HeaderParameter.ACCESS_TOKEN,
-                JwtUtil.generateToken(JwtUtil.getID(token), TokenTypeEnum.ACCESS_TOKEN));
+    public ResponseEntity<Void> refreshToken(@RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken, @RequestHeader(HeaderParameter.REFRESH_TOKEN) String refreshToken) {
+        JwtUtil.blacklistToken(accessToken);
+        HttpHeaders headers = JwtUtil.generateHeaders(JwtUtil.getID(refreshToken), false);
         return ResponseEntity.ok().headers(headers).build();
     }
 }

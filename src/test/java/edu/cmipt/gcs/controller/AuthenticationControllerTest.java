@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.json.JsonParserFactory;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.Ordered;
@@ -110,13 +111,14 @@ public class AuthenticationControllerTest {
                                 status().isOk(),
                                 jsonPath("$.username", is(TestConstant.USERNAME)),
                                 jsonPath("$.email", is(TestConstant.EMAIL)),
-                                jsonPath("$.id").isNumber(),
+                                jsonPath("$.id").isString(),
                                 header().exists(HeaderParameter.ACCESS_TOKEN),
                                 header().exists(HeaderParameter.REFRESH_TOKEN))
                         .andReturn()
                         .getResponse();
         TestConstant.ACCESS_TOKEN = response.getHeader(HeaderParameter.ACCESS_TOKEN);
         TestConstant.REFRESH_TOKEN = response.getHeader(HeaderParameter.REFRESH_TOKEN);
+        TestConstant.ID = JsonParserFactory.getJsonParser().parseMap(response.getContentAsString()).get("id").toString();
     }
 
     /**
@@ -131,7 +133,8 @@ public class AuthenticationControllerTest {
     public void testRefreshValid() throws Exception {
         mvc.perform(
                         get(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)
-                                .header(HeaderParameter.TOKEN, TestConstant.REFRESH_TOKEN))
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN))
                 .andExpectAll(status().isOk(), header().exists(HeaderParameter.ACCESS_TOKEN));
     }
 
@@ -184,10 +187,11 @@ public class AuthenticationControllerTest {
 
     @Test
     public void testRefreshInvalid() throws Exception {
-        String invalidToken = "This is a invalid token";
+        String invalidToken = "This is an invalid token";
         mvc.perform(
                         get(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)
-                                .header(HeaderParameter.TOKEN, invalidToken))
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .header(HeaderParameter.REFRESH_TOKEN, invalidToken))
                 .andExpectAll(
                         status().isUnauthorized(),
                         content()

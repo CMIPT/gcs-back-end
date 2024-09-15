@@ -3,23 +3,34 @@ package edu.cmipt.gcs.filter;
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+import edu.cmipt.gcs.enumeration.TokenTypeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.util.JwtUtil;
 
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.boot.json.JsonParserFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JwtFilter
@@ -31,6 +42,66 @@ import java.util.Set;
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class JwtFilter extends OncePerRequestFilter {
+    /**
+     * CachedBodyHttpServletRequest
+     *
+     * The {@link}getInputStream() and {@link}getReader() methods of {@link}HttpServletRequest can only be called once.
+     * This class is used to cache the body of the request so that it can be read multiple times.
+     */
+    private class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
+        private class CachedBodyServletInputStream extends ServletInputStream {
+            private final InputStream cacheBodyInputStream;
+
+            public CachedBodyServletInputStream(byte[] cacheBody) {
+                this.cacheBodyInputStream = new ByteArrayInputStream(cacheBody);
+            }
+
+            @Override
+            public boolean isFinished() {
+                try {
+                    return cacheBodyInputStream.available() == 0;
+                } catch (IOException e) {
+                    return true;
+                }
+            }
+
+            @Override
+            public boolean isReady() {
+                return true;
+            }
+
+            @Override
+            public void setReadListener(ReadListener listener) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public int read() throws IOException {
+                return cacheBodyInputStream.read();
+            }
+        }
+
+        private final byte[] cacheBody;
+
+        public CachedBodyHttpServletRequest(HttpServletRequest request) throws IOException {
+            super(request);
+            InputStream requestInputStream = request.getInputStream();
+            this.cacheBody = StreamUtils.copyToByteArray(requestInputStream);
+        }
+
+        @Override
+        public ServletInputStream getInputStream() {
+            return new CachedBodyServletInputStream(this.cacheBody);
+        }
+
+        @Override
+        public BufferedReader getReader() {
+            return new BufferedReader(new InputStreamReader(new ByteArrayInputStream(this.cacheBody)));
+        }
+    }
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtFilter.class);
+
     private Set<String> ignorePath =
             Set.of(
                     ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH,
@@ -52,45 +123,52 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
         // throw exception if authorization failed
-        authorize(request, request.getHeader(HeaderParameter.TOKEN));
-        filterChain.doFilter(request, response);
+        CachedBodyHttpServletRequest cachedRequest = new CachedBodyHttpServletRequest(request);
+        authorize(cachedRequest, cachedRequest.getHeader(HeaderParameter.ACCESS_TOKEN), cachedRequest.getHeader(HeaderParameter.REFRESH_TOKEN));
+        filterChain.doFilter(cachedRequest, response);
     }
 
-    private void authorize(HttpServletRequest request, String token) {
-        if (token == null) {
-            throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
+    private void authorize(HttpServletRequest request, String accessToken, String refreshToken) {
+        if (accessToken != null && JwtUtil.getTokenType(accessToken) != TokenTypeEnum.ACCESS_TOKEN) {
+            throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, accessToken);
         }
-        switch (JwtUtil.getTokenType(token)) {
-            case ACCESS_TOKEN:
-                // ACCESS_TOKEN can not be used for refresh
-                if (request.getRequestURI()
-                        .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)) {
-                    throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
-                }
-                String idInToken = JwtUtil.getID(token);
-                switch (request.getMethod()) {
-                    case "GET":
-                        break;
-                    case "POST":
-                        // User can not update other user's information
-                        if (request.getRequestURI().startsWith(ApiPathConstant.USER_API_PREFIX)
-                                && !idInToken.equals(getFromRequestBody(request, "id"))) {
-                            throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
-                        }
-                        break;
-                    default:
-                        throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
+        if (refreshToken != null && JwtUtil.getTokenType(refreshToken) != TokenTypeEnum.REFRESH_TOKEN) {
+            throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, refreshToken);
+        }
+        switch (request.getMethod()) {
+            case "GET":
+                if ((accessToken == null && !request.getRequestURI().equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)) ||
+                    (refreshToken == null && request.getRequestURI().equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH))) {
+                    throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
                 }
                 break;
-            case REFRESH_TOKEN:
-                // REFRESH_TOKEN can only be used for refresh
-                if (!request.getRequestURI()
-                        .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)) {
-                    throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
+            case "POST":
+                if (accessToken == null) {
+                    throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
+                }
+                if (request.getRequestURI().equals(ApiPathConstant.USER_UPDATE_USER_API_PATH)) {
+                    // for update user information, both access token and refresh token are needed
+                    if (refreshToken == null) {
+                        throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
+                    }
+                    // User can not update other user's information
+                    String idInToken = JwtUtil.getID(accessToken);
+                    String idInBody = getFromRequestBody(request, "id");
+                    if (request.getRequestURI().startsWith(ApiPathConstant.USER_API_PREFIX)
+                            && !idInToken.equals(idInBody)) {
+                        logger.info("User[{}] tried to update user[{}]'s information", idInToken, idInBody);
+                        throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+                    }
+                } else if (request.getRequestURI().equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH) &&
+                           refreshToken == null) {
+                    // for refresh token, both access token and refresh token are needed
+                    throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
+                } else {
+                    throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                 }
                 break;
             default:
-                throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
+                throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
         }
     }
 
