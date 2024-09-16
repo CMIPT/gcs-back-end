@@ -165,10 +165,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     String idInToken = JwtUtil.getID(accessToken);
                     String idInBody = getFromRequestBody(request, "id");
                     if (!idInToken.equals(idInBody)) {
-                        logger.info(
-                                "User[{}] tried to update user[{}]",
-                                idInToken,
-                                idInBody);
+                        logger.info("User[{}] tried to update user[{}]", idInToken, idInBody);
                         throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                     }
                 } else if (request.getRequestURI()
@@ -193,10 +190,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     String idInToken = JwtUtil.getID(accessToken);
                     String idInParam = request.getParameter("id");
                     if (!idInToken.equals(idInParam)) {
-                        logger.info(
-                                "User[{}] tried to delete user[{}]",
-                                idInToken,
-                                idInParam);
+                        logger.info("User[{}] tried to delete user[{}]", idInToken, idInParam);
                         throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                     }
                 } else {

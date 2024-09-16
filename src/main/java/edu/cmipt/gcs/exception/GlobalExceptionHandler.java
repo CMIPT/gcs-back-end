@@ -83,7 +83,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(JsonParseException.class)
-    public ResponseEntity<ErrorVO> handleJsonParseException(JsonParseException e, HttpServletRequest request) {
+    public ResponseEntity<ErrorVO> handleJsonParseException(
+            JsonParseException e, HttpServletRequest request) {
         GenericException exception = new GenericException(e.getMessage());
         exception.setCode(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
         return handleGenericException(exception, request);
