@@ -1,11 +1,14 @@
 package edu.cmipt.gcs.util;
 
 import edu.cmipt.gcs.constant.ApplicationConstant;
+import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.enumeration.TokenTypeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 
 import io.jsonwebtoken.Jwts;
+
+import org.springframework.http.HttpHeaders;
 
 import java.util.Date;
 import java.util.List;
@@ -78,19 +81,31 @@ public class JwtUtil {
         }
     }
 
+    public static HttpHeaders generateHeaders(String id) {
+        return generateHeaders(id, true);
+    }
+
+    public static HttpHeaders generateHeaders(String id, boolean addRefreshToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HeaderParameter.ACCESS_TOKEN, generateToken(id, TokenTypeEnum.ACCESS_TOKEN));
+        if (addRefreshToken) {
+            headers.add(
+                    HeaderParameter.REFRESH_TOKEN, generateToken(id, TokenTypeEnum.REFRESH_TOKEN));
+        }
+        return headers;
+    }
+
     /**
      * Add token to blacklist
      *
      * @author Kaiser
-     * @param token
+     * @param tokens
      */
-    public static void blacklistToken(String token) {
+    public static void blacklistToken(String... tokens) {
         // TODO: add token to blacklist, we will consider this later
     }
 
     public static void blacklistToken(List<String> tokenList) {
-        for (String token : tokenList) {
-            blacklistToken(token);
-        }
+        blacklistToken(tokenList.toArray(new String[0]));
     }
 }
