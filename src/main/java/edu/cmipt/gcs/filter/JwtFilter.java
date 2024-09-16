@@ -15,6 +15,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.json.JsonParserFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -29,9 +31,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * JwtFilter
  *
@@ -45,8 +44,9 @@ public class JwtFilter extends OncePerRequestFilter {
     /**
      * CachedBodyHttpServletRequest
      *
-     * The {@link}getInputStream() and {@link}getReader() methods of {@link}HttpServletRequest can only be called once.
-     * This class is used to cache the body of the request so that it can be read multiple times.
+     * <p>The {@link}getInputStream() and {@link}getReader() methods of {@link}HttpServletRequest
+     * can only be called once. This class is used to cache the body of the request so that it can
+     * be read multiple times.
      */
     private class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
         private class CachedBodyServletInputStream extends ServletInputStream {
@@ -96,7 +96,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
         @Override
         public BufferedReader getReader() {
-            return new BufferedReader(new InputStreamReader(new ByteArrayInputStream(this.cacheBody)));
+            return new BufferedReader(
+                    new InputStreamReader(new ByteArrayInputStream(this.cacheBody)));
         }
     }
 
@@ -124,21 +125,30 @@ public class JwtFilter extends OncePerRequestFilter {
         }
         // throw exception if authorization failed
         CachedBodyHttpServletRequest cachedRequest = new CachedBodyHttpServletRequest(request);
-        authorize(cachedRequest, cachedRequest.getHeader(HeaderParameter.ACCESS_TOKEN), cachedRequest.getHeader(HeaderParameter.REFRESH_TOKEN));
+        authorize(
+                cachedRequest,
+                cachedRequest.getHeader(HeaderParameter.ACCESS_TOKEN),
+                cachedRequest.getHeader(HeaderParameter.REFRESH_TOKEN));
         filterChain.doFilter(cachedRequest, response);
     }
 
     private void authorize(HttpServletRequest request, String accessToken, String refreshToken) {
-        if (accessToken != null && JwtUtil.getTokenType(accessToken) != TokenTypeEnum.ACCESS_TOKEN) {
+        if (accessToken != null
+                && JwtUtil.getTokenType(accessToken) != TokenTypeEnum.ACCESS_TOKEN) {
             throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, accessToken);
         }
-        if (refreshToken != null && JwtUtil.getTokenType(refreshToken) != TokenTypeEnum.REFRESH_TOKEN) {
+        if (refreshToken != null
+                && JwtUtil.getTokenType(refreshToken) != TokenTypeEnum.REFRESH_TOKEN) {
             throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, refreshToken);
         }
         switch (request.getMethod()) {
             case "GET":
-                if ((accessToken == null && !request.getRequestURI().equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)) ||
-                    (refreshToken == null && request.getRequestURI().equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH))) {
+                if ((accessToken == null
+                                && !request.getRequestURI()
+                                        .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH))
+                        || (refreshToken == null
+                                && request.getRequestURI()
+                                        .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH))) {
                     throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
                 }
                 break;
@@ -156,11 +166,15 @@ public class JwtFilter extends OncePerRequestFilter {
                     String idInBody = getFromRequestBody(request, "id");
                     if (request.getRequestURI().startsWith(ApiPathConstant.USER_API_PREFIX)
                             && !idInToken.equals(idInBody)) {
-                        logger.info("User[{}] tried to update user[{}]'s information", idInToken, idInBody);
+                        logger.info(
+                                "User[{}] tried to update user[{}]'s information",
+                                idInToken,
+                                idInBody);
                         throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                     }
-                } else if (request.getRequestURI().equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH) &&
-                           refreshToken == null) {
+                } else if (request.getRequestURI()
+                                .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)
+                        && refreshToken == null) {
                     // for refresh token, both access token and refresh token are needed
                     throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
                 } else {

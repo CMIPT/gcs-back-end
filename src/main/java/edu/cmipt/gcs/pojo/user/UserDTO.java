@@ -5,6 +5,7 @@ import edu.cmipt.gcs.validation.group.CreateGroup;
 import edu.cmipt.gcs.validation.group.UpdateGroup;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,9 +20,7 @@ import jakarta.validation.constraints.Size;
  */
 @Schema(description = "User Data Transfer Object")
 public record UserDTO(
-        @Schema(
-                        description = "User ID",
-                        accessMode = Schema.AccessMode.READ_ONLY)
+        @Schema(description = "User ID", accessMode = Schema.AccessMode.READ_ONLY)
                 @Null(groups = CreateGroup.class, message = "USERDTO_ID_NULL {UserDTO.id.Null}")
                 @NotNull(
                         groups = UpdateGroup.class,

@@ -118,7 +118,11 @@ public class AuthenticationControllerTest {
                         .getResponse();
         TestConstant.ACCESS_TOKEN = response.getHeader(HeaderParameter.ACCESS_TOKEN);
         TestConstant.REFRESH_TOKEN = response.getHeader(HeaderParameter.REFRESH_TOKEN);
-        TestConstant.ID = JsonParserFactory.getJsonParser().parseMap(response.getContentAsString()).get("id").toString();
+        TestConstant.ID =
+                JsonParserFactory.getJsonParser()
+                        .parseMap(response.getContentAsString())
+                        .get("id")
+                        .toString();
     }
 
     /**

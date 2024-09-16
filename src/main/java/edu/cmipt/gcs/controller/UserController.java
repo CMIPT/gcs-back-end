@@ -6,7 +6,6 @@ import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.ValidationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
-import edu.cmipt.gcs.enumeration.TokenTypeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.user.UserDTO;
@@ -15,6 +14,7 @@ import edu.cmipt.gcs.pojo.user.UserVO;
 import edu.cmipt.gcs.service.UserService;
 import edu.cmipt.gcs.util.JwtUtil;
 import edu.cmipt.gcs.validation.group.UpdateGroup;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -108,9 +109,16 @@ public class UserController {
                 in = ParameterIn.HEADER,
                 schema = @Schema(implementation = String.class))
     })
-    public ResponseEntity<UserVO> updateUser(@RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken, @RequestHeader(HeaderParameter.REFRESH_TOKEN) String refreshToken, @Validated(UpdateGroup.class) @RequestBody UserDTO user) {
-        if (user.username() != null) { checkUsernameValidity(user.username()); }
-        if (user.email() != null) { checkEmailValidity(user.email()); }
+    public ResponseEntity<UserVO> updateUser(
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
+            @RequestHeader(HeaderParameter.REFRESH_TOKEN) String refreshToken,
+            @Validated(UpdateGroup.class) @RequestBody UserDTO user) {
+        if (user.username() != null) {
+            checkUsernameValidity(user.username());
+        }
+        if (user.email() != null) {
+            checkEmailValidity(user.email());
+        }
         // for the null fields, mybatis-plus will ignore by default
         assert user.id() != null;
         boolean res = userService.updateById(new UserPO(user));

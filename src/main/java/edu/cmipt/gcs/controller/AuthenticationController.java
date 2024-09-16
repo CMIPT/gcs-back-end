@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
-import edu.cmipt.gcs.enumeration.TokenTypeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.user.UserDTO;
@@ -146,7 +145,9 @@ public class AuthenticationController {
                 content = @Content(schema = @Schema(implementation = String.class))),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<Void> refreshToken(@RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken, @RequestHeader(HeaderParameter.REFRESH_TOKEN) String refreshToken) {
+    public ResponseEntity<Void> refreshToken(
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
+            @RequestHeader(HeaderParameter.REFRESH_TOKEN) String refreshToken) {
         JwtUtil.blacklistToken(accessToken);
         HttpHeaders headers = JwtUtil.generateHeaders(JwtUtil.getID(refreshToken), false);
         return ResponseEntity.ok().headers(headers).build();

@@ -8,12 +8,12 @@ import edu.cmipt.gcs.exception.GenericException;
 
 import io.jsonwebtoken.Jwts;
 
+import org.springframework.http.HttpHeaders;
+
 import java.util.Date;
 import java.util.List;
 
 import javax.crypto.SecretKey;
-
-import org.springframework.http.HttpHeaders;
 
 /**
  * JwtUtil
@@ -89,7 +89,8 @@ public class JwtUtil {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HeaderParameter.ACCESS_TOKEN, generateToken(id, TokenTypeEnum.ACCESS_TOKEN));
         if (addRefreshToken) {
-            headers.add(HeaderParameter.REFRESH_TOKEN, generateToken(id, TokenTypeEnum.REFRESH_TOKEN));
+            headers.add(
+                    HeaderParameter.REFRESH_TOKEN, generateToken(id, TokenTypeEnum.REFRESH_TOKEN));
         }
         return headers;
     }

@@ -136,29 +136,39 @@ public class UserControllerTest {
         TestConstant.USERNAME += new Date().getTime() + "new";
         TestConstant.EMAIL = TestConstant.USERNAME + "@cmipt.edu";
         TestConstant.USER_PASSWORD += "new";
-        var response = mvc.perform(
-                post(ApiPathConstant.USER_UPDATE_USER_API_PATH)
-                        .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                        .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(
-                            """
-                            {
-                                "id": "%s",
-                                "username": "%s",
-                                "email": "%s",
-                                "userPassword": "%s"
-                            }
-                            """.formatted(TestConstant.ID, TestConstant.USERNAME, TestConstant.EMAIL, TestConstant.USER_PASSWORD)))
-                .andExpectAll(
-                    status().isOk(),
-                    header().exists(HeaderParameter.ACCESS_TOKEN),
-                    header().exists(HeaderParameter.REFRESH_TOKEN),
-                    jsonPath("$.username", is(TestConstant.USERNAME)),
-                    jsonPath("$.email", is(TestConstant.EMAIL)),
-                    jsonPath("$.id").isString())
-                .andReturn()
-                .getResponse();
+        var response =
+                mvc.perform(
+                                post(ApiPathConstant.USER_UPDATE_USER_API_PATH)
+                                        .header(
+                                                HeaderParameter.ACCESS_TOKEN,
+                                                TestConstant.ACCESS_TOKEN)
+                                        .header(
+                                                HeaderParameter.REFRESH_TOKEN,
+                                                TestConstant.REFRESH_TOKEN)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                """
+                                                {
+                                                    "id": "%s",
+                                                    "username": "%s",
+                                                    "email": "%s",
+                                                    "userPassword": "%s"
+                                                }
+                                                """
+                                                        .formatted(
+                                                                TestConstant.ID,
+                                                                TestConstant.USERNAME,
+                                                                TestConstant.EMAIL,
+                                                                TestConstant.USER_PASSWORD)))
+                        .andExpectAll(
+                                status().isOk(),
+                                header().exists(HeaderParameter.ACCESS_TOKEN),
+                                header().exists(HeaderParameter.REFRESH_TOKEN),
+                                jsonPath("$.username", is(TestConstant.USERNAME)),
+                                jsonPath("$.email", is(TestConstant.EMAIL)),
+                                jsonPath("$.id").isString())
+                        .andReturn()
+                        .getResponse();
         // make sure the new information is updated
         TestConstant.ACCESS_TOKEN = response.getHeader(HeaderParameter.ACCESS_TOKEN);
         TestConstant.REFRESH_TOKEN = response.getHeader(HeaderParameter.REFRESH_TOKEN);
@@ -168,28 +178,37 @@ public class UserControllerTest {
     public void testUpdateUserInvalid() throws Exception {
         String otherID = "123";
         mvc.perform(
-            post(ApiPathConstant.USER_UPDATE_USER_API_PATH)
-                    .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                    .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(
-                            """
-                            {
-                                "id": "%s",
-                                "username": "%s",
-                                "email": "%s",
-                                "userPassword": "%s"
-                            }
-                            """.formatted(otherID, TestConstant.USERNAME, TestConstant.EMAIL, TestConstant.USER_PASSWORD)))
-            .andExpectAll(
-                status().isForbidden(),
-                content()
-                    .json(
-                        """
-                        {
-                            "code": %d,
-                            "message": "%s"
-                        }
-                        """.formatted(ErrorCodeEnum.ACCESS_DENIED.ordinal(), MessageSourceUtil.getMessage(ErrorCodeEnum.ACCESS_DENIED))));
+                        post(ApiPathConstant.USER_UPDATE_USER_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {
+                                            "id": "%s",
+                                            "username": "%s",
+                                            "email": "%s",
+                                            "userPassword": "%s"
+                                        }
+                                        """
+                                                .formatted(
+                                                        otherID,
+                                                        TestConstant.USERNAME,
+                                                        TestConstant.EMAIL,
+                                                        TestConstant.USER_PASSWORD)))
+                .andExpectAll(
+                        status().isForbidden(),
+                        content()
+                                .json(
+                                        """
+                                        {
+                                            "code": %d,
+                                            "message": "%s"
+                                        }
+                                        """
+                                                .formatted(
+                                                        ErrorCodeEnum.ACCESS_DENIED.ordinal(),
+                                                        MessageSourceUtil.getMessage(
+                                                                ErrorCodeEnum.ACCESS_DENIED))));
     }
 }
