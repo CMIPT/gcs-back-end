@@ -31,7 +31,8 @@ public enum ErrorCodeEnum {
 
     USER_NOT_FOUND("USER_NOT_FOUND"),
 
-    USER_UPDATE_FAILED("USER_UPDATE_FAILED");
+    USER_UPDATE_FAILED("USER_UPDATE_FAILED"),
+    USER_DELETE_FAILED("USER_DELETE_FAILED");
 
     // code means the error code in the message.properties
     private String code;

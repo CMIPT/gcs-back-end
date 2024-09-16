@@ -33,8 +33,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -47,7 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
     @Autowired private UserService userService;
 
-    @GetMapping(ApiPathConstant.USER_GET_USER_BY_NAME_API_PATH)
+    @GetMapping(ApiPathConstant.USER_GET_USER_API_PATH)
     @Operation(
             summary = "Get user by name",
             description = "Get user information by user name",
@@ -74,7 +74,7 @@ public class UserController {
                 description = "User not found",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public UserVO getUserByName(@PathVariable("username") String username) {
+    public UserVO getUser(@RequestParam("username") String username) {
         QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
         wrapper.eq("username", username);
         if (!userService.exists(wrapper)) {
@@ -123,7 +123,7 @@ public class UserController {
         assert user.id() != null;
         boolean res = userService.updateById(new UserPO(user));
         if (!res) {
-            throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user.toString());
+            throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user);
         }
         UserVO userVO = new UserVO(userService.getById(Long.valueOf(user.id())));
         HttpHeaders headers = null;
@@ -132,6 +132,52 @@ public class UserController {
             headers = JwtUtil.generateHeaders(userVO.id());
         }
         return ResponseEntity.ok().headers(headers).body(userVO);
+    }
+
+    @DeleteMapping(ApiPathConstant.USER_DELETE_USER_API_PATH)
+    @Operation(
+            summary = "Delete user",
+            description = "Delete user by id",
+            tags = {"User", "Delete Method"})
+    @Parameters({
+        @Parameter(
+                name = HeaderParameter.ACCESS_TOKEN,
+                description = "Access token",
+                required = true,
+                in = ParameterIn.HEADER,
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = HeaderParameter.REFRESH_TOKEN,
+                description = "Refresh token",
+                required = true,
+                in = ParameterIn.HEADER,
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = "id",
+                description = "User id",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = Long.class))
+    })
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "User deleted successfully"),
+        @ApiResponse(
+                responseCode = "404",
+                description = "User not found",
+                content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    })
+    public void deleteUser(
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
+            @RequestHeader(HeaderParameter.REFRESH_TOKEN) String refreshToken,
+            @RequestParam("id") Long id) {
+        if (userService.getById(id) == null) {
+            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, id);
+        }
+        boolean res = userService.removeById(id);
+        if (!res) {
+            throw new GenericException(ErrorCodeEnum.USER_DELETE_FAILED, id);
+        }
+        JwtUtil.blacklistToken(accessToken, refreshToken);
     }
 
     @GetMapping(ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH)

@@ -164,10 +164,9 @@ public class JwtFilter extends OncePerRequestFilter {
                     // User can not update other user's information
                     String idInToken = JwtUtil.getID(accessToken);
                     String idInBody = getFromRequestBody(request, "id");
-                    if (request.getRequestURI().startsWith(ApiPathConstant.USER_API_PREFIX)
-                            && !idInToken.equals(idInBody)) {
+                    if (!idInToken.equals(idInBody)) {
                         logger.info(
-                                "User[{}] tried to update user[{}]'s information",
+                                "User[{}] tried to update user[{}]",
                                 idInToken,
                                 idInBody);
                         throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
@@ -177,6 +176,29 @@ public class JwtFilter extends OncePerRequestFilter {
                         && refreshToken == null) {
                     // for refresh token, both access token and refresh token are needed
                     throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
+                } else {
+                    throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+                }
+                break;
+            case "DELETE":
+                if (accessToken == null) {
+                    throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
+                }
+                if (request.getRequestURI().equals(ApiPathConstant.USER_DELETE_USER_API_PATH)) {
+                    // for delete user, both access token and refresh token are needed
+                    if (refreshToken == null) {
+                        throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
+                    }
+                    // User can not delete other user
+                    String idInToken = JwtUtil.getID(accessToken);
+                    String idInParam = request.getParameter("id");
+                    if (!idInToken.equals(idInParam)) {
+                        logger.info(
+                                "User[{}] tried to delete user[{}]",
+                                idInToken,
+                                idInParam);
+                        throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+                    }
                 } else {
                     throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                 }
