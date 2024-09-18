@@ -8,4 +8,5 @@ import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, RepositoryPO> implements RepositoryService {}
+public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, RepositoryPO>
+        implements RepositoryService {}

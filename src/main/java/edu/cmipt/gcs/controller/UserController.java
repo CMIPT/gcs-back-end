@@ -33,10 +33,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -48,6 +44,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Validated
 @RestController
@@ -192,7 +191,9 @@ public class UserController {
     @GetMapping(ApiPathConstant.USER_PAGE_USER_REPOSITORY_API_PATH)
     @Operation(
             summary = "Page user repositories",
-            description = "Page user repositories. If the given token is trying to get other's repositories, only public repositories will be shown",
+            description =
+                    "Page user repositories. If the given token is trying to get other's"
+                        + " repositories, only public repositories will be shown",
             tags = {"User", "Get Method"})
     @Parameters({
         @Parameter(
@@ -236,7 +237,9 @@ public class UserController {
             wrapper.eq("is_private", false);
         }
         wrapper.eq("user_id", userId);
-        return repositoryService.page(new Page<>(page, size), wrapper).getRecords().stream().map(RepositoryVO::new).collect(Collectors.toList());
+        return repositoryService.page(new Page<>(page, size), wrapper).getRecords().stream()
+                .map(RepositoryVO::new)
+                .collect(Collectors.toList());
     }
 
     @GetMapping(ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH)

@@ -11,7 +11,13 @@ public record RepositoryVO(
         @Schema(description = "Fork Count") Integer fork,
         @Schema(description = "Watcher Count") Integer watcher) {
     public RepositoryVO(RepositoryPO repositoryPO) {
-        this(repositoryPO.getId().toString(), repositoryPO.getRepositoryName(), repositoryPO.getRepositoryDescription(),
-                repositoryPO.getIsPrivate(), repositoryPO.getStar(), repositoryPO.getFork(), repositoryPO.getWatcher());
+        this(
+                repositoryPO.getId().toString(),
+                repositoryPO.getRepositoryName(),
+                repositoryPO.getRepositoryDescription(),
+                repositoryPO.getIsPrivate(),
+                repositoryPO.getStar(),
+                repositoryPO.getFork(),
+                repositoryPO.getWatcher());
     }
 }

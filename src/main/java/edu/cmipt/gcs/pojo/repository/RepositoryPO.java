@@ -1,10 +1,11 @@
 package edu.cmipt.gcs.pojo.repository;
 
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 
-import java.time.LocalDateTime;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 @Data
 @TableName("t_repository")
