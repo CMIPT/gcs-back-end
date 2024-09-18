@@ -20,7 +20,7 @@ import jakarta.validation.constraints.Size;
  */
 @Schema(description = "User Data Transfer Object")
 public record UserDTO(
-        @Schema(description = "User ID", accessMode = Schema.AccessMode.READ_ONLY)
+        @Schema(description = "User ID")
                 @Null(groups = CreateGroup.class, message = "USERDTO_ID_NULL {UserDTO.id.Null}")
                 @NotNull(
                         groups = UpdateGroup.class,
