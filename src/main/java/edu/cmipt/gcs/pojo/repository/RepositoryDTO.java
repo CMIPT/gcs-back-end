@@ -33,12 +33,12 @@ public record RepositoryDTO(
                         max = ValidationConstant.MAX_REPOSITORY_NAME_LENGTH,
                         message =
                                 "REPOSITORYDTO_REPOSITORYNAME_SIZE"
-                                    + " {RepositoryDTO.repositoryName.Size}")
+                                        + " {RepositoryDTO.repositoryName.Size}")
                 @NotBlank(
                         groups = {CreateGroup.class},
                         message =
                                 "REPOSITORYDTO_REPOSITORYNAME_NOTBLANK"
-                                    + " {RepositoryDTO.repositoryName.NotBlank}")
+                                        + " {RepositoryDTO.repositoryName.NotBlank}")
                 @Pattern(
                         regexp = ValidationConstant.REPOSITORY_NAME_PATTERN,
                         groups = {CreateGroup.class, UpdateGroup.class},
@@ -52,7 +52,7 @@ public record RepositoryDTO(
                         max = ValidationConstant.MAX_REPOSITORY_DESCRIPTION_LENGTH,
                         message =
                                 "REPOSITORYDTO_REPOSITORYDESCRIPTION_SIZE"
-                                    + " {RepositoryDTO.repositoryDescription.Size}")
+                                        + " {RepositoryDTO.repositoryDescription.Size}")
                 String repositoryDescription,
         @Schema(description = "Whether or Not Private Repo") Boolean isPrivate,
         @Schema(description = "Star Count")

@@ -193,7 +193,7 @@ public class UserController {
             summary = "Page user repositories",
             description =
                     "Page user repositories. If the given token is trying to get other's"
-                        + " repositories, only public repositories will be shown",
+                            + " repositories, only public repositories will be shown",
             tags = {"User", "Get Method"})
     @Parameters({
         @Parameter(
