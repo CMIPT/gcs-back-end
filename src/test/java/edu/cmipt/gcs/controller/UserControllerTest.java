@@ -1,6 +1,7 @@
 package edu.cmipt.gcs.controller;
 
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -14,10 +15,14 @@ import edu.cmipt.gcs.constant.TestConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.util.MessageSourceUtil;
 
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.Ordered;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -30,14 +35,17 @@ import java.util.Date;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Order(Ordered.LOWEST_PRECEDENCE)
 public class UserControllerTest {
     @Autowired private MockMvc mvc;
 
     @Test
-    public void testGetUserByNameValid() throws Exception {
+    public void testGetUserValid() throws Exception {
         mvc.perform(
-                        get(ApiPathConstant.USER_API_PREFIX + "/" + TestConstant.USERNAME)
-                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN))
+                        get(ApiPathConstant.USER_GET_USER_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("username", TestConstant.USERNAME))
                 .andExpectAll(
                         status().isOk(),
                         jsonPath("$.username", is(TestConstant.USERNAME)),
@@ -46,11 +54,12 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testGetUserByNameInvalid() throws Exception {
+    public void testGetUserInvalid() throws Exception {
         String invalidUsername = TestConstant.USERNAME + "invalid";
         mvc.perform(
-                        get(ApiPathConstant.USER_API_PREFIX + "/" + invalidUsername)
-                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN))
+                        get(ApiPathConstant.USER_GET_USER_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("username", invalidUsername))
                 .andExpectAll(
                         status().isNotFound(),
                         content()
@@ -210,5 +219,40 @@ public class UserControllerTest {
                                                         ErrorCodeEnum.ACCESS_DENIED.ordinal(),
                                                         MessageSourceUtil.getMessage(
                                                                 ErrorCodeEnum.ACCESS_DENIED))));
+    }
+
+    @Test
+    public void testDeleteUserInvalid() throws Exception {
+        String otherID = "123";
+        mvc.perform(
+                        delete(ApiPathConstant.USER_DELETE_USER_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN)
+                                .param("id", otherID))
+                .andExpectAll(
+                        status().isForbidden(),
+                        content()
+                                .json(
+                                        """
+                                        {
+                                            "code": %d,
+                                            "message": "%s"
+                                        }
+                                        """
+                                                .formatted(
+                                                        ErrorCodeEnum.ACCESS_DENIED.ordinal(),
+                                                        MessageSourceUtil.getMessage(
+                                                                ErrorCodeEnum.ACCESS_DENIED))));
+    }
+
+    @Test
+    @Order(Ordered.LOWEST_PRECEDENCE)
+    public void testDeleteUserValid() throws Exception {
+        mvc.perform(
+                        delete(ApiPathConstant.USER_DELETE_USER_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN)
+                                .param("id", TestConstant.ID))
+                .andExpectAll(status().isOk());
     }
 }

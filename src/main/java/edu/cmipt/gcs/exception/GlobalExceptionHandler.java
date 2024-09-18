@@ -82,12 +82,12 @@ public class GlobalExceptionHandler {
         }
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(JsonParseException.class)
-    public void handleJsonParseException(JsonParseException e, HttpServletRequest request) {
+    public ResponseEntity<ErrorVO> handleJsonParseException(
+            JsonParseException e, HttpServletRequest request) {
         GenericException exception = new GenericException(e.getMessage());
         exception.setCode(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-        handleGenericException(exception, request);
+        return handleGenericException(exception, request);
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
