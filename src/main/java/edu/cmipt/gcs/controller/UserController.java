@@ -1,6 +1,7 @@
 package edu.cmipt.gcs.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
@@ -8,9 +9,12 @@ import edu.cmipt.gcs.constant.ValidationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
+import edu.cmipt.gcs.pojo.repository.RepositoryPO;
+import edu.cmipt.gcs.pojo.repository.RepositoryVO;
 import edu.cmipt.gcs.pojo.user.UserDTO;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.pojo.user.UserVO;
+import edu.cmipt.gcs.service.RepositoryService;
 import edu.cmipt.gcs.service.UserService;
 import edu.cmipt.gcs.util.JwtUtil;
 import edu.cmipt.gcs.validation.group.UpdateGroup;
@@ -41,11 +45,15 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Validated
 @RestController
 @Tag(name = "User", description = "User Related APIs")
 public class UserController {
     @Autowired private UserService userService;
+    @Autowired private RepositoryService repositoryService;
 
     @GetMapping(ApiPathConstant.USER_GET_USER_API_PATH)
     @Operation(
@@ -178,6 +186,60 @@ public class UserController {
             throw new GenericException(ErrorCodeEnum.USER_DELETE_FAILED, id);
         }
         JwtUtil.blacklistToken(accessToken, refreshToken);
+    }
+
+    @GetMapping(ApiPathConstant.USER_PAGE_USER_REPOSITORY_API_PATH)
+    @Operation(
+            summary = "Page user repositories",
+            description =
+                    "Page user repositories. If the given token is trying to get other's"
+                            + " repositories, only public repositories will be shown",
+            tags = {"User", "Get Method"})
+    @Parameters({
+        @Parameter(
+                name = HeaderParameter.ACCESS_TOKEN,
+                description = "Access token",
+                required = true,
+                in = ParameterIn.HEADER,
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = "id",
+                description = "User id",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = Long.class)),
+        @Parameter(
+                name = "page",
+                description = "Page number",
+                example = "1",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = Integer.class)),
+        @Parameter(
+                name = "size",
+                description = "Page size",
+                example = "10",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = Integer.class))
+    })
+    @ApiResponse(responseCode = "200", description = "User repositories paged successfully")
+    public List<RepositoryVO> pageUserRepositories(
+            @RequestParam("id") Long userId,
+            @RequestParam("page") Integer page,
+            @RequestParam("size") Integer size,
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+        QueryWrapper<RepositoryPO> wrapper = new QueryWrapper<RepositoryPO>();
+        String idInToken = JwtUtil.getID(accessToken);
+        assert idInToken != null;
+        if (!idInToken.equals(userId.toString())) {
+            // the user only can see the public repositories of others
+            wrapper.eq("is_private", false);
+        }
+        wrapper.eq("user_id", userId);
+        return repositoryService.page(new Page<>(page, size), wrapper).getRecords().stream()
+                .map(RepositoryVO::new)
+                .collect(Collectors.toList());
     }
 
     @GetMapping(ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH)

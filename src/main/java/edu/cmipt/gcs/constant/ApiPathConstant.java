@@ -26,4 +26,6 @@ public class ApiPathConstant {
     public static final String USER_CHECK_USERNAME_VALIDITY_API_PATH =
             USER_API_PREFIX + "/username";
     public static final String USER_DELETE_USER_API_PATH = USER_API_PREFIX + "/delete";
+    public static final String USER_PAGE_USER_REPOSITORY_API_PATH =
+            USER_API_PREFIX + "/page/repository";
 }

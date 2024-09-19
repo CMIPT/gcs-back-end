@@ -32,7 +32,18 @@ public enum ErrorCodeEnum {
     USER_NOT_FOUND("USER_NOT_FOUND"),
 
     USER_UPDATE_FAILED("USER_UPDATE_FAILED"),
-    USER_DELETE_FAILED("USER_DELETE_FAILED");
+    USER_DELETE_FAILED("USER_DELETE_FAILED"),
+
+    REPOSITORYDTO_ID_NULL("RepositoryDTO.id.Null"),
+    REPOSITORYDTO_ID_NOTNULL("RepositoryDTO.id.NotNull"),
+    REPOSITORYDTO_REPOSITORYNAME_SIZE("RepositoryDTO.repositoryName.Size"),
+    REPOSITORYDTO_REPOSITORYNAME_NOTBLANK("RepositoryDTO.repositoryName.NotBlank"),
+    REPOSITORYDTO_REPOSITORYDESCRIPTION_SIZE("RepositoryDTO.repositoryDescription.Size"),
+    REPOSITORYDTO_STAR_MIN("RepositoryDTO.star.Min"),
+    REPOSITORYDTO_FORK_MIN("RepositoryDTO.fork.Min"),
+    REPOSITORYDTO_WATCHER_MIN("RepositoryDTO.watcher.Min"),
+
+    REPOSITORYNAME_PATTERN_MISMATCH("REPOSITORYNAME_PATTERN_MISMATCH");
 
     // code means the error code in the message.properties
     private String code;
