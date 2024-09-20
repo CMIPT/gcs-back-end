@@ -1,26 +1,29 @@
 package edu.cmipt.gcs;
 
-import org.junit.jupiter.api.ClassDescriptor;
-import org.junit.jupiter.api.ClassOrderer;
-import org.junit.jupiter.api.ClassOrdererContext;
-
 import edu.cmipt.gcs.controller.AuthenticationControllerTest;
 import edu.cmipt.gcs.controller.RepositoryControllerTest;
 import edu.cmipt.gcs.controller.UserControllerTest;
+
+import org.junit.jupiter.api.ClassDescriptor;
+import org.junit.jupiter.api.ClassOrderer;
+import org.junit.jupiter.api.ClassOrdererContext;
 
 import java.util.Comparator;
 
 public class SpringBootTestClassOrderer implements ClassOrderer {
 
-    private static final Class<?>[] classOrder = new Class[] {
-        AuthenticationControllerTest.class,
-        RepositoryControllerTest.class,
-        UserControllerTest.class
-    };
+    private static final Class<?>[] classOrder =
+            new Class[] {
+                AuthenticationControllerTest.class,
+                RepositoryControllerTest.class,
+                UserControllerTest.class
+            };
 
     @Override
     public void orderClasses(ClassOrdererContext classOrdererContext) {
-        classOrdererContext.getClassDescriptors().sort(Comparator.comparingInt(SpringBootTestClassOrderer::getOrder));
+        classOrdererContext
+                .getClassDescriptors()
+                .sort(Comparator.comparingInt(SpringBootTestClassOrderer::getOrder));
     }
 
     private static int getOrder(ClassDescriptor classDescriptor) {

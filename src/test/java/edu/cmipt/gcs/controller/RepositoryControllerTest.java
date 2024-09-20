@@ -29,21 +29,24 @@ public class RepositoryControllerTest {
         String isPrivate = "";
         String repositoryName = "";
         for (int i = 0; i < TestConstant.REPOSITORY_SIZE; i++) {
-            if (i % 2 == 0) { isPrivate = "true"; }
-            else { isPrivate = "false"; }
+            if (i % 2 == 0) {
+                isPrivate = "true";
+            } else {
+                isPrivate = "false";
+            }
             repositoryName = String.valueOf(i);
             mvc.perform(
-                    post(ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH)
-                            .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(
-                                    """
-                                    {
-                                        "repositoryName": "%s",
-                                        "isPrivate": %s
-                                    }
-                                    """
-                                        .formatted(repositoryName, isPrivate)))
+                            post(ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH)
+                                    .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(
+                                            """
+                                            {
+                                                "repositoryName": "%s",
+                                                "isPrivate": %s
+                                            }
+                                            """
+                                                    .formatted(repositoryName, isPrivate)))
                     .andExpect(status().isOk());
         }
     }

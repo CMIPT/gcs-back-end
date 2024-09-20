@@ -1,7 +1,6 @@
 package edu.cmipt.gcs.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import edu.cmipt.gcs.constant.ApiPathConstant;

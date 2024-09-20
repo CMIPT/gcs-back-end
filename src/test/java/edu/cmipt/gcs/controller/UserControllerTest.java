@@ -263,7 +263,8 @@ public class UserControllerTest {
                                 .param("id", TestConstant.ID)
                                 .param("page", "1")
                                 .param("size", TestConstant.REPOSITORY_SIZE.toString()))
-                .andExpectAll(status().isOk(),
+                .andExpectAll(
+                        status().isOk(),
                         jsonPath("$").isArray(),
                         jsonPath("$.length()").value(TestConstant.REPOSITORY_SIZE));
     }
@@ -272,11 +273,14 @@ public class UserControllerTest {
     public void testPageOtherUserRepositoryValid() throws Exception {
         mvc.perform(
                         get(ApiPathConstant.USER_PAGE_USER_REPOSITORY_API_PATH)
-                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.OTHER_ACCESS_TOKEN)
+                                .header(
+                                        HeaderParameter.ACCESS_TOKEN,
+                                        TestConstant.OTHER_ACCESS_TOKEN)
                                 .param("id", TestConstant.ID)
                                 .param("page", "1")
                                 .param("size", TestConstant.REPOSITORY_SIZE.toString()))
-                .andExpectAll(status().isOk(),
+                .andExpectAll(
+                        status().isOk(),
                         jsonPath("$").isArray(),
                         jsonPath("$.length()").value(TestConstant.REPOSITORY_SIZE / 2));
     }

@@ -32,7 +32,9 @@ public class RepositoryPO {
         }
         this.repositoryName = repositoryDTO.repositoryName();
         this.repositoryDescription = repositoryDTO.repositoryDescription();
-        if (this.repositoryDescription == null) { this.repositoryDescription = ""; }
+        if (this.repositoryDescription == null) {
+            this.repositoryDescription = "";
+        }
         this.isPrivate = repositoryDTO.isPrivate();
         try {
             this.userId = Long.valueOf(userId);
