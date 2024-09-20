@@ -34,7 +34,6 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@Order(Ordered.HIGHEST_PRECEDENCE)
 public class AuthenticationControllerTest {
     @Autowired private MockMvc mvc;
 
@@ -48,6 +47,18 @@ public class AuthenticationControllerTest {
             """
                     .formatted(
                             TestConstant.USERNAME, TestConstant.EMAIL, TestConstant.USER_PASSWORD);
+    private static String otherUserDTO =
+            """
+            {
+                "username": "%s",
+                "email": "%s",
+                "userPassword": "%s"
+            }
+            """
+                    .formatted(
+                            TestConstant.OTHER_USERNAME,
+                            TestConstant.OTHER_EMAIL,
+                            TestConstant.OTHER_USER_PASSWORD);
     private static String userSignInDTO =
             """
             {
@@ -56,6 +67,14 @@ public class AuthenticationControllerTest {
             }
             """
                     .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD);
+    public static String otherUserSignInDTO =
+            """
+            {
+                "username": "%s",
+                "userPassword": "%s"
+            }
+            """
+                    .formatted(TestConstant.OTHER_USERNAME, TestConstant.OTHER_USER_PASSWORD);
 
     private static String invalidUserDTO =
             """
@@ -88,6 +107,11 @@ public class AuthenticationControllerTest {
                         post(ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(userDTO))
+                .andExpect(status().isOk());
+        mvc.perform(
+                        post(ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(otherUserDTO))
                 .andExpect(status().isOk());
     }
 
@@ -123,6 +147,27 @@ public class AuthenticationControllerTest {
                         .parseMap(response.getContentAsString())
                         .get("id")
                         .toString();
+        var otherResponse =
+                mvc.perform(
+                                post(ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(otherUserSignInDTO))
+                        .andExpectAll(
+                                status().isOk(),
+                                jsonPath("$.username", is(TestConstant.OTHER_USERNAME)),
+                                jsonPath("$.email", is(TestConstant.OTHER_EMAIL)),
+                                jsonPath("$.id").isString(),
+                                header().exists(HeaderParameter.ACCESS_TOKEN),
+                                header().exists(HeaderParameter.REFRESH_TOKEN))
+                        .andReturn()
+                        .getResponse();
+        TestConstant.OTHER_ID =
+                JsonParserFactory.getJsonParser()
+                        .parseMap(otherResponse.getContentAsString())
+                        .get("id")
+                        .toString();
+        TestConstant.OTHER_ACCESS_TOKEN = otherResponse.getHeader(HeaderParameter.ACCESS_TOKEN);
+        TestConstant.OTHER_REFRESH_TOKEN = otherResponse.getHeader(HeaderParameter.REFRESH_TOKEN);
     }
 
     /**

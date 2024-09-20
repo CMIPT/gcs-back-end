@@ -28,4 +28,8 @@ public class ApiPathConstant {
     public static final String USER_DELETE_USER_API_PATH = USER_API_PREFIX + "/delete";
     public static final String USER_PAGE_USER_REPOSITORY_API_PATH =
             USER_API_PREFIX + "/page/repository";
+
+    public static final String REPOSITORY_API_PREFIX = ALL_API_PREFIX + "/repository";
+    public static final String REPOSITORY_CREATE_REPOSITORY_API_PATH =
+            REPOSITORY_API_PREFIX + "/create";
 }

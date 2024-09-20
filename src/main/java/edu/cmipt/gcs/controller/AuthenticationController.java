@@ -77,7 +77,7 @@ public class AuthenticationController {
         }
         boolean res = userService.save(new UserPO(user));
         if (!res) {
-            throw new RuntimeException("Failed to sign up user");
+            throw new GenericException(ErrorCodeEnum.USER_CREATE_FAILED, user);
         }
     }
 
@@ -149,7 +149,7 @@ public class AuthenticationController {
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
             @RequestHeader(HeaderParameter.REFRESH_TOKEN) String refreshToken) {
         JwtUtil.blacklistToken(accessToken);
-        HttpHeaders headers = JwtUtil.generateHeaders(JwtUtil.getID(refreshToken), false);
+        HttpHeaders headers = JwtUtil.generateHeaders(JwtUtil.getId(refreshToken), false);
         return ResponseEntity.ok().headers(headers).build();
     }
 }
