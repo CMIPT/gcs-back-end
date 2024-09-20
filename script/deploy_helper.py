@@ -189,15 +189,7 @@ def activate_profile(config):
     profile_format = f"spring.profiles.active={parse_iterable_into_str(config.profiles, sep=',')}"
     log_debug(f"Profile format: {profile_format}")
     try:
-        lines = None
-        if os.path.exists(application_config_file_path):
-            with open(application_config_file_path, 'r') as f:
-                lines = f.readlines()
-        with open(application_config_file_path, 'w') as f:
-            if lines:
-                for line in lines:
-                    if not line.startswith('spring.profiles.active'):
-                        f.write(line)
+        with open(application_config_file_path, 'a') as f:
             f.write(profile_format + '\n')
     except Exception as e:
         command_checker(1, f"Error: {e}")
@@ -214,15 +206,7 @@ def config_datasource(config):
     datasource_format = "spring.datasource.druid.{0}={1}"
     log_debug(f"Datasource format: {datasource_format}")
     try:
-        lines = None
-        if os.path.exists(application_config_file_path):
-            with open(application_config_file_path, 'r') as f:
-                lines = f.readlines()
-        with open(application_config_file_path, 'w') as f:
-            if lines:
-                for line in lines:
-                    if not line.startswith('spring.datasource.druid'):
-                        f.write(line + '\n')
+        with open(application_config_file_path, 'a') as f:
             for key, value in datasource_map_config.items():
                 f.write(datasource_format.format(key, value) + '\n')
                 log_debug(f"Datasource config: {datasource_format.format(key, value)}")
@@ -363,16 +347,7 @@ def write_other_config(config):
         "gitRepositorySuffix": "git.repository.suffix",
     }
     try:
-        lines = None
-        if os.path.exists(application_config_file_path):
-            with open(application_config_file_path, 'r') as f:
-                lines = f.readlines()
-        with open(application_config_file_path, 'w') as f:
-            if lines:
-                for line in lines:
-                    for _, value in other_config_map.items():
-                        if not line.startswith(value):
-                            f.write(line)
+        with open(application_config_file_path, 'a') as f:
             for key, value in other_config_map.items():
                 f.write(f"{value}={getattr(config, key)}\n")
                 log_debug(f"Other config: {value}={getattr(config, key)}")
