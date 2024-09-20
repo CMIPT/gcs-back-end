@@ -14,7 +14,7 @@ import logging
 import inspect
 
 essential_packages = ['python-is-python3', 'postgresql postgresql-client',
-                      'openjdk-17-jdk-headless', 'maven', 'systemd']
+                      'openjdk-17-jdk-headless', 'maven', 'systemd', 'sudo']
 sudo_cmd = os.popen('command -v sudo').read().strip()
 apt_updated = False
 message_tmp = '''\
@@ -90,7 +90,7 @@ def create_systemd_service(config):
                                          [config.serviceStartJarFile])
     wanted_by = parse_iterable_into_str(config.serviceWantedBy)
     after = parse_iterable_into_str(config.serviceAfter)
-    service_full_path = f'{config.serviceSystemdDirectory}/{config.serviceName}.{config.serviceSuffix}'
+    service_full_path = f'{config.serviceSystemdDirectory}/{config.serviceName}{config.serviceSuffix}'
     gcs_file_content = f"""\
 [Unit]
 Description={config.serviceDescription}
@@ -334,7 +334,8 @@ def create_or_update_user(username, password):
     if username == None or username == "":
         return
     if os.system(f"cat /etc/passwd | grep -w -E '^{username}'") != 0:
-        command = f'{sudo_cmd} useradd {username}'
+        # use -m to create the home directory for user
+        command = f'{sudo_cmd} useradd -m {username}'
         res = os.system(command)
         message = message_tmp.format(command, res)
         command_checker(res, message)
@@ -355,7 +356,11 @@ def create_or_update_user(username, password):
 
 def write_other_config(config):
     other_config_map = {
-        "frontEndUrl": "front-end.url"
+        "frontEndUrl": "front-end.url",
+        "gitServerDomain": "git.server.domain",
+        "gitUserName": "git.user.name",
+        "gitRepositoryDirectory": "git.repository.directory",
+        "gitRepositorySuffix": "git.repository.suffix",
     }
     try:
         lines = None
@@ -373,6 +378,7 @@ def write_other_config(config):
                 log_debug(f"Other config: {value}={getattr(config, key)}")
     except Exception as e:
         command_checker(1, f"Error: {e}")
+
 
 def deploy_on_ubuntu(config):
     assert(config != None)
@@ -393,9 +399,19 @@ def deploy_on_ubuntu(config):
     res = os.system(command)
     message = message_tmp.format(command, res)
     command_checker(res, message)
+    create_or_update_user(config.gitUserName, config.gitUserPassword)
+    create_or_update_user(config.serviceUser, config.serviceUserPassword)
+    # let the service user can use git command as the git user without password
+    sudoers_entry = f"{config.serviceUser} ALL=(git) NOPASSWD: /usr/bin/git"
+    try:
+        res = subprocess.run(f"echo '{sudoers_entry}' | {sudo_cmd} tee /etc/sudoers.d/{config.serviceUser}", shell=True);
+        command_checker(res.returncode, f"Failed to create /etc/sudoers.d/{config.serviceUser}")
+        res = subprocess.run(f"{sudo_cmd} chmod 440 /etc/sudoers.d/{config.serviceUser}", shell=True)
+        command_checker(res.returncode, f"Failed to chmod 440 /etc/sudoers.d/{config.serviceUser}")
+    except subprocess.CalledProcessError as e:
+        command_checker(1, f"Error: {e}")
 
     if config.deploy:
-        create_or_update_user(config.serviceUser, config.serviceUserPassword)
         if not os.path.exists(os.path.dirname(config.serviceStartJarFile)):
             command = f'{sudo_cmd} mkdir -p {os.path.dirname(config.serviceStartJarFile)}'
             res = os.system(command)
@@ -410,6 +426,15 @@ def deploy_on_ubuntu(config):
         else:
             deploy_with_systemd(config)
 
+
+def delete_user(username):
+    if username == None or username == "":
+        return
+    if os.system(f"cat /etc/passwd | grep -w -E '^{username}'") == 0:
+        command = f'{sudo_cmd} userdel {username}'
+        res = os.system(command)
+        message = message_tmp.format(command, res)
+        command_checker(res, message)
 
 def clean(config):
     if config.deployWithDocker:
@@ -426,8 +451,8 @@ def clean(config):
     res = os.system(command)
     message = message_tmp.format(command, res)
     command_checker(res, message)
-    if os.path.exists(f'{config.serviceSystemdDirectory}/{config.serviceName}.{config.serviceSuffix}'):
-        command = f'''{sudo_cmd} rm -rf {config.serviceSystemdDirectory}/{config.serviceName}.{config.serviceSuffix} && \\
+    if os.path.exists(f'{config.serviceSystemdDirectory}/{config.serviceName}{config.serviceSuffix}'):
+        command = f'''{sudo_cmd} rm -rf {config.serviceSystemdDirectory}/{config.serviceName}{config.serviceSuffix} && \\
     {sudo_cmd} systemctl daemon-reload'''
         res = os.system(command)
         message = message_tmp.format(command, res)
@@ -451,11 +476,15 @@ def clean(config):
         res = os.system(command)
         message = message_tmp.format(command, res)
         command_checker(res, message)
-    if os.system(f"cat /etc/passwd | grep -w -E '^{config.serviceUser}'") == 0:
-        command = f'{sudo_cmd} userdel {config.serviceUser}'
+    if os.path.exists(f'/etc/sudoers.d/{config.serviceUser}'):
+        command = f'{sudo_cmd} rm -rf /etc/sudoers.d/{config.serviceUser}'
         res = os.system(command)
         message = message_tmp.format(command, res)
         command_checker(res, message)
+    if config.deleteGitUser:
+        delete_user(config.gitUserName)
+    if config.deleteServiceUser:
+        delete_user(config.serviceUser)
     command = f'mvn clean'
     res = os.system(command)
     message = message_tmp.format(command, res)

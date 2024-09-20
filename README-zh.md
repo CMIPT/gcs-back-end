@@ -8,14 +8,17 @@
 | `profiles`                   | `list`   | `["dev"]`                              | 启动的配置类型。 |
 | `deployLogLevel`             | `string` | `"info"`                               | 部署脚本的日志级别。 |
 | `skipTest`                   | `bool`   | `true`                                 | 是否跳过测试。 |
-| `createGitUser`              | `bool`   | `true`                                 | 是否创建 `git` 用户。 |
+| `gitUserName`                | `string` | `"git"`                                | 用于保存 `git` 仓库的用户名。 |
+| `gitUserPassword`            | `string` | `"git"`                                | 用于保存 `git` 仓库的用户密码。 |
+| `gitRepositoryDirectory`     | `string` | `"/home/git/repository"`               | `git` 仓库存放目录。不要使用 `~`。 |
+| `gitServerDomain`            | `string` | `"localhost"`                          | 服务器域名。 |
+| `gitRepositorySuffix`        | `string` | `".git"`                               | `git` 仓库后缀。 |
 | `deployWithDocker`           | `bool`   | `true`                                 | 是否使用 `Docker` 进行部署。 |
 | `dockerName`                 | `string` | `"gcs-backend"`                        | `Docker` 容器名称。 |
 | `dockerImage`                | `string` | `"ubuntu:latest"`                      | `Docker` 镜像。 |
 | `dockerPortMapping`          | `list`   | `["8080:8080"]`                        | `Docker` 端口映射。 |
 | `dockerWithGpu`              | `bool`   | `false`                                | `Docker` 是否使用 `GPU`。 |
 | `dockerSrcPath`              | `string` | `"/opt/gcs-back-end-src"`              | `Docker` 中源码路径。源码会被拷贝到该路径进行编译。 |
-| `repositoryDirectory`        | `string` | `"/home/git/repositories"`             | `git` 仓库存放目录。 |
 | `serviceEnable`              | `bool`   | `true`                                 | 是否启用 `systemd` 服务。 |
 | `serviceName`                | `string` | `"gcs"`                                | 服务名称。 |
 | `serviceDescription`         | `string` | `"Git server center back-end service"` | 服务描述。 |
@@ -25,7 +28,7 @@
 | `serviceStartJavaCommand`    | `string` | `"/usr/bin/java"`                      | 服务启动的 `Java` 命令。 |
 | `serviceStartJavaArgs`       | `list`   | `["-jar"]`                             | 服务启动的 `Java` 参数。 |
 | `serviceStartJarFile`        | `string` | `"/opt/gcs/gcs.jar"`                   | 服务启动的 `Jar` 文件。脚本会将 `maven` 打包出来的文件拷贝到该位置。 |
-| `serviceSuffix`              | `string` | `"service"`                            | `systemd` 服务文件后缀。 |
+| `serviceSuffix`              | `string` | `".service"`                           | `systemd` 服务文件后缀。 |
 | `serviceWorkingDirectory`    | `string` | `"/opt/gcs"`                           | `systemd` 服务工作目录。 |
 | `serviceRestartPolicy`       | `string` | `"always"`                             | `systemd` 服务重启策略。 |
 | `serviceRestartDelaySeconds` | `int`    | `5`                                    | `systemd` 服务重启延迟时间。 |
@@ -44,3 +47,5 @@
 | `druidLoginUsername`         | `string` | `"druid"`                              | `Druid` 登录用户名。 |
 | `druidLoginPassword`         | `string` | `"druid"`                              | `Druid` 登录密码。 |
 | `frontEndUrl`                | `string` | `"http://localhost:3000"`              | 前端地址。 |
+| `deleteGitUser`              | `bool`   | `true`                                 | 清理时是否删除 `git` 用户。 |
+| `deleteServiceUser`          | `bool`   | `true`                                 | 清理时是否删除 `service` 用户。 |

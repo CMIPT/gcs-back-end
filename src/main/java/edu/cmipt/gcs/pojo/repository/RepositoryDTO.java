@@ -35,7 +35,7 @@ public record RepositoryDTO(
                                 "REPOSITORYDTO_REPOSITORYNAME_SIZE"
                                         + " {RepositoryDTO.repositoryName.Size}")
                 @NotBlank(
-                        groups = {CreateGroup.class},
+                        groups = CreateGroup.class,
                         message =
                                 "REPOSITORYDTO_REPOSITORYNAME_NOTBLANK"
                                         + " {RepositoryDTO.repositoryName.NotBlank}")
@@ -56,20 +56,29 @@ public record RepositoryDTO(
                 String repositoryDescription,
         @Schema(description = "Whether or Not Private Repo") Boolean isPrivate,
         @Schema(description = "Star Count")
+                @Null(
+                        groups = CreateGroup.class,
+                        message = "REPOSITORYDTO_STAR_NULL {RepositoryDTO.star.Null}")
                 @Min(
-                        groups = {CreateGroup.class, UpdateGroup.class},
+                        groups = UpdateGroup.class,
                         value = 0,
                         message = "REPOSITORYDTO_STAR_MIN {RepositoryDTO.star.Min}")
                 Integer star,
         @Schema(description = "Fork Count")
+                @Null(
+                        groups = CreateGroup.class,
+                        message = "REPOSITORYDTO_FORK_NULL {RepositoryDTO.fork.Null}")
                 @Min(
-                        groups = {CreateGroup.class, UpdateGroup.class},
+                        groups = UpdateGroup.class,
                         value = 0,
                         message = "REPOSITORYDTO_FORK_MIN {RepositoryDTO.fork.Min}")
                 Integer fork,
         @Schema(description = "Watcher Count")
+                @Null(
+                        groups = CreateGroup.class,
+                        message = "REPOSITORYDTO_WATCHER_NULL {RepositoryDTO.watcher.Null}")
                 @Min(
-                        groups = {CreateGroup.class, UpdateGroup.class},
+                        groups = UpdateGroup.class,
                         value = 0,
                         message = "REPOSITORYDTO_WATCHER_MIN {RepositoryDTO.watcher.Min}")
                 Integer watcher) {}

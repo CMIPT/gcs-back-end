@@ -53,7 +53,7 @@ public class JwtUtil {
         return generateToken(Long.valueOf(id), tokenType);
     }
 
-    public static String getID(String token) {
+    public static String getId(String token) {
         try {
             return String.valueOf(
                     Jwts.parser()

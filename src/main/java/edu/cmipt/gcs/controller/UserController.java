@@ -1,6 +1,7 @@
 package edu.cmipt.gcs.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import edu.cmipt.gcs.constant.ApiPathConstant;
@@ -129,8 +130,7 @@ public class UserController {
         }
         // for the null fields, mybatis-plus will ignore by default
         assert user.id() != null;
-        boolean res = userService.updateById(new UserPO(user));
-        if (!res) {
+        if (!userService.updateById(new UserPO(user))) {
             throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user);
         }
         UserVO userVO = new UserVO(userService.getById(Long.valueOf(user.id())));
@@ -181,8 +181,7 @@ public class UserController {
         if (userService.getById(id) == null) {
             throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, id);
         }
-        boolean res = userService.removeById(id);
-        if (!res) {
+        if (!userService.removeById(id)) {
             throw new GenericException(ErrorCodeEnum.USER_DELETE_FAILED, id);
         }
         JwtUtil.blacklistToken(accessToken, refreshToken);
@@ -224,20 +223,20 @@ public class UserController {
                 schema = @Schema(implementation = Integer.class))
     })
     @ApiResponse(responseCode = "200", description = "User repositories paged successfully")
-    public List<RepositoryVO> pageUserRepositories(
+    public List<RepositoryVO> pageUserRepository(
             @RequestParam("id") Long userId,
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         QueryWrapper<RepositoryPO> wrapper = new QueryWrapper<RepositoryPO>();
-        String idInToken = JwtUtil.getID(accessToken);
+        String idInToken = JwtUtil.getId(accessToken);
         assert idInToken != null;
         if (!idInToken.equals(userId.toString())) {
             // the user only can see the public repositories of others
             wrapper.eq("is_private", false);
         }
         wrapper.eq("user_id", userId);
-        return repositoryService.page(new Page<>(page, size), wrapper).getRecords().stream()
+        return repositoryService.list(new Page<>(page, size), wrapper).stream()
                 .map(RepositoryVO::new)
                 .collect(Collectors.toList());
     }

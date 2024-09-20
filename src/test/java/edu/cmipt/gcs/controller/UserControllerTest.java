@@ -36,7 +36,6 @@ import java.util.Date;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@Order(Ordered.LOWEST_PRECEDENCE)
 public class UserControllerTest {
     @Autowired private MockMvc mvc;
 
@@ -254,5 +253,31 @@ public class UserControllerTest {
                                 .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN)
                                 .param("id", TestConstant.ID))
                 .andExpectAll(status().isOk());
+    }
+
+    @Test
+    public void testPageUserRepositoryValid() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.USER_PAGE_USER_REPOSITORY_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("id", TestConstant.ID)
+                                .param("page", "1")
+                                .param("size", TestConstant.REPOSITORY_SIZE.toString()))
+                .andExpectAll(status().isOk(),
+                        jsonPath("$").isArray(),
+                        jsonPath("$.length()").value(TestConstant.REPOSITORY_SIZE));
+    }
+
+    @Test
+    public void testPageOtherUserRepositoryValid() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.USER_PAGE_USER_REPOSITORY_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.OTHER_ACCESS_TOKEN)
+                                .param("id", TestConstant.ID)
+                                .param("page", "1")
+                                .param("size", TestConstant.REPOSITORY_SIZE.toString()))
+                .andExpectAll(status().isOk(),
+                        jsonPath("$").isArray(),
+                        jsonPath("$.length()").value(TestConstant.REPOSITORY_SIZE / 2));
     }
 }

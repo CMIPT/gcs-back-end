@@ -162,7 +162,7 @@ public class JwtFilter extends OncePerRequestFilter {
                         throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
                     }
                     // User can not update other user's information
-                    String idInToken = JwtUtil.getID(accessToken);
+                    String idInToken = JwtUtil.getId(accessToken);
                     String idInBody = getFromRequestBody(request, "id");
                     if (!idInToken.equals(idInBody)) {
                         logger.info("User[{}] tried to update user[{}]", idInToken, idInBody);
@@ -173,6 +173,8 @@ public class JwtFilter extends OncePerRequestFilter {
                         && refreshToken == null) {
                     // for refresh token, both access token and refresh token are needed
                     throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
+                } else if (request.getRequestURI().equals(ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH)) {
+                    // pass
                 } else {
                     throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                 }
@@ -187,7 +189,7 @@ public class JwtFilter extends OncePerRequestFilter {
                         throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
                     }
                     // User can not delete other user
-                    String idInToken = JwtUtil.getID(accessToken);
+                    String idInToken = JwtUtil.getId(accessToken);
                     String idInParam = request.getParameter("id");
                     if (!idInToken.equals(idInParam)) {
                         logger.info("User[{}] tried to delete user[{}]", idInToken, idInParam);
