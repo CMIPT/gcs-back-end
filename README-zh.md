@@ -9,6 +9,7 @@
 | `deployLogLevel`             | `string` | `"info"`                               | 部署脚本的日志级别。 |
 | `skipTest`                   | `bool`   | `true`                                 | 是否跳过测试。 |
 | `gitUserName`                | `string` | `"git"`                                | 用于保存 `git` 仓库的用户名。 |
+| `gitHomeDirectory`           | `string` | `"/home/git"`                          | `git` 用户的家目录。 |
 | `gitUserPassword`            | `string` | `"git"`                                | 用于保存 `git` 仓库的用户密码。 |
 | `gitRepositoryDirectory`     | `string` | `"/home/git/repository"`               | `git` 仓库存放目录。不要使用 `~`。 |
 | `gitServerDomain`            | `string` | `"localhost"`                          | 服务器域名。 |
