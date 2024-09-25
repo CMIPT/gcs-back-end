@@ -14,3 +14,8 @@ FOR EACH ROW EXECUTE FUNCTION public.update_gmt_updated_column();
 CREATE TRIGGER update_t_user_repository_gmt_updated
 BEFORE UPDATE ON public.t_user_repository
 FOR EACH ROW EXECUTE FUNCTION public.update_gmt_updated_column();
+
+-- The trigger of the t_ssh_key table is added.
+CREATE TRIGGER update_t_ssh_key_gmt_updated
+BEFORE UPDATE ON public.t_ssh_key
+FOR EACH ROW EXECUTE FUNCTION public.update_gmt_updated_column();

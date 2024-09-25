@@ -2,6 +2,7 @@ package edu.cmipt.gcs;
 
 import edu.cmipt.gcs.controller.AuthenticationControllerTest;
 import edu.cmipt.gcs.controller.RepositoryControllerTest;
+import edu.cmipt.gcs.controller.SshKeyControllerTest;
 import edu.cmipt.gcs.controller.UserControllerTest;
 
 import org.junit.jupiter.api.ClassDescriptor;
@@ -15,6 +16,7 @@ public class SpringBootTestClassOrderer implements ClassOrderer {
     private static final Class<?>[] classOrder =
             new Class[] {
                 AuthenticationControllerTest.class,
+                SshKeyControllerTest.class,
                 RepositoryControllerTest.class,
                 UserControllerTest.class
             };

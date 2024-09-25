@@ -94,6 +94,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public void handleException(Exception e) {
         logger.error(e.getMessage());
+        // TODO: use logger to log the exception
+        e.printStackTrace();
     }
 
     private ResponseEntity<ErrorVO> handleValidationException(

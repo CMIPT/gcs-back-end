@@ -32,4 +32,10 @@ public class ApiPathConstant {
     public static final String REPOSITORY_API_PREFIX = ALL_API_PREFIX + "/repository";
     public static final String REPOSITORY_CREATE_REPOSITORY_API_PATH =
             REPOSITORY_API_PREFIX + "/create";
+
+    public static final String SSH_KEY_API_PREFIX = ALL_API_PREFIX + "/ssh";
+    public static final String SSH_KEY_UPLOAD_SSH_KEY_API_PATH = SSH_KEY_API_PREFIX + "/upload";
+    public static final String SSH_KEY_UPDATE_SSH_KEY_API_PATH = SSH_KEY_API_PREFIX + "/update";
+    public static final String SSH_KEY_DELETE_SSH_KEY_API_PATH = SSH_KEY_API_PREFIX + "/delete";
+    public static final String SSH_KEY_PAGE_SSH_KEY_API_PATH = SSH_KEY_API_PREFIX + "/page";
 }

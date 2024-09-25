@@ -6,6 +6,7 @@
     "deployLogLevel": "info",
     "skipTest": true,
     "gitUserName": "git",
+    "gitHomeDirectory": "/home/git",
     "gitUserPassword": "git",
     "gitRepositoryDirectory": "/home/git/repository",
     "gitServerDomain": "localhost",

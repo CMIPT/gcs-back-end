@@ -14,4 +14,5 @@ COMMENT ON COLUMN public.t_user_star_repository.user_id IS 'ID of the user who s
 COMMENT ON COLUMN public.t_user_star_repository.repository_id IS 'ID of the repository that has been starred.';
 COMMENT ON COLUMN public.t_user_star_repository.gmt_created IS 'Timestamp when the relationship was created.';
 COMMENT ON COLUMN public.t_user_star_repository.gmt_updated IS 'Timestamp when the relationship was last updated.';
-COMMENT ON COLUMN public.t_user_star_repository.gmt_deleted IS 'Timestamp when the relationship was deleted. If set to NULL, it indicates that this relationship has not been deleted.';
+COMMENT ON COLUMN public.t_user_star_repository.gmt_deleted IS 'Timestamp when the relationship was deleted.
+If set to NULL, it indicates that this relationship has not been deleted.';

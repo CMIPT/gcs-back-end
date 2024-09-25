@@ -16,4 +16,6 @@ public class TestConstant {
     public static String OTHER_ACCESS_TOKEN;
     public static String OTHER_REFRESH_TOKEN;
     public static Integer REPOSITORY_SIZE = 10;
+    public static Integer SSH_KEY_SIZE = 10;
+    public static String SSH_KEY_ID;
 }

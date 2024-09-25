@@ -343,6 +343,7 @@ def write_other_config(config):
         "frontEndUrl": "front-end.url",
         "gitServerDomain": "git.server.domain",
         "gitUserName": "git.user.name",
+        "gitHomeDirectory": "git.home.directory",
         "gitRepositoryDirectory": "git.repository.directory",
         "gitRepositorySuffix": "git.repository.suffix",
     }
@@ -376,8 +377,8 @@ def deploy_on_ubuntu(config):
     command_checker(res, message)
     create_or_update_user(config.gitUserName, config.gitUserPassword)
     create_or_update_user(config.serviceUser, config.serviceUserPassword)
-    # let the service user can use git command as the git user without password
-    sudoers_entry = f"{config.serviceUser} ALL=(git) NOPASSWD: /usr/bin/git"
+    # let the service user can use git and tee commands as the git user without password
+    sudoers_entry = f"{config.serviceUser} ALL=(git) NOPASSWD: /usr/bin/git, /usr/bin/tee"
     res = subprocess.run(f"echo '{sudoers_entry}' | {sudo_cmd} tee /etc/sudoers.d/{config.serviceUser}", shell=True);
     command_checker(res.returncode, f"Failed to create /etc/sudoers.d/{config.serviceUser}")
     res = subprocess.run(f"{sudo_cmd} chmod 440 /etc/sudoers.d/{config.serviceUser}", shell=True)

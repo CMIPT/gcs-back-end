@@ -132,6 +132,7 @@ public class JwtFilter extends OncePerRequestFilter {
         filterChain.doFilter(cachedRequest, response);
     }
 
+    // TODO: move all the pass paths to a set, and use the set to check
     private void authorize(HttpServletRequest request, String accessToken, String refreshToken) {
         if (accessToken != null
                 && JwtUtil.getTokenType(accessToken) != TokenTypeEnum.ACCESS_TOKEN) {
@@ -150,6 +151,25 @@ public class JwtFilter extends OncePerRequestFilter {
                                 && request.getRequestURI()
                                         .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH))) {
                     throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
+                } else if (request.getRequestURI()
+                        .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)) {
+                    // pass
+                } else if (request.getRequestURI()
+                        .equals(ApiPathConstant.USER_PAGE_USER_REPOSITORY_API_PATH)) {
+                    // pass
+                } else if (request.getRequestURI().equals(ApiPathConstant.USER_GET_USER_API_PATH)) {
+                    // pass
+                } else if (request.getRequestURI()
+                        .equals(ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH)) {
+                    String idInToken = JwtUtil.getId(accessToken);
+                    String idInParam = request.getParameter("id");
+                    if (!idInToken.equals(idInParam)) {
+                        logger.info(
+                                "User[{}] tried to get SSH key of user[{}]", idInToken, idInParam);
+                        throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+                    }
+                } else {
+                    throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                 }
                 break;
             case "POST":
@@ -176,6 +196,28 @@ public class JwtFilter extends OncePerRequestFilter {
                 } else if (request.getRequestURI()
                         .equals(ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH)) {
                     // pass
+                } else if (request.getRequestURI()
+                        .equals(ApiPathConstant.SSH_KEY_UPLOAD_SSH_KEY_API_PATH)) {
+                    String idInToken = JwtUtil.getId(accessToken);
+                    String idInBody = getFromRequestBody(request, "userId");
+                    if (!idInToken.equals(idInBody)) {
+                        logger.info(
+                                "User[{}] tried to upload SSH key of user[{}]",
+                                idInToken,
+                                idInBody);
+                        throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+                    }
+                } else if (request.getRequestURI()
+                        .equals(ApiPathConstant.SSH_KEY_UPDATE_SSH_KEY_API_PATH)) {
+                    String idInToken = JwtUtil.getId(accessToken);
+                    String idInBody = getFromRequestBody(request, "userId");
+                    if (!idInToken.equals(idInBody)) {
+                        logger.info(
+                                "User[{}] tried to update SSH key of user[{}]",
+                                idInToken,
+                                idInBody);
+                        throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+                    }
                 } else {
                     throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                 }
@@ -196,6 +238,10 @@ public class JwtFilter extends OncePerRequestFilter {
                         logger.info("User[{}] tried to delete user[{}]", idInToken, idInParam);
                         throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                     }
+                } else if (request.getRequestURI()
+                        .equals(ApiPathConstant.SSH_KEY_DELETE_SSH_KEY_API_PATH)) {
+                    // this will be checked in controller
+                    // because we must query the database to get the user id of the ssh key
                 } else {
                     throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                 }
