@@ -13,6 +13,7 @@ import edu.cmipt.gcs.service.RepositoryService;
 import edu.cmipt.gcs.util.JwtUtil;
 import edu.cmipt.gcs.validation.group.CreateGroup;
 import edu.cmipt.gcs.validation.group.UpdateGroup;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -58,7 +59,9 @@ public class RepositoryController {
             @Validated(CreateGroup.class) @RequestBody RepositoryDTO repository,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         if (repository.isPrivate() != null && repository.isPrivate()) {
-            throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED, "private repository is not implemented");
+            throw new GenericException(
+                    ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED,
+                    "private repository is not implemented");
         }
         String userId = JwtUtil.getId(accessToken);
         RepositoryPO repositoryPO = new RepositoryPO(repository, userId);
@@ -75,25 +78,22 @@ public class RepositoryController {
 
     @DeleteMapping(ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH)
     @Operation(
-        summary = "Delete a repository",
-        description = "Delete a repository with the given id",
-        tags = {"Repository", "Delete Method"}
-    )
+            summary = "Delete a repository",
+            description = "Delete a repository with the given id",
+            tags = {"Repository", "Delete Method"})
     @Parameters({
         @Parameter(
-            name = HeaderParameter.ACCESS_TOKEN,
-            description = "Access token",
-            required = true,
-            in = ParameterIn.HEADER,
-            schema = @Schema(implementation = String.class)
-        ),
+                name = HeaderParameter.ACCESS_TOKEN,
+                description = "Access token",
+                required = true,
+                in = ParameterIn.HEADER,
+                schema = @Schema(implementation = String.class)),
         @Parameter(
-            name = "id",
-            description = "Repository id",
-            required = true,
-            in = ParameterIn.QUERY,
-            schema = @Schema(implementation = Long.class)
-        )
+                name = "id",
+                description = "Repository id",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = Long.class))
     })
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Repository deleted successfully"),
@@ -101,16 +101,18 @@ public class RepositoryController {
         @ApiResponse(responseCode = "404", description = "Repository not found")
     })
     public void deleteRepository(
-        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
-        @RequestParam("id") Long id
-    ) {
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
+            @RequestParam("id") Long id) {
         var repository = repositoryService.getById(id);
         if (repository == null) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, id);
         }
         String userId = JwtUtil.getId(accessToken);
         if (!userId.equals(repository.getUserId().toString())) {
-            logger.info("User[{}] tried to delete repository of user[{}]", userId, repository.getUserId());
+            logger.info(
+                    "User[{}] tried to delete repository of user[{}]",
+                    userId,
+                    repository.getUserId());
             throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
         }
         if (!repositoryService.removeById(id)) {
@@ -120,27 +122,26 @@ public class RepositoryController {
 
     @PostMapping(ApiPathConstant.REPOSITORY_UPDATE_REPOSITORY_API_PATH)
     @Operation(
-        summary = "Update a repository",
-        description = "Update a repository with the given information",
-        tags = {"Repository", "Post Method"}
-    )
+            summary = "Update a repository",
+            description = "Update a repository with the given information",
+            tags = {"Repository", "Post Method"})
     @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class)
-    )
+            name = HeaderParameter.ACCESS_TOKEN,
+            description = "Access token",
+            required = true,
+            in = ParameterIn.HEADER,
+            schema = @Schema(implementation = String.class))
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Repository updated successfully"),
         @ApiResponse(responseCode = "403", description = "Access denied"),
         @ApiResponse(responseCode = "404", description = "Repository not found"),
-        @ApiResponse(responseCode = "501", description = "Update repository name is not implemented")
+        @ApiResponse(
+                responseCode = "501",
+                description = "Update repository name is not implemented")
     })
     public ResponseEntity<RepositoryVO> updateRepository(
-        @Validated(UpdateGroup.class) @RequestBody RepositoryDTO repository,
-        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken
-    ) {
+            @Validated(UpdateGroup.class) @RequestBody RepositoryDTO repository,
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         Long id = null;
         try {
             id = Long.valueOf(repository.id());
@@ -154,12 +155,19 @@ public class RepositoryController {
         }
         String userId = JwtUtil.getId(accessToken);
         if (!userId.equals(repositoryPO.getUserId().toString())) {
-            logger.info("User[{}] tried to update repository of user[{}]", userId, repositoryPO.getUserId());
+            logger.info(
+                    "User[{}] tried to update repository of user[{}]",
+                    userId,
+                    repositoryPO.getUserId());
             throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
         }
-        if (repository.repositoryName() != null && 
-            !repository.repositoryName().equals(repositoryService.getById(id).getRepositoryName())) {
-            throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED, "update repository name is not implemented");
+        if (repository.repositoryName() != null
+                && !repository
+                        .repositoryName()
+                        .equals(repositoryService.getById(id).getRepositoryName())) {
+            throw new GenericException(
+                    ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED,
+                    "update repository name is not implemented");
         }
         if (!repositoryService.updateById(new RepositoryPO(repository))) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_UPDATE_FAILED, repository);

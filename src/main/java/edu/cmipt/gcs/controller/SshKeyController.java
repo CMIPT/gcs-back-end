@@ -107,7 +107,10 @@ public class SshKeyController {
         }
         String idInToken = JwtUtil.getId(accessToken);
         if (!idInToken.equals(sshKeyPO.getUserId().toString())) {
-            logger.info("User[{}] tried to delete SSH key of user[{}]", idInToken, sshKeyPO.getUserId());
+            logger.info(
+                    "User[{}] tried to delete SSH key of user[{}]",
+                    idInToken,
+                    sshKeyPO.getUserId());
             throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
         }
         if (!sshKeyService.removeById(id)) {
@@ -151,7 +154,10 @@ public class SshKeyController {
         }
         String idInToken = JwtUtil.getId(accessToken);
         if (!idInToken.equals(sshKeyPO.getUserId().toString())) {
-            logger.info("User[{}] tried to update SSH key of user[{}]", idInToken, sshKeyPO.getUserId());
+            logger.info(
+                    "User[{}] tried to update SSH key of user[{}]",
+                    idInToken,
+                    sshKeyPO.getUserId());
             throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
         }
         if (!sshKeyService.updateById(new SshKeyPO(sshKeyDTO))) {

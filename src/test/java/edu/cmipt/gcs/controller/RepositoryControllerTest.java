@@ -6,9 +6,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
@@ -24,6 +21,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.Ordered;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Tests for RepositoryController
@@ -55,17 +55,22 @@ public class RepositoryControllerTest {
                                                     .formatted(repositoryName)))
                     .andExpect(status().isOk());
         }
-        var content = 
+        var content =
                 mvc.perform(
-                        get(ApiPathConstant.USER_PAGE_USER_REPOSITORY_API_PATH)
-                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                                .param("id", TestConstant.ID)
-                                .param("page", "1")
-                                .param("size", TestConstant.REPOSITORY_SIZE.toString()))
-                .andExpectAll(
-                        status().isOk(),
-                        jsonPath("$").isArray(),
-                        jsonPath("$.length()").value(TestConstant.REPOSITORY_SIZE)).andReturn().getResponse().getContentAsString();
+                                get(ApiPathConstant.USER_PAGE_USER_REPOSITORY_API_PATH)
+                                        .header(
+                                                HeaderParameter.ACCESS_TOKEN,
+                                                TestConstant.ACCESS_TOKEN)
+                                        .param("id", TestConstant.ID)
+                                        .param("page", "1")
+                                        .param("size", TestConstant.REPOSITORY_SIZE.toString()))
+                        .andExpectAll(
+                                status().isOk(),
+                                jsonPath("$").isArray(),
+                                jsonPath("$.length()").value(TestConstant.REPOSITORY_SIZE))
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         content = JsonParserFactory.getJsonParser().parseList(content).get(0).toString();
         Matcher matcher = Pattern.compile("id=(\\d+),").matcher(content);
         matcher.find();
@@ -91,18 +96,20 @@ public class RepositoryControllerTest {
                                             "id": "%s",
                                             "repositoryDescription": "%s"
                                         }
-                                        """.formatted(TestConstant.REPOSITORY_ID, newDescription)))
+                                        """
+                                                .formatted(
+                                                        TestConstant.REPOSITORY_ID,
+                                                        newDescription)))
                 .andExpectAll(
-                    status().isOk(),
-                    jsonPath("$.id").value(TestConstant.REPOSITORY_ID),
-                    jsonPath("$.repositoryName").value(TestConstant.REPOSITORY_NAME),
-                    jsonPath("$.repositoryDescription").value(newDescription),
-                    jsonPath("$.isPrivate").value(false),
-                    jsonPath("$.userId").value(TestConstant.ID),
-                    jsonPath("$.star").value(0),
-                    jsonPath("$.fork").value(0),
-                    jsonPath("$.watcher").value(0)
-                );
+                        status().isOk(),
+                        jsonPath("$.id").value(TestConstant.REPOSITORY_ID),
+                        jsonPath("$.repositoryName").value(TestConstant.REPOSITORY_NAME),
+                        jsonPath("$.repositoryDescription").value(newDescription),
+                        jsonPath("$.isPrivate").value(false),
+                        jsonPath("$.userId").value(TestConstant.ID),
+                        jsonPath("$.star").value(0),
+                        jsonPath("$.fork").value(0),
+                        jsonPath("$.watcher").value(0));
     }
 
     @Test
@@ -117,5 +124,4 @@ public class RepositoryControllerTest {
         TestConstant.REPOSITORY_NAME = null;
         TestConstant.REPOSITORY_SIZE--;
     }
-
 }
