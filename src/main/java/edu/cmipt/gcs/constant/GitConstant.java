@@ -15,7 +15,8 @@ public class GitConstant {
 
     public static String GIT_SERVER_DOMAIN;
 
-    public static final String SSH_KEY_PREFIX = "no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ";
+    public static final String SSH_KEY_PREFIX =
+            "no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ";
 
     @Value("${git.user.name}")
     public void setGIT_USER_NAME(String gitUserName) {

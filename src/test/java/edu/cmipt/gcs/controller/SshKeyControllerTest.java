@@ -38,20 +38,19 @@ public class SshKeyControllerTest {
         for (int i = 0; i < TestConstant.SSH_KEY_SIZE; i++) {
             String name = "My SSH Key " + i;
             String publicKey = "This is my public key " + i;
-            mockMvc
-                    .perform(
+            mockMvc.perform(
                             post(ApiPathConstant.SSH_KEY_UPLOAD_SSH_KEY_API_PATH)
                                     .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(
-                        """
-                        {
-                            "name": "%s",
-                            "userId": "%s",
-                            "publicKey": "%s"
-                        }
-                        """.formatted(name, TestConstant.ID, publicKey)
-                    ))
+                                    .content(
+                                            """
+                                            {
+                                                "name": "%s",
+                                                "userId": "%s",
+                                                "publicKey": "%s"
+                                            }
+                                            """
+                                                    .formatted(name, TestConstant.ID, publicKey)))
                     .andExpect(status().isOk());
         }
     }
@@ -59,17 +58,28 @@ public class SshKeyControllerTest {
     @Test
     @Order(Ordered.HIGHEST_PRECEDENCE + 1)
     public void testPageSshKeyValid() throws Exception {
-        var response = mockMvc
-                .perform(
-                        get(ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH)
-                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                                .param("id", TestConstant.ID)
-                                .param("page", "1")
-                                .param("size", TestConstant.SSH_KEY_SIZE.toString()))
-                .andExpectAll(status().isOk(),
-            jsonPath("$").isArray(),
-            jsonPath("$.length()").value(TestConstant.SSH_KEY_SIZE)).andReturn().getResponse();
-        Matcher matcher = Pattern.compile("id=(\\d+)").matcher(JsonParserFactory.getJsonParser().parseList(response.getContentAsString()).get(0).toString());
+        var response =
+                mockMvc.perform(
+                                get(ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH)
+                                        .header(
+                                                HeaderParameter.ACCESS_TOKEN,
+                                                TestConstant.ACCESS_TOKEN)
+                                        .param("id", TestConstant.ID)
+                                        .param("page", "1")
+                                        .param("size", TestConstant.SSH_KEY_SIZE.toString()))
+                        .andExpectAll(
+                                status().isOk(),
+                                jsonPath("$").isArray(),
+                                jsonPath("$.length()").value(TestConstant.SSH_KEY_SIZE))
+                        .andReturn()
+                        .getResponse();
+        Matcher matcher =
+                Pattern.compile("id=(\\d+)")
+                        .matcher(
+                                JsonParserFactory.getJsonParser()
+                                        .parseList(response.getContentAsString())
+                                        .get(0)
+                                        .toString());
         matcher.find();
         TestConstant.SSH_KEY_ID = matcher.group(1);
     }
@@ -77,8 +87,7 @@ public class SshKeyControllerTest {
     @Test
     @Order(Ordered.HIGHEST_PRECEDENCE + 2)
     public void testUpdateSshKeyValid() throws Exception {
-        mockMvc
-                .perform(
+        mockMvc.perform(
                         post(ApiPathConstant.SSH_KEY_UPDATE_SSH_KEY_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -90,14 +99,15 @@ public class SshKeyControllerTest {
                                             "userId": "%s",
                                             "publicKey": "This is my public key updated"
                                         }
-                                        """.formatted(TestConstant.SSH_KEY_ID, TestConstant.ID)))
+                                        """
+                                                .formatted(
+                                                        TestConstant.SSH_KEY_ID, TestConstant.ID)))
                 .andExpectAll(
-                    status().isOk(),
-                    jsonPath("$.id", is(TestConstant.SSH_KEY_ID)),
-                    jsonPath("$.userId", is(TestConstant.ID)),
-                    jsonPath("$.name", is("My SSH Key Updated")),
-                    jsonPath("$.publicKey", is("This is my public key updated"))
-                );
+                        status().isOk(),
+                        jsonPath("$.id", is(TestConstant.SSH_KEY_ID)),
+                        jsonPath("$.userId", is(TestConstant.ID)),
+                        jsonPath("$.name", is("My SSH Key Updated")),
+                        jsonPath("$.publicKey", is("This is my public key updated")));
     }
 
     /**
@@ -110,8 +120,7 @@ public class SshKeyControllerTest {
     @Test
     @Order(Ordered.HIGHEST_PRECEDENCE + 3)
     public void testDeleteSshKeyValid() throws Exception {
-        mockMvc
-                .perform(
+        mockMvc.perform(
                         delete(ApiPathConstant.SSH_KEY_DELETE_SSH_KEY_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                                 .param("id", TestConstant.SSH_KEY_ID))

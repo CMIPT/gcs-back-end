@@ -157,15 +157,15 @@ public class JwtFilter extends OncePerRequestFilter {
                 } else if (request.getRequestURI()
                         .equals(ApiPathConstant.USER_PAGE_USER_REPOSITORY_API_PATH)) {
                     // pass
-                } else if (request.getRequestURI()
-                        .equals(ApiPathConstant.USER_GET_USER_API_PATH)) {
+                } else if (request.getRequestURI().equals(ApiPathConstant.USER_GET_USER_API_PATH)) {
                     // pass
                 } else if (request.getRequestURI()
                         .equals(ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH)) {
                     String idInToken = JwtUtil.getId(accessToken);
                     String idInParam = request.getParameter("id");
                     if (!idInToken.equals(idInParam)) {
-                        logger.info("User[{}] tried to get SSH key of user[{}]", idInToken, idInParam);
+                        logger.info(
+                                "User[{}] tried to get SSH key of user[{}]", idInToken, idInParam);
                         throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                     }
                 } else {
@@ -201,7 +201,10 @@ public class JwtFilter extends OncePerRequestFilter {
                     String idInToken = JwtUtil.getId(accessToken);
                     String idInBody = getFromRequestBody(request, "userId");
                     if (!idInToken.equals(idInBody)) {
-                        logger.info("User[{}] tried to upload SSH key of user[{}]", idInToken, idInBody);
+                        logger.info(
+                                "User[{}] tried to upload SSH key of user[{}]",
+                                idInToken,
+                                idInBody);
                         throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                     }
                 } else if (request.getRequestURI()
@@ -209,7 +212,10 @@ public class JwtFilter extends OncePerRequestFilter {
                     String idInToken = JwtUtil.getId(accessToken);
                     String idInBody = getFromRequestBody(request, "userId");
                     if (!idInToken.equals(idInBody)) {
-                        logger.info("User[{}] tried to update SSH key of user[{}]", idInToken, idInBody);
+                        logger.info(
+                                "User[{}] tried to update SSH key of user[{}]",
+                                idInToken,
+                                idInBody);
                         throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                     }
                 } else {

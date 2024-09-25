@@ -28,7 +28,7 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
     /**
      * Save a repository and initialize a git repository in the file system.
      *
-     * <p> Usually, the user will not create the same repository at the same time, so we don't
+     * <p>Usually, the user will not create the same repository at the same time, so we don't
      * consider the thread competition
      */
     @Transactional
@@ -42,16 +42,22 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
                 Paths.get(
                                 GitConstant.GIT_REPOSITORY_DIRECTORY,
                                 userMapper.selectById(repositoryPO.getUserId()).getUsername(),
-                                repositoryPO.getRepositoryName() + GitConstant.GIT_REPOSITORY_SUFFIX)
+                                repositoryPO.getRepositoryName()
+                                        + GitConstant.GIT_REPOSITORY_SUFFIX)
                         .toString();
         // check if the repositorySavePath has been created, if so, remove it
         // this may occur, if the last creation failed
-        if (Files.exists(Paths.get(repositorySavePath))){
+        if (Files.exists(Paths.get(repositorySavePath))) {
             logger.info("Repository save path exists, try to remove it");
             try {
                 ProcessBuilder dirRemover =
                         new ProcessBuilder(
-                                "sudo", "-u", GitConstant.GIT_USER_NAME, "rm", "-rf", repositorySavePath);
+                                "sudo",
+                                "-u",
+                                GitConstant.GIT_USER_NAME,
+                                "rm",
+                                "-rf",
+                                repositorySavePath);
                 Process process = dirRemover.start();
                 if (process.waitFor() != 0) {
                     throw new GenericException(
@@ -67,7 +73,13 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
         try {
             ProcessBuilder repositoryInitializer =
                     new ProcessBuilder(
-                            "sudo", "-u", GitConstant.GIT_USER_NAME, "git", "init", "--bare", repositorySavePath);
+                            "sudo",
+                            "-u",
+                            GitConstant.GIT_USER_NAME,
+                            "git",
+                            "init",
+                            "--bare",
+                            repositorySavePath);
             Process process = repositoryInitializer.start();
             if (process.waitFor() != 0) {
                 throw new GenericException(
