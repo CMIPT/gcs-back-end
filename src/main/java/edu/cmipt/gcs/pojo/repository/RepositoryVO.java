@@ -7,6 +7,7 @@ public record RepositoryVO(
         @Schema(description = "Repository Name") String repositoryName,
         @Schema(description = "Repository Description") String repositoryDescription,
         @Schema(description = "Whether or Not Private Repo") Boolean isPrivate,
+        @Schema(description = "Owner ID") Long userId,
         @Schema(description = "Star Count") Integer star,
         @Schema(description = "Fork Count") Integer fork,
         @Schema(description = "Watcher Count") Integer watcher) {
@@ -16,6 +17,7 @@ public record RepositoryVO(
                 repositoryPO.getRepositoryName(),
                 repositoryPO.getRepositoryDescription(),
                 repositoryPO.getIsPrivate(),
+                repositoryPO.getUserId(),
                 repositoryPO.getStar(),
                 repositoryPO.getFork(),
                 repositoryPO.getWatcher());

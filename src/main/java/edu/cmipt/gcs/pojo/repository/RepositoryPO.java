@@ -45,4 +45,8 @@ public class RepositoryPO {
         this.fork = repositoryDTO.fork();
         this.watcher = repositoryDTO.watcher();
     }
+
+    public RepositoryPO(RepositoryDTO repositoryDTO) {
+        this(repositoryDTO, null);
+    }
 }

@@ -19,11 +19,6 @@ public record SshKeyDTO(
                         groups = UpdateGroup.class,
                         message = "SSHKEYDTO_ID_NOTNULL {SshKeyDTO.id.NotNull}")
                 String id,
-        @Schema(description = "User ID")
-                @NotBlank(
-                        groups = {CreateGroup.class, UpdateGroup.class},
-                        message = "SSHKEYDTO_USERID_NOTBLANK {SshKeyDTO.userId.NotBlank}")
-                String userId,
         @Schema(description = "Name", example = "My SSH Key")
                 @NotBlank(
                         groups = {CreateGroup.class, UpdateGroup.class},

@@ -198,26 +198,15 @@ public class JwtFilter extends OncePerRequestFilter {
                     // pass
                 } else if (request.getRequestURI()
                         .equals(ApiPathConstant.SSH_KEY_UPLOAD_SSH_KEY_API_PATH)) {
-                    String idInToken = JwtUtil.getId(accessToken);
-                    String idInBody = getFromRequestBody(request, "userId");
-                    if (!idInToken.equals(idInBody)) {
-                        logger.info(
-                                "User[{}] tried to upload SSH key of user[{}]",
-                                idInToken,
-                                idInBody);
-                        throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
-                    }
+                    // pass
                 } else if (request.getRequestURI()
                         .equals(ApiPathConstant.SSH_KEY_UPDATE_SSH_KEY_API_PATH)) {
-                    String idInToken = JwtUtil.getId(accessToken);
-                    String idInBody = getFromRequestBody(request, "userId");
-                    if (!idInToken.equals(idInBody)) {
-                        logger.info(
-                                "User[{}] tried to update SSH key of user[{}]",
-                                idInToken,
-                                idInBody);
-                        throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
-                    }
+                    // this will be checked in controller
+                    // because we must query the database to get the user id of the ssh key
+                } else if (request.getRequestURI()
+                        .equals(ApiPathConstant.REPOSITORY_UPDATE_REPOSITORY_API_PATH)) {
+                    // this will be checked in controller
+                    // because we must query the database to get the user id of the repository
                 } else {
                     throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                 }
@@ -242,6 +231,10 @@ public class JwtFilter extends OncePerRequestFilter {
                         .equals(ApiPathConstant.SSH_KEY_DELETE_SSH_KEY_API_PATH)) {
                     // this will be checked in controller
                     // because we must query the database to get the user id of the ssh key
+                } else if (request.getRequestURI()
+                        .equals(ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH)) {
+                    // this will be checked in controller
+                    // because we must query the database to get the user id of the repository
                 } else {
                     throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                 }

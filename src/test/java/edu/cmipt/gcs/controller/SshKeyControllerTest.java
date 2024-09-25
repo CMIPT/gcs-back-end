@@ -58,7 +58,7 @@ public class SshKeyControllerTest {
     @Test
     @Order(Ordered.HIGHEST_PRECEDENCE + 1)
     public void testPageSshKeyValid() throws Exception {
-        var response =
+        var content =
                 mockMvc.perform(
                                 get(ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH)
                                         .header(
@@ -72,12 +72,13 @@ public class SshKeyControllerTest {
                                 jsonPath("$").isArray(),
                                 jsonPath("$.length()").value(TestConstant.SSH_KEY_SIZE))
                         .andReturn()
-                        .getResponse();
+                        .getResponse()
+                        .getContentAsString();
         Matcher matcher =
-                Pattern.compile("id=(\\d+)")
+                Pattern.compile("id=(\\d+),")
                         .matcher(
                                 JsonParserFactory.getJsonParser()
-                                        .parseList(response.getContentAsString())
+                                        .parseList(content)
                                         .get(0)
                                         .toString());
         matcher.find();

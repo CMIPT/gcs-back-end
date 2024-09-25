@@ -20,18 +20,22 @@ public class SshKeyPO {
     private LocalDateTime gmtUpdated;
     @TableLogic private LocalDateTime gmtDeleted;
 
-    public SshKeyPO(SshKeyDTO sshKeyDTO) {
+    public SshKeyPO(SshKeyDTO sshKeyDTO, String userId) {
         try {
             this.id = Long.valueOf(sshKeyDTO.id());
         } catch (NumberFormatException e) {
             this.id = null;
         }
         try {
-            this.userId = Long.valueOf(sshKeyDTO.userId());
+            this.userId = Long.valueOf(userId);
         } catch (NumberFormatException e) {
             this.userId = null;
         }
         this.name = sshKeyDTO.name();
         this.publicKey = sshKeyDTO.publicKey();
+    }
+
+    public SshKeyPO(SshKeyDTO sshKeyDTO) {
+        this(sshKeyDTO, null);
     }
 }
