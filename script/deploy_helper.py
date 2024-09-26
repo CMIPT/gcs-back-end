@@ -346,6 +346,7 @@ def write_other_config(config):
         "gitHomeDirectory": "git.home.directory",
         "gitRepositoryDirectory": "git.repository.directory",
         "gitRepositorySuffix": "git.repository.suffix",
+        "md5Salt": "md5.salt",
     }
     try:
         with open(application_config_file_path, 'a') as f:
