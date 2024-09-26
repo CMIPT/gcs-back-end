@@ -1,10 +1,10 @@
 package edu.cmipt.gcs.util;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 @Component
 public class MD5Converter {
@@ -17,7 +17,13 @@ public class MD5Converter {
 
     public static String convertToMD5(String input) {
         try {
-            byte[] hashBytes = MessageDigest.getInstance("MD5").digest(new StringBuilder(input).append(MD5_SALT).toString().getBytes());
+            byte[] hashBytes =
+                    MessageDigest.getInstance("MD5")
+                            .digest(
+                                    new StringBuilder(input)
+                                            .append(MD5_SALT)
+                                            .toString()
+                                            .getBytes());
             StringBuilder hexString = new StringBuilder();
             for (byte b : hashBytes) {
                 String hex = Integer.toHexString(0xff & b);
