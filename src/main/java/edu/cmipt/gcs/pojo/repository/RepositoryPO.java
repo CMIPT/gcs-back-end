@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import edu.cmipt.gcs.constant.GitConstant;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -51,17 +52,21 @@ public class RepositoryPO {
         if (generateUrl) {
             // TODO: https is not supported now
             this.httpsUrl = "";
-            this.sshUrl = new StringBuilder("ssh://")
-                    .append(GitConstant.GIT_USER_NAME)
-                    .append("@")
-                    .append(GitConstant.GIT_SERVER_DOMAIN)
-                    .append(":")
-                    .append(GitConstant.GIT_SERVER_PORT)
-                    .append(Paths.get(
-                            GitConstant.GIT_REPOSITORY_DIRECTORY,
-                            userId.toString(),
-                            repositoryName + GitConstant.GIT_REPOSITORY_SUFFIX).toString())
-                    .toString();
+            this.sshUrl =
+                    new StringBuilder("ssh://")
+                            .append(GitConstant.GIT_USER_NAME)
+                            .append("@")
+                            .append(GitConstant.GIT_SERVER_DOMAIN)
+                            .append(":")
+                            .append(GitConstant.GIT_SERVER_PORT)
+                            .append(
+                                    Paths.get(
+                                                    GitConstant.GIT_REPOSITORY_DIRECTORY,
+                                                    userId.toString(),
+                                                    repositoryName
+                                                            + GitConstant.GIT_REPOSITORY_SUFFIX)
+                                            .toString())
+                            .toString();
         }
     }
 
