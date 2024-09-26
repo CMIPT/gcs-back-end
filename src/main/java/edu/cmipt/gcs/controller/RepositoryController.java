@@ -64,7 +64,7 @@ public class RepositoryController {
                     "private repository is not implemented");
         }
         String userId = JwtUtil.getId(accessToken);
-        RepositoryPO repositoryPO = new RepositoryPO(repository, userId);
+        RepositoryPO repositoryPO = new RepositoryPO(repository, userId, true);
         QueryWrapper<RepositoryPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", repositoryPO.getUserId());
         queryWrapper.eq("repository_name", repositoryPO.getRepositoryName());

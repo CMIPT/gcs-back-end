@@ -13,6 +13,7 @@
 | `gitUserPassword`            | `string` | `"git"`                                | 用于保存 `git` 仓库的用户密码。 |
 | `gitRepositoryDirectory`     | `string` | `"/home/git/repository"`               | `git` 仓库存放目录。不要使用 `~`。 |
 | `gitServerDomain`            | `string` | `"localhost"`                          | 服务器域名。 |
+| `gitServerPort`              | `int`    | `22`                                   | 服务器端口。 |
 | `gitRepositorySuffix`        | `string` | `".git"`                               | `git` 仓库后缀。 |
 | `deployWithDocker`           | `bool`   | `true`                                 | 是否使用 `Docker` 进行部署。 |
 | `dockerName`                 | `string` | `"gcs-backend"`                        | `Docker` 容器名称。 |

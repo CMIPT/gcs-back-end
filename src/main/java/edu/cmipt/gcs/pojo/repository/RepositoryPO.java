@@ -3,9 +3,11 @@ package edu.cmipt.gcs.pojo.repository;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 
+import edu.cmipt.gcs.constant.GitConstant;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 
 @Data
@@ -20,11 +22,13 @@ public class RepositoryPO {
     private Integer star;
     private Integer fork;
     private Integer watcher;
+    private String httpsUrl;
+    private String sshUrl;
     private LocalDateTime gmtCreated;
     private LocalDateTime gmtUpdated;
     @TableLogic private LocalDateTime gmtDeleted;
 
-    public RepositoryPO(RepositoryDTO repositoryDTO, String userId) {
+    public RepositoryPO(RepositoryDTO repositoryDTO, String userId, boolean generateUrl) {
         try {
             this.id = Long.valueOf(repositoryDTO.id());
         } catch (NumberFormatException e) {
@@ -44,9 +48,28 @@ public class RepositoryPO {
         this.star = repositoryDTO.star();
         this.fork = repositoryDTO.fork();
         this.watcher = repositoryDTO.watcher();
+        if (generateUrl) {
+            // TODO: https is not supported now
+            this.httpsUrl = "";
+            this.sshUrl = new StringBuilder("ssh://")
+                    .append(GitConstant.GIT_USER_NAME)
+                    .append("@")
+                    .append(GitConstant.GIT_SERVER_DOMAIN)
+                    .append(":")
+                    .append(GitConstant.GIT_SERVER_PORT)
+                    .append(Paths.get(
+                            GitConstant.GIT_REPOSITORY_DIRECTORY,
+                            userId.toString(),
+                            repositoryName + GitConstant.GIT_REPOSITORY_SUFFIX).toString())
+                    .toString();
+        }
+    }
+
+    public RepositoryPO(RepositoryDTO repositoryDTO, String userId) {
+        this(repositoryDTO, userId, false);
     }
 
     public RepositoryPO(RepositoryDTO repositoryDTO) {
-        this(repositoryDTO, null);
+        this(repositoryDTO, null, false);
     }
 }

@@ -342,6 +342,7 @@ def write_other_config(config):
     other_config_map = {
         "frontEndUrl": "front-end.url",
         "gitServerDomain": "git.server.domain",
+        "gitServerPort": "git.server.port",
         "gitUserName": "git.user.name",
         "gitHomeDirectory": "git.home.directory",
         "gitRepositoryDirectory": "git.repository.directory",

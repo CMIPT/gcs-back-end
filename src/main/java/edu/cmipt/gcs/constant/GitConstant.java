@@ -15,6 +15,8 @@ public class GitConstant {
 
     public static String GIT_SERVER_DOMAIN;
 
+    public static String GIT_SERVER_PORT;
+
     public static final String SSH_KEY_PREFIX =
             "no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ";
 
@@ -41,5 +43,10 @@ public class GitConstant {
     @Value("${git.server.domain}")
     public void setGIT_SERVER_DOMAIN(String gitServerDomain) {
         GitConstant.GIT_SERVER_DOMAIN = gitServerDomain;
+    }
+
+    @Value("${git.server.port}")
+    public void setGIT_SERVER_PORT(String gitServerPort) {
+        GitConstant.GIT_SERVER_PORT = gitServerPort;
     }
 }
