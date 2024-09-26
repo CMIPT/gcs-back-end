@@ -50,3 +50,4 @@
 | `frontEndUrl`                | `string` | `"http://localhost:3000"`              | 前端地址。 |
 | `deleteGitUser`              | `bool`   | `true`                                 | 清理时是否删除 `git` 用户。 |
 | `deleteServiceUser`          | `bool`   | `true`                                 | 清理时是否删除 `service` 用户。 |
+| `md5Salt`                    | `string` | `""`                                   | `MD5` 加密盐值。 |

@@ -54,5 +54,6 @@
     "druidLoginPassword": "druid",
     "frontEndUrl": "http://localhost:3000",
     "deleteGitUser": true,
-    "deleteServiceUser": true
+    "deleteServiceUser": true,
+    "md5Salt": ""
 }
