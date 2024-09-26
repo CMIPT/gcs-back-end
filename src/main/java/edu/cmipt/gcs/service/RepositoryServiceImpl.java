@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -38,13 +39,7 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
             logger.error("Failed to save repository to database");
             return false;
         }
-        String repositorySavePath =
-                Paths.get(
-                                GitConstant.GIT_REPOSITORY_DIRECTORY,
-                                userMapper.selectById(repositoryPO.getUserId()).getUsername(),
-                                repositoryPO.getRepositoryName()
-                                        + GitConstant.GIT_REPOSITORY_SUFFIX)
-                        .toString();
+        String repositorySavePath = getRepositorySavePath(repositoryPO);
         // check if the repositorySavePath has been created, if so, remove it
         // this may occur, if the last creation failed
         if (Files.exists(Paths.get(repositorySavePath))) {
@@ -91,5 +86,45 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
             throw new GenericException(ErrorCodeEnum.REPOSITORY_CREATE_FAILED, e.getMessage());
         }
         return true;
+    }
+
+    @Override
+    @Transactional
+    public boolean removeById(Serializable id) {
+        RepositoryPO repositoryPO = super.getById(id);
+        assert repositoryPO != null;
+        if (!super.removeById(id)) {
+            logger.error("Failed to remove repository from database");
+            return false;
+        }
+        String repositorySavePath = getRepositorySavePath(repositoryPO);
+        try {
+            ProcessBuilder dirRemover =
+                    new ProcessBuilder(
+                            "sudo",
+                            "-u",
+                            GitConstant.GIT_USER_NAME,
+                            "rm",
+                            "-rf",
+                            repositorySavePath);
+            Process process = dirRemover.start();
+            if (process.waitFor() != 0) {
+                throw new GenericException(
+                        ErrorCodeEnum.REPOSITORY_DELETE_FAILED,
+                        process.errorReader().lines().toList().toString());
+            }
+        } catch (Exception e) {
+            logger.error("Failed to remove repository directory: {}", e.getMessage());
+            throw new GenericException(ErrorCodeEnum.REPOSITORY_DELETE_FAILED, e.getMessage());
+        }
+        return true;
+    }
+
+    private String getRepositorySavePath(RepositoryPO repositoryPO) {
+        return Paths.get(
+                        GitConstant.GIT_REPOSITORY_DIRECTORY,
+                        repositoryPO.getUserId().toString(),
+                        repositoryPO.getRepositoryName() + GitConstant.GIT_REPOSITORY_SUFFIX)
+                .toString();
     }
 }

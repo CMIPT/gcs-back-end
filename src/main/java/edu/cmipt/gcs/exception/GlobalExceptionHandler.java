@@ -74,7 +74,12 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(new ErrorVO(e.getCode(), e.getMessage()));
             case USER_NOT_FOUND:
+            case SSH_KEY_NOT_FOUND:
+            case REPOSITORY_NOT_FOUND:
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ErrorVO(e.getCode(), e.getMessage()));
+            case OPERATION_NOT_IMPLEMENTED:
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
                         .body(new ErrorVO(e.getCode(), e.getMessage()));
             default:
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)

@@ -282,6 +282,6 @@ public class UserControllerTest {
                 .andExpectAll(
                         status().isOk(),
                         jsonPath("$").isArray(),
-                        jsonPath("$.length()").value(TestConstant.REPOSITORY_SIZE / 2));
+                        jsonPath("$.length()").value(TestConstant.REPOSITORY_SIZE));
     }
 }

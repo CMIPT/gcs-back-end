@@ -73,7 +73,7 @@ public class SshKeyController {
     public void uploadSshKey(
             @Validated(CreateGroup.class) @RequestBody SshKeyDTO sshKeyDTO,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        if (!sshKeyService.save(new SshKeyPO(sshKeyDTO))) {
+        if (!sshKeyService.save(new SshKeyPO(sshKeyDTO, JwtUtil.getId(accessToken)))) {
             throw new GenericException(ErrorCodeEnum.SSH_KEY_UPLOAD_FAILED, sshKeyDTO);
         }
     }
@@ -101,14 +101,16 @@ public class SshKeyController {
     public void deleteSshKey(
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
             @RequestParam("id") Long id) {
-        var res = sshKeyService.getById(id);
-        if (res == null) {
+        var sshKeyPO = sshKeyService.getById(id);
+        if (sshKeyPO == null) {
             throw new GenericException(ErrorCodeEnum.SSH_KEY_NOT_FOUND, id);
         }
         String idInToken = JwtUtil.getId(accessToken);
-        String idInRes = res.getUserId().toString();
-        if (!idInRes.equals(idInToken)) {
-            logger.info("User[{}] tried to get SSH key of user[{}]", idInToken, idInRes);
+        if (!idInToken.equals(sshKeyPO.getUserId().toString())) {
+            logger.info(
+                    "User[{}] tried to delete SSH key of user[{}]",
+                    idInToken,
+                    sshKeyPO.getUserId());
             throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
         }
         if (!sshKeyService.removeById(id)) {
@@ -137,7 +139,27 @@ public class SshKeyController {
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
     public ResponseEntity<SshKeyVO> updateSshKey(
-            @Validated(UpdateGroup.class) @RequestBody SshKeyDTO sshKeyDTO) {
+            @Validated(UpdateGroup.class) @RequestBody SshKeyDTO sshKeyDTO,
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+        Long id = null;
+        try {
+            id = Long.valueOf(sshKeyDTO.id());
+        } catch (NumberFormatException e) {
+            logger.error(e.getMessage());
+            throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+        }
+        var sshKeyPO = sshKeyService.getById(id);
+        if (sshKeyPO == null) {
+            throw new GenericException(ErrorCodeEnum.SSH_KEY_NOT_FOUND, id);
+        }
+        String idInToken = JwtUtil.getId(accessToken);
+        if (!idInToken.equals(sshKeyPO.getUserId().toString())) {
+            logger.info(
+                    "User[{}] tried to update SSH key of user[{}]",
+                    idInToken,
+                    sshKeyPO.getUserId());
+            throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+        }
         if (!sshKeyService.updateById(new SshKeyPO(sshKeyDTO))) {
             throw new GenericException(ErrorCodeEnum.SSH_KEY_UPDATE_FAILED, sshKeyDTO);
         }
