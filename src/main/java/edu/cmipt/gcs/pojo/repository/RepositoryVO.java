@@ -10,7 +10,9 @@ public record RepositoryVO(
         @Schema(description = "Owner ID") Long userId,
         @Schema(description = "Star Count") Integer star,
         @Schema(description = "Fork Count") Integer fork,
-        @Schema(description = "Watcher Count") Integer watcher) {
+        @Schema(description = "Watcher Count") Integer watcher,
+        @Schema(description = "HTTPS URL") String httpsUrl,
+        @Schema(description = "SSH URL") String sshUrl) {
     public RepositoryVO(RepositoryPO repositoryPO) {
         this(
                 repositoryPO.getId().toString(),
@@ -20,6 +22,8 @@ public record RepositoryVO(
                 repositoryPO.getUserId(),
                 repositoryPO.getStar(),
                 repositoryPO.getFork(),
-                repositoryPO.getWatcher());
+                repositoryPO.getWatcher(),
+                repositoryPO.getHttpsUrl(),
+                repositoryPO.getSshUrl());
     }
 }

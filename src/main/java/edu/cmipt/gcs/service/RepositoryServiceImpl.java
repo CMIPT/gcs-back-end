@@ -4,14 +4,12 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import edu.cmipt.gcs.constant.GitConstant;
 import edu.cmipt.gcs.dao.RepositoryMapper;
-import edu.cmipt.gcs.dao.UserMapper;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,8 +21,6 @@ import java.nio.file.Paths;
 public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, RepositoryPO>
         implements RepositoryService {
     private static final Logger logger = LoggerFactory.getLogger(RepositoryServiceImpl.class);
-
-    @Autowired private UserMapper userMapper;
 
     /**
      * Save a repository and initialize a git repository in the file system.
@@ -81,7 +77,6 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
                         ErrorCodeEnum.REPOSITORY_CREATE_FAILED,
                         process.errorReader().lines().toList().toString());
             }
-            // TODO: add url in the repositoryPO
         } catch (Exception e) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_CREATE_FAILED, e.getMessage());
         }

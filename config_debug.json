@@ -11,5 +11,6 @@
     "postgresqlUserPassword": "gcs_debug",
     "postgresqlDatabaseName": "gcs_debug",
     "deleteGitUser": false,
-    "deleteServiceUser": false
+    "deleteServiceUser": false,
+    "md5Salt": "Is that the best you can do?"
 }

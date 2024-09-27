@@ -10,6 +10,7 @@
     "gitUserPassword": "git",
     "gitRepositoryDirectory": "/home/git/repository",
     "gitServerDomain": "localhost",
+    "gitServerPort": 22,
     "gitRepositorySuffix": ".git",
     "deployWithDocker": true,
     "dockerName": "gcs-back-end",
