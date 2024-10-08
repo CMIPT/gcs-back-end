@@ -35,7 +35,7 @@
 | `serviceRestartPolicy`       | `string` | `"always"`                             | `systemd` 服务重启策略。 |
 | `serviceRestartDelaySeconds` | `int`    | `5`                                    | `systemd` 服务重启延迟时间。 |
 | `serviceAfter`               | `list`   | `["network.target"]`                   | `systemd` 服务会在这些服务启动后启动。 |
-| `serviceWantedBy`            | `list`   | `"multi-user.target"`                  | `systemd` 服务会被这些服务依赖。 |
+| `serviceWantedBy`            | `list`   | `["multi-user.target"]`                | `systemd` 服务会被这些服务依赖。 |
 | `serviceSystemdDirectory`    | `string` | `"/etc/systemd/system"`                | `systemd` 服务文件存放目录。 |
 | `serviceSysVInitDirectory`   | `string` | `"/etc/init.d"`                        | `Sys-Init-V` 服务文件存放目录。 |
 | `serviceStartWithBoot`       | `bool`   | `true`                                 | `Sys-Init-V` 服务是否随系统启动。 |
