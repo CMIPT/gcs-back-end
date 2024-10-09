@@ -14,7 +14,8 @@ import logging
 import inspect
 
 essential_packages = ['python-is-python3', 'postgresql postgresql-client',
-                      'openjdk-17-jdk-headless', 'maven', 'systemd', 'sudo']
+                      'openjdk-17-jdk-headless', 'maven', 'systemd', 'sudo', 'git',
+                      'openssh-server']
 sudo_cmd = os.popen('command -v sudo').read().strip()
 apt_updated = False
 message_tmp = '''\
@@ -132,28 +133,25 @@ LOGFILE={config.serviceLogFile}
     service_content = header + service_content
     log_debug(f"service_content:\n {service_content}")
 
-    res = os.system(f"echo '{service_content}' | "
-                    f"{sudo_cmd} tee {config.serviceSysVInitDirectory}/{config.serviceName}")
-    command_checker(res, f"Failed to create {config.serviceSysVInitDirectory}/{config.serviceName}")
+    try:
+        with open(f'{config.serviceSysVInitDirectory}/{config.serviceName}', 'w') as f:
+            f.write(service_content)
+    except Exception as e:
+        command_checker(1, f"Error: {e}")
+        return
     res = os.system(f'{sudo_cmd} chmod +x {config.serviceSysVInitDirectory}/{config.serviceName}')
     command_checker(
         res, f"Failed to chmod +x {config.serviceSysVInitDirectory}/{config.serviceName}")
 
-    if logging.getLogger().level == logging.DEBUG:
-        try:
-            with open(f'{config.serviceSysVInitDirectory}/{config.serviceName}', 'r') as f:
-                log_debug(f"Service content:\n {f.read()}")
-        except Exception as e:
-            command_checker(1, f"Error: {e}")
-            return
-
 
 def apt_install_package(name):
-    global apt_updated
+    global apt_updated, sudo_cmd
     if not apt_updated:
         res = os.system(f'{sudo_cmd} apt update')
         command_checker(res, 'Failed to update apt')
         apt_updated = True
+    if 'sudo' in name:
+        sudo_cmd = os.popen('command -v sudo').read().strip()
     res = os.system(f'{sudo_cmd} apt install -y {name}')
     command_checker(res, f'Failed to install {name}')
 
@@ -360,10 +358,21 @@ def write_other_config(config):
 
 def deploy_on_ubuntu(config):
     assert(config != None)
-    if config.inDocker:
+    if config.serviceType != 'systemd':
         essential_packages.remove('systemd')
     apt_install_package(parse_iterable_into_str(essential_packages))
     init_database(config)
+    create_or_update_user(config.gitUserName, config.gitUserPassword)
+    if not os.path.exists(f'{config.gitHomeDirectory}/.ssh'):
+        os.system(f"{sudo_cmd} -u {config.gitUserName} mkdir -p {config.gitHomeDirectory}/.ssh")
+        os.system(f"{sudo_cmd} -u {config.gitUserName} chmod 700 {config.gitHomeDirectory}/.ssh")
+    create_or_update_user(config.serviceUser, config.serviceUserPassword)
+    # let the service user can use git, rm and tee commands as the git user without password
+    sudoers_entry = f"{config.serviceUser} ALL=(git) NOPASSWD: /usr/bin/git, /usr/bin/tee, /usr/bin/rm"
+    res = subprocess.run(f"echo '{sudoers_entry}' | {sudo_cmd} tee /etc/sudoers.d/{config.serviceUser}", shell=True);
+    command_checker(res.returncode, f"Failed to create /etc/sudoers.d/{config.serviceUser}")
+    res = subprocess.run(f"{sudo_cmd} chmod 440 /etc/sudoers.d/{config.serviceUser}", shell=True)
+    command_checker(res.returncode, f"Failed to chmod 440 /etc/sudoers.d/{config.serviceUser}")
     activate_profile(config)
     write_other_config(config)
     skip_test = ""
@@ -377,14 +386,6 @@ def deploy_on_ubuntu(config):
     res = os.system(command)
     message = message_tmp.format(command, res)
     command_checker(res, message)
-    create_or_update_user(config.gitUserName, config.gitUserPassword)
-    create_or_update_user(config.serviceUser, config.serviceUserPassword)
-    # let the service user can use git, rm and tee commands as the git user without password
-    sudoers_entry = f"{config.serviceUser} ALL=(git) NOPASSWD: /usr/bin/git, /usr/bin/tee, /usr/bin/rm"
-    res = subprocess.run(f"echo '{sudoers_entry}' | {sudo_cmd} tee /etc/sudoers.d/{config.serviceUser}", shell=True);
-    command_checker(res.returncode, f"Failed to create /etc/sudoers.d/{config.serviceUser}")
-    res = subprocess.run(f"{sudo_cmd} chmod 440 /etc/sudoers.d/{config.serviceUser}", shell=True)
-    command_checker(res.returncode, f"Failed to chmod 440 /etc/sudoers.d/{config.serviceUser}")
 
     if config.deploy:
         if not os.path.exists(os.path.dirname(config.serviceStartJarFile)):
@@ -396,10 +397,12 @@ def deploy_on_ubuntu(config):
         res = os.system(command)
         message = message_tmp.format(command, res)
         command_checker(res, message)
-        if config.inDocker:
+        if config.serviceType == 'sys-init-v':
             deploy_with_sys_v_init(config)
-        else:
+        elif config.serviceType == 'systemd':
             deploy_with_systemd(config)
+        else:
+            raise ValueError(f"Invalid service type: {config.serviceType}")
 
 
 def delete_user(username):
@@ -418,24 +421,32 @@ def clean(config):
         res = os.system(f"docker rm {config.dockerName}")
         command_checker(res, f"Failed to remove {config.dockerName}")
         return
-    command = f'{sudo_cmd} systemctl disable {config.serviceName}'
-    res = os.system(command)
-    message = message_tmp.format(command, res)
-    command_checker(res, message)
-    command = f'{sudo_cmd} systemctl stop {config.serviceName}'
-    res = os.system(command)
-    message = message_tmp.format(command, res)
-    command_checker(res, message)
-    if os.path.exists(f'{config.serviceSystemdDirectory}/{config.serviceName}{config.serviceSuffix}'):
-        command = f'''{sudo_cmd} rm -rf {config.serviceSystemdDirectory}/{config.serviceName}{config.serviceSuffix} && \\
-    {sudo_cmd} systemctl daemon-reload'''
+    if config.serviceType == 'systemd':
+        command = f'{sudo_cmd} systemctl disable {config.serviceName}'
         res = os.system(command)
         message = message_tmp.format(command, res)
         command_checker(res, message)
-    command = f'{sudo_cmd} systemctl reset-failed {config.serviceName}'
-    res = os.system(command)
-    message = message_tmp.format(command, res)
-    command_checker(res, message)
+        command = f'{sudo_cmd} systemctl stop {config.serviceName}'
+        res = os.system(command)
+        message = message_tmp.format(command, res)
+        command_checker(res, message)
+        if os.path.exists(f'{config.serviceSystemdDirectory}/{config.serviceName}{config.serviceSuffix}'):
+            command = f'''{sudo_cmd} rm -rf {config.serviceSystemdDirectory}/{config.serviceName}{config.serviceSuffix} && \\
+        {sudo_cmd} systemctl daemon-reload'''
+            res = os.system(command)
+            message = message_tmp.format(command, res)
+            command_checker(res, message)
+        command = f'{sudo_cmd} systemctl reset-failed {config.serviceName}'
+        res = os.system(command)
+        message = message_tmp.format(command, res)
+        command_checker(res, message)
+    elif config.serviceType == 'sys-init-v':
+        command = f'{sudo_cmd} service {config.serviceName} uninstall'
+        res = os.system(command)
+        message = message_tmp.format(command, res)
+        command_checker(res, message)
+    else:
+        raise ValueError(f"Invalid service type: {config.serviceType}")
     if os.path.exists(f'{config.serviceWorkingDirectory}'):
         command = f'{sudo_cmd} rm -rf {config.serviceWorkingDirectory}'
         res = os.system(command)
@@ -503,7 +514,7 @@ Set the logging level. Available levels are:
     return parser.parse_args()
 
 
-def deploy_in_docker(config):
+def deploy_with_docker(config):
     res = os.system(f'cd 3rdparty/docker-script && '
                     f'bash create_docker.sh -n {config.dockerName} -d {config.dockerImage} '
                     f'-w {int(config.dockerWithGpu)} '
@@ -537,7 +548,7 @@ def main():
     if args.clean:
         clean(config)
     elif not args.in_docker and config.deployWithDocker:
-        deploy_in_docker(config)
+        deploy_with_docker(config)
     elif args.distro == 'ubuntu':
         deploy_on_ubuntu(config)
 

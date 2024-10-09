@@ -1,6 +1,4 @@
 {
-    "createGitUser": false,
-    "repositoryDirectory": "~/.local/gcs/repository",
     "skipTest": false,
     "deployLogLevel": "debug",
     "profiles": [

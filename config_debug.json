@@ -1,12 +1,11 @@
 {
-    "createGitUser": false,
     "deployWithDocker": false,
-    "repositoryDirectory": "~/.local/gcs/repository",
     "skipTest": false,
     "deployLogLevel": "debug",
     "profiles": [
         "dev"
     ],
+    "serviceType": "systemd",
     "postgresqlUserName": "gcs_debug",
     "postgresqlUserPassword": "gcs_debug",
     "postgresqlDatabaseName": "gcs_debug",
