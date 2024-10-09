@@ -13,9 +13,8 @@ import subprocess
 import logging
 import inspect
 
-essential_packages = ['python-is-python3', 'postgresql postgresql-client',
-                      'openjdk-17-jdk-headless', 'maven', 'systemd', 'sudo', 'git',
-                      'openssh-server']
+essential_packages = ['postgresql postgresql-client', 'openjdk-17-jdk-headless', 'maven',
+                      'systemd', 'sudo', 'git', 'openssh-server']
 sudo_cmd = os.popen('command -v sudo').read().strip()
 apt_updated = False
 message_tmp = '''\
@@ -312,12 +311,20 @@ def init_database(config):
     config_datasource(config)
 
 
-def create_or_update_user(username, password):
+def create_or_update_user(username, password, homeDirectory = None):
     if username == None or username == "":
         return
     if os.system(f"cat /etc/passwd | grep -w -E '^{username}'") != 0:
         # use -m to create the home directory for user
-        command = f'{sudo_cmd} useradd -m {username}'
+        command = f'{sudo_cmd} useradd -m '
+        if homeDirectory is not None:
+            command += f'-d {homeDirectory} '
+        command += username
+        res = os.system(command)
+        message = message_tmp.format(command, res)
+        command_checker(res, message)
+    elif homeDirectory is not None: # update the home directory
+        command = f'{sudo_cmd} usermod -d {homeDirectory} {username}'
         res = os.system(command)
         message = message_tmp.format(command, res)
         command_checker(res, message)
@@ -346,7 +353,18 @@ def write_other_config(config):
         "gitRepositoryDirectory": "git.repository.directory",
         "gitRepositorySuffix": "git.repository.suffix",
         "md5Salt": "md5.salt",
+        "staticPathPattern": "spring.mvc.static-path-pattern",
+        "staticLocations": "spring.web.resources.static-locations",
     }
+    if config.frontEndUrl is None:
+        config.frontEndUrl = ""
+    if config.staticPathPattern is None:
+        config.staticPathPattern = ""
+    if config.staticLocations is None:
+        config.staticLocations = ""
+    else:
+        config.staticLocations = ['file:' + location for location in config.staticLocations]
+        config.staticLocations = parse_iterable_into_str(config.staticLocations, ',')
     try:
         with open(application_config_file_path, 'a') as f:
             for key, value in other_config_map.items():
@@ -362,7 +380,7 @@ def deploy_on_ubuntu(config):
         essential_packages.remove('systemd')
     apt_install_package(parse_iterable_into_str(essential_packages))
     init_database(config)
-    create_or_update_user(config.gitUserName, config.gitUserPassword)
+    create_or_update_user(config.gitUserName, config.gitUserPassword, config.gitHomeDirectory)
     if not os.path.exists(f'{config.gitHomeDirectory}/.ssh'):
         os.system(f"{sudo_cmd} -u {config.gitUserName} mkdir -p {config.gitHomeDirectory}/.ssh")
         os.system(f"{sudo_cmd} -u {config.gitUserName} chmod 700 {config.gitHomeDirectory}/.ssh")
@@ -418,8 +436,6 @@ def clean(config):
     if config.deployWithDocker:
         res = os.system(f"docker stop {config.dockerName}")
         command_checker(res, f"Failed to stop {config.dockerName}")
-        res = os.system(f"docker rm {config.dockerName}")
-        command_checker(res, f"Failed to remove {config.dockerName}")
         return
     if config.serviceType == 'systemd':
         command = f'{sudo_cmd} systemctl disable {config.serviceName}'

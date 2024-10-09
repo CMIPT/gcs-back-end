@@ -52,3 +52,10 @@ mybatis-plus:
 
 logging:
   include-application-name: false
+
+# force to add encoding UTF-8 to response header
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true

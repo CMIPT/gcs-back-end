@@ -16,7 +16,7 @@ import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 public class WebConfig {
-    @Value("${front-end.url:http://localhost:3000}")
+    @Value("${front-end.url}")
     private String frontEndUrl;
 
     @Bean
@@ -38,11 +38,13 @@ public class WebConfig {
     @Profile({ApplicationConstant.PROD_PROFILE, ApplicationConstant.TEST_PROFILE})
     FilterRegistrationBean<CorsFilter> corsFilterNonDev() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin(frontEndUrl);
-        config.addAllowedMethod(HttpMethod.GET);
-        config.addAllowedMethod(HttpMethod.POST);
-        config.addAllowedMethod(HttpMethod.DELETE);
-        config.addAllowedHeader("*");
+        if (frontEndUrl != null && frontEndUrl.length() > 0) {
+            config.addAllowedOrigin(frontEndUrl);
+            config.addAllowedMethod(HttpMethod.GET);
+            config.addAllowedMethod(HttpMethod.POST);
+            config.addAllowedMethod(HttpMethod.DELETE);
+            config.addAllowedHeader("*");
+        }
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration(ApiPathConstant.ALL_API_PREFIX + "/**", config);
         FilterRegistrationBean<CorsFilter> bean =
