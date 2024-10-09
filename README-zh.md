@@ -21,7 +21,7 @@
 | `dockerPortMapping`          | `list`   | `["8080:8080"]`                        | `Docker` 端口映射。 |
 | `dockerWithGpu`              | `bool`   | `false`                                | `Docker` 是否使用 `GPU`。 |
 | `dockerSrcPath`              | `string` | `"/opt/gcs-back-end-src"`              | `Docker` 中源码路径。源码会被拷贝到该路径进行编译。 |
-| `serviceEnable`              | `bool`   | `true`                                 | 是否启用 `systemd` 服务。 |
+| `serviceType`                | `string` | `"systemd"`                            | 部署的服务类型，可选值为 `"systemd"` 和 `"sys-init-v"` |
 | `serviceName`                | `string` | `"gcs"`                                | 服务名称。 |
 | `serviceDescription`         | `string` | `"Git server center back-end service"` | 服务描述。 |
 | `servicePIDFile`             | `string` | `"/var/run/gcs.pid"`                   | 服务 `PID` 文件。 |
@@ -30,6 +30,7 @@
 | `serviceStartJavaCommand`    | `string` | `"/usr/bin/java"`                      | 服务启动的 `Java` 命令。 |
 | `serviceStartJavaArgs`       | `list`   | `["-jar"]`                             | 服务启动的 `Java` 参数。 |
 | `serviceStartJarFile`        | `string` | `"/opt/gcs/gcs.jar"`                   | 服务启动的 `Jar` 文件。脚本会将 `maven` 打包出来的文件拷贝到该位置。 |
+| `serviceEnable`              | `bool`   | `true`                                 | 是否启用 `systemd` 服务。 |
 | `serviceSuffix`              | `string` | `".service"`                           | `systemd` 服务文件后缀。 |
 | `serviceWorkingDirectory`    | `string` | `"/opt/gcs"`                           | `systemd` 服务工作目录。 |
 | `serviceRestartPolicy`       | `string` | `"always"`                             | `systemd` 服务重启策略。 |

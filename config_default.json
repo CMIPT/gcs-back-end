@@ -20,7 +20,7 @@
     ],
     "dockerWithGpu": false,
     "dockerSrcPath": "/opt/gcs-back-end-src",
-    "serviceEnable": true,
+    "serviceType": "systemd",
     "serviceName": "gcs",
     "serviceDescription": "Git server center back-end service",
     "servicePIDFile": "/var/run/gcs.pid",
@@ -31,6 +31,7 @@
         "-jar"
     ],
     "serviceStartJarFile": "/opt/gcs/gcs.jar",
+    "serviceEnable": true,
     "serviceSuffix": ".service",
     "serviceWorkingDirectory": "/opt/gcs",
     "serviceRestartPolicy": "always",

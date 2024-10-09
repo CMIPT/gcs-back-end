@@ -1,15 +1,15 @@
 PIDDIR=$(dirname "$PIDFILE")
 LOGDIR=$(dirname "$LOGFILE")
 start() {
-  if [ -f "$PIDDIR/$PIDNAME" ] && kill -0 "$(cat "$PIDDIR/$PIDNAME")"; then
+  if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")"; then
     echo 'Service already running' >&2
     return 1
   fi
   echo 'Starting service…' >&2
-  local CMD="$SCRIPT &> \"$LOGFILE\" & echo \$!"
   su -c "mkdir -p ""$PIDDIR" "$RUNAS"
   su -c "mkdir -p ""$LOGDIR" "$RUNAS"
-  su -c "$CMD" "$RUNAS" > "$PIDFILE"
+  su -c "$SCRIPT & echo \$!" "$RUNAS" > "$LOGFILE"
+  head -1 "$LOGFILE" > "$PIDFILE"
   echo 'Service started' >&2
 }
 
@@ -24,16 +24,11 @@ stop() {
 }
 
 uninstall() {
-  echo -n "Are you really sure you want to uninstall this service? That cannot be undone. [yes|No] "
-  local SURE
-  read SURE
-  if [ "$SURE" = "yes" ]; then
-    stop
-    rm -f "$PIDFILE"
-    echo "Notice: log file is not be removed: '$LOGFILE'" >&2
-    update-rc.d -f "$NAME" remove
-    rm -fv "$0"
-  fi
+  stop
+  rm -f "$PIDFILE"
+  echo "Notice: log file is not be removed: '$LOGFILE'" >&2
+  update-rc.d -f "$NAME" remove
+  rm -fv "$0"
 }
 
 case "$1" in
