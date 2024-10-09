@@ -468,26 +468,38 @@ def clean(config):
 
 def get_cli_args():
     parser = argparse.ArgumentParser(
-        description="Deploy the project when the environment is ready.")
+        description="Deploy the project when the environment is ready.",
+        formatter_class=argparse.RawTextHelpFormatter,
+        usage="""
+    deploy_helper.py [OPTION]... [--config-path PATH] [--distro DISTRO]
+or: deploy_helper.py [OPTION]... --clean
+or: deploy_helper.py [OPTION]... [--log-level LEVEL] [--in-docker]"""
+        )
     parser.add_argument('--config-path', nargs='?', default='../config.json',
-                        type=str, help="Path to the JSON file")
+                        type=str, help="Default to '../config.json'. Path to config JSON file.")
     parser.add_argument('--distro', nargs='?', default='ubuntu',
-                        type=str, help="Linux distribution")
+                        type=str, help="Default to 'ubuntu'. Set linux distribution.")
     parser.add_argument('--default-config-path', nargs='?', default='../config_default.json',
-                        type=str, help="Linux distribution")
-    parser.add_argument('--clean', action='store_true', help="Clean up the project")
+                        type=str, help="Default to '../config_default.json'. Path to default config JSON file.")
+    parser.add_argument('--clean', action='store_true', help="Default to false. Clean up the project.")
+    parser.add_argument('--in-docker', action='store_true', help="Default to false. Whether or not deploy in docker.")
     parser.add_argument('--log-level', nargs='?', default='INFO',
-                        type=str, help=(
-                            "Set the logging level. Possible values are: "
-                            "'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'. "
-                            "Default is 'INFO'.\n"
-                            "- DEBUG: Detailed information, typically of interest only when diagnosing problems.\n"
-                            "- INFO: Confirmation that things are working as expected.\n"
-                            "- WARNING: An indication that something unexpected happened, or indicative of some problem in the near future. The software is still working as expected.\n"
-                            "- ERROR: Due to a more serious problem, the software has not been able to perform some function.\n"
-                            "- CRITICAL: A very serious error, indicating that the program itself may be unable to continue running."
-                        ))
-    parser.add_argument('--in-docker', action='store_true', help="Whether or not deploy in docker")
+                        type=str, help=("""\
+Default to 'INFO'.
+Set the logging level. Available levels are: 
+'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'.
+- DEBUG: Detailed information, useful for diagnosing issues.
+  Typically only enabled during development or troubleshooting.
+- INFO: General information about the application's normal operations.
+  Used to confirm that things are working as expected.
+- WARNING: Indicates a potential issue or unexpected situation.
+  The application is still running but may encounter problems soon.
+- ERROR: A significant problem occurred, preventing some functionality
+  from working. The application is still running but encountered a failure.
+- CRITICAL: A severe error occurred, causing the application to
+  stop or severely impact functionality. Immediate attention is required.
+"""
+    ))
     return parser.parse_args()
 
 
