@@ -19,7 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @ActiveProfiles({ApplicationConstant.TEST_PROFILE})
 public class WebConfigTest {
-    @Value("${front-end.url:http://localhost:3000}")
+    @Value("${front-end.url}")
     private String frontEndUrl;
 
     @Autowired private MockMvc mockMvc;
@@ -28,15 +28,16 @@ public class WebConfigTest {
     public void testCorsFilter() throws Exception {
         mockMvc.perform(
                         options(ApiPathConstant.DEVELOPMENT_GET_API_MAP_API_PATH)
-                                .header("Origin", frontEndUrl)
-                                .header("Access-Control-Request-Method", "GET"))
-                .andExpectAll(
-                        status().isOk(),
-                        header().string("Access-Control-Allow-Origin", frontEndUrl));
-
-        mockMvc.perform(
-                        options(ApiPathConstant.DEVELOPMENT_GET_API_MAP_API_PATH)
                                 .header("Origin", frontEndUrl + "/INVALID"))
                 .andExpectAll(status().isForbidden());
+        if (frontEndUrl != null && frontEndUrl.length() > 0) {
+            mockMvc.perform(
+                            options(ApiPathConstant.DEVELOPMENT_GET_API_MAP_API_PATH)
+                                    .header("Origin", frontEndUrl)
+                                    .header("Access-Control-Request-Method", "GET"))
+                    .andExpectAll(
+                            status().isOk(),
+                            header().string("Access-Control-Allow-Origin", frontEndUrl));
+        }
     }
 }

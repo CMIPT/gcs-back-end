@@ -5,11 +5,13 @@
     "profiles": [
         "dev"
     ],
-    "serviceType": "systemd",
     "postgresqlUserName": "gcs_debug",
     "postgresqlUserPassword": "gcs_debug",
     "postgresqlDatabaseName": "gcs_debug",
     "deleteGitUser": false,
     "deleteServiceUser": false,
-    "md5Salt": "Is that the best you can do?"
+    "frontEndUrl": null,
+    "md5Salt": "Is that the best you can do?",
+    "staticPathPattern": "/**",
+    "staticLocations": ["/home/kaiser/test1", "/home/kaiser/test2"]
 }

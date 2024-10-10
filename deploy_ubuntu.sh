@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-config_file=${1:-"config_user.json"}
+config_file=${1:-"config.json"}
 
 log_error () {
     echo -e "\e[31m[ERROR]: $1\e[0m"

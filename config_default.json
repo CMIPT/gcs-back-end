@@ -54,8 +54,10 @@
     "postgresqlPort": 5432,
     "druidLoginUsername": "druid",
     "druidLoginPassword": "druid",
-    "frontEndUrl": "http://localhost:3000",
     "deleteGitUser": true,
     "deleteServiceUser": true,
-    "md5Salt": ""
+    "md5Salt": "",
+    "frontEndUrl": "http://localhost:3000",
+    "staticPathPattern": null,
+    "staticLocations": null
 }
