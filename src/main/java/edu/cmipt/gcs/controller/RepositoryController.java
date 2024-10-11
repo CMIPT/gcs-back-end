@@ -58,11 +58,6 @@ public class RepositoryController {
     public void createRepository(
             @Validated(CreateGroup.class) @RequestBody RepositoryDTO repository,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        if (repository.isPrivate() != null && repository.isPrivate()) {
-            throw new GenericException(
-                    ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED,
-                    "private repository is not implemented");
-        }
         String userId = JwtUtil.getId(accessToken);
         RepositoryPO repositoryPO = new RepositoryPO(repository, userId, true);
         QueryWrapper<RepositoryPO> queryWrapper = new QueryWrapper<>();
