@@ -62,9 +62,7 @@ public class RepositoryPO {
                             .append(GitConstant.GIT_SERVER_DOMAIN)
                             .append(":")
                             .append(GitConstant.GIT_SERVER_PORT)
-                            .append(
-                                    Paths.get("/", userId.toString(),
-                                              repositoryName).toString())
+                            .append(Paths.get("/", userId.toString(), repositoryName).toString())
                             .toString();
         }
     }

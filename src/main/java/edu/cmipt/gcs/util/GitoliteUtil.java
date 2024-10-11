@@ -2,14 +2,14 @@ package edu.cmipt.gcs.util;
 
 import edu.cmipt.gcs.constant.GitConstant;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class GitoliteUtil {
     private static final Logger logger = LoggerFactory.getLogger(GitoliteUtil.class);
@@ -23,14 +23,15 @@ public class GitoliteUtil {
         }
         try {
             Files.createFile(userConfPath);
-            String content = 
-            """
-            @%d_public_repo = testing
-            @%d_private_repo =
-            @%d_ssh_key =
-            repo @%d_private_repo
-                RW+ = @%d_ssh_key
-            """.formatted(userId, userId, userId, userId, userId);
+            String content =
+                    """
+                    @%d_public_repo = testing
+                    @%d_private_repo =
+                    @%d_ssh_key =
+                    repo @%d_private_repo
+                        RW+ = @%d_ssh_key
+                    """
+                            .formatted(userId, userId, userId, userId, userId);
             Files.writeString(userConfPath, content);
             List<String> lines = Files.readAllLines(Paths.get(GitConstant.GITOLITE_CONF_FILE_PATH));
             for (int i = 0; i < lines.size(); i++) {
@@ -39,7 +40,10 @@ public class GitoliteUtil {
                     lines.set(i, line + ' ' + "@%d_public_repo".formatted(userId));
                     Files.write(Paths.get(GitConstant.GITOLITE_CONF_FILE_PATH), lines);
                     String message = "Add user " + userId;
-                    Path[] files = {Paths.get("conf", "gitolite.d", userFileName), Paths.get("conf", "gitolite.conf")};
+                    Path[] files = {
+                        Paths.get("conf", "gitolite.d", userFileName),
+                        Paths.get("conf", "gitolite.conf")
+                    };
                     if (!GitoliteUtil.commitAndPush(message, files)) {
                         logger.error("Failed to commit and push changes");
                         return false;
@@ -63,14 +67,21 @@ public class GitoliteUtil {
         }
         try {
             Files.writeString(sshKeyPath, key);
-            List<String> lines = Files.readAllLines(Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"));
+            List<String> lines =
+                    Files.readAllLines(
+                            Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"));
             for (int i = 0; i < lines.size(); i++) {
                 String line = lines.get(i);
                 if (line.startsWith("@%d_ssh_key".formatted(userId))) {
                     lines.set(i, line + ' ' + sshKeyId);
-                    Files.write(Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"), lines);
+                    Files.write(
+                            Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"),
+                            lines);
                     String message = "Add ssh key " + sshKeyId;
-                    Path[] files = {Paths.get("keydir", sshKeyId + ".pub"), Paths.get("conf", "gitolite.d", userId + ".conf")};
+                    Path[] files = {
+                        Paths.get("keydir", sshKeyId + ".pub"),
+                        Paths.get("conf", "gitolite.d", userId + ".conf")
+                    };
                     if (!GitoliteUtil.commitAndPush(message, files)) {
                         logger.error("Failed to commit and push");
                         return false;
@@ -99,14 +110,21 @@ public class GitoliteUtil {
             return false;
         }
         try {
-            List<String> lines = Files.readAllLines(Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"));
+            List<String> lines =
+                    Files.readAllLines(
+                            Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"));
             for (int i = 0; i < lines.size(); i++) {
                 String line = lines.get(i);
                 if (line.startsWith("@%d_ssh_key".formatted(userId))) {
                     lines.set(i, line.replace(" " + sshKeyId, ""));
-                    Files.write(Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"), lines);
+                    Files.write(
+                            Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"),
+                            lines);
                     String message = "Remove ssh key " + sshKeyId;
-                    Path[] files = {Paths.get("keydir", sshKeyId + ".pub"), Paths.get("conf", "gitolite.d", userId + ".conf")};
+                    Path[] files = {
+                        Paths.get("keydir", sshKeyId + ".pub"),
+                        Paths.get("conf", "gitolite.d", userId + ".conf")
+                    };
                     if (!GitoliteUtil.commitAndPush(message, files)) {
                         logger.error("Failed to commit and push");
                         return false;
@@ -143,14 +161,20 @@ public class GitoliteUtil {
         return true;
     }
 
-    public static synchronized boolean createRepository(String repositoryName, Long userId, boolean isPrivate) {
+    public static synchronized boolean createRepository(
+            String repositoryName, Long userId, boolean isPrivate) {
         try {
-            List<String> lines = Files.readAllLines(Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"));
+            List<String> lines =
+                    Files.readAllLines(
+                            Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"));
             for (int i = 0; i < lines.size(); i++) {
                 String line = lines.get(i);
-                if (line.startsWith("@%d_%s_repo".formatted(userId, isPrivate ? "private" : "public"))) {
+                if (line.startsWith(
+                        "@%d_%s_repo".formatted(userId, isPrivate ? "private" : "public"))) {
                     lines.set(i, line + ' ' + userId + '/' + repositoryName);
-                    Files.write(Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"), lines);
+                    Files.write(
+                            Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"),
+                            lines);
                     String message = "Add repository " + userId + '/' + repositoryName;
                     Path[] files = {Paths.get("conf", "gitolite.d", userId + ".conf")};
                     if (!GitoliteUtil.commitAndPush(message, files)) {
@@ -164,24 +188,38 @@ public class GitoliteUtil {
             logger.error(e.getMessage());
             return false;
         }
-        logger.error("Can not find @{}_{}_repo in user configuration".formatted(userId, isPrivate ? "private" : "public"));
+        logger.error(
+                "Can not find @{}_{}_repo in user configuration"
+                        .formatted(userId, isPrivate ? "private" : "public"));
         return false;
     }
 
-    public static synchronized boolean removeRepository(String repositoryName, Long userId, boolean isPrivate) {
+    public static synchronized boolean removeRepository(
+            String repositoryName, Long userId, boolean isPrivate) {
         try {
-            List<String> lines = Files.readAllLines(Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"));
+            List<String> lines =
+                    Files.readAllLines(
+                            Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"));
             for (int i = 0; i < lines.size(); i++) {
                 String line = lines.get(i);
-                if (line.startsWith("@%d_%s_repo".formatted(userId, isPrivate ? "private" : "public"))) {
+                if (line.startsWith(
+                        "@%d_%s_repo".formatted(userId, isPrivate ? "private" : "public"))) {
                     lines.set(i, line.replace(" " + userId + '/' + repositoryName, ""));
-                    Files.write(Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"), lines);
+                    Files.write(
+                            Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userId + ".conf"),
+                            lines);
                     String message = "Remove repository " + userId + '/' + repositoryName;
                     Path[] files = {Paths.get("conf", "gitolite.d", userId + ".conf")};
                     if (!GitoliteUtil.commitAndPush(message, files)) {
                         logger.error("Failed to commit and push");
                     }
-                    String repositorySavePath = Paths.get(GitConstant.GIT_HOME_DIRECTORY, "repositories", userId.toString(), repositoryName + ".git").toString();
+                    String repositorySavePath =
+                            Paths.get(
+                                            GitConstant.GIT_HOME_DIRECTORY,
+                                            "repositories",
+                                            userId.toString(),
+                                            repositoryName + ".git")
+                                    .toString();
                     ProcessBuilder dirRemover =
                             new ProcessBuilder(
                                     "sudo",
@@ -202,11 +240,13 @@ public class GitoliteUtil {
             logger.error(e.getMessage());
             return false;
         }
-        logger.error("Can not find @{}_{}_repo in user configuration".formatted(userId, isPrivate ? "private" : "public"));
+        logger.error(
+                "Can not find @{}_{}_repo in user configuration"
+                        .formatted(userId, isPrivate ? "private" : "public"));
         return false;
     }
 
-    private static synchronized boolean commitAndPush(String message, Path ...files) {
+    private static synchronized boolean commitAndPush(String message, Path... files) {
         if (files.length == 0) {
             logger.error("No files to commit");
             return false;
@@ -239,10 +279,7 @@ public class GitoliteUtil {
             }
             ProcessBuilder push =
                     new ProcessBuilder(
-                            "git",
-                            "-C",
-                            GitConstant.GITOLITE_ADMIN_REPOSITORY_PATH,
-                            "push");
+                            "git", "-C", GitConstant.GITOLITE_ADMIN_REPOSITORY_PATH, "push");
             process = push.start();
             if (process.waitFor() != 0) {
                 logger.error("Failed to push changes");

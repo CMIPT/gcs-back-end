@@ -1,9 +1,9 @@
 package edu.cmipt.gcs.constant;
 
-import java.nio.file.Paths;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.nio.file.Paths;
 
 @Component
 public class GitConstant {
@@ -51,9 +51,13 @@ public class GitConstant {
     @Value("${gitolite.admin.repository.path}")
     public void setGITOLITE_ADMIN_REPOSITORY_PATH(String gitoliteAdminRepositoryPath) {
         GitConstant.GITOLITE_ADMIN_REPOSITORY_PATH = gitoliteAdminRepositoryPath;
-        GitConstant.GITOLITE_CONF_DIR_PATH = Paths.get(gitoliteAdminRepositoryPath, "conf").toString();
-        GitConstant.GITOLITE_CONF_FILE_PATH = Paths.get(GITOLITE_CONF_DIR_PATH, "gitolite.conf").toString();
-        GitConstant.GITOLITE_USER_CONF_DIR_PATH = Paths.get(GITOLITE_CONF_DIR_PATH, "gitolite.d").toString();
-        GitConstant.GITOLITE_KEY_DIR_PATH = Paths.get(gitoliteAdminRepositoryPath, "keydir").toString();
+        GitConstant.GITOLITE_CONF_DIR_PATH =
+                Paths.get(gitoliteAdminRepositoryPath, "conf").toString();
+        GitConstant.GITOLITE_CONF_FILE_PATH =
+                Paths.get(GITOLITE_CONF_DIR_PATH, "gitolite.conf").toString();
+        GitConstant.GITOLITE_USER_CONF_DIR_PATH =
+                Paths.get(GITOLITE_CONF_DIR_PATH, "gitolite.d").toString();
+        GitConstant.GITOLITE_KEY_DIR_PATH =
+                Paths.get(gitoliteAdminRepositoryPath, "keydir").toString();
     }
 }

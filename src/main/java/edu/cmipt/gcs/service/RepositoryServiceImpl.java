@@ -33,9 +33,14 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
             logger.error("Failed to save repository to database");
             return false;
         }
-        if (!GitoliteUtil.createRepository(repositoryPO.getRepositoryName(), repositoryPO.getUserId(), repositoryPO.getIsPrivate())) {
+        if (!GitoliteUtil.createRepository(
+                repositoryPO.getRepositoryName(),
+                repositoryPO.getUserId(),
+                repositoryPO.getIsPrivate())) {
             logger.error("Failed to create repository in gitolite");
-            throw new GenericException(ErrorCodeEnum.REPOSITORY_CREATE_FAILED, "Failed to create repository in gitolite");
+            throw new GenericException(
+                    ErrorCodeEnum.REPOSITORY_CREATE_FAILED,
+                    "Failed to create repository in gitolite");
         }
         return true;
     }
@@ -49,9 +54,14 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
             logger.error("Failed to remove repository from database");
             return false;
         }
-        if (!GitoliteUtil.removeRepository(repositoryPO.getRepositoryName(), repositoryPO.getUserId(), repositoryPO.getIsPrivate())) {
+        if (!GitoliteUtil.removeRepository(
+                repositoryPO.getRepositoryName(),
+                repositoryPO.getUserId(),
+                repositoryPO.getIsPrivate())) {
             logger.error("Failed to remove repository from gitolite");
-            throw new GenericException(ErrorCodeEnum.REPOSITORY_DELETE_FAILED, "Failed to remove repository from gitolite");
+            throw new GenericException(
+                    ErrorCodeEnum.REPOSITORY_DELETE_FAILED,
+                    "Failed to remove repository from gitolite");
         }
         return true;
     }
