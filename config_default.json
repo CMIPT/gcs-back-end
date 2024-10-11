@@ -11,7 +11,7 @@
     "gitServerDomain": "localhost",
     "gitServerPort": 22,
     "localSshdPort": 22,
-    "deployWithDocker": true,
+    "deployWithDocker": false,
     "dockerName": "gcs-back-end",
     "dockerImage": "ubuntu:20.04",
     "dockerPortMapping": [
@@ -19,7 +19,7 @@
     ],
     "dockerWithGpu": false,
     "dockerSrcPath": "/opt/gcs-back-end-src",
-    "serviceType": "systemd",
+    "serviceType": "sys-init-v",
     "serviceName": "gcs",
     "serviceDescription": "Git server center back-end service",
     "servicePIDFile": "/var/run/gcs.pid",
