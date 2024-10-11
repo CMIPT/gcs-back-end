@@ -78,8 +78,6 @@ public class RepositoryControllerTest {
         matcher = Pattern.compile("repositoryName=(.+?),").matcher(content);
         matcher.find();
         TestConstant.REPOSITORY_NAME = matcher.group(1);
-        System.out.println(TestConstant.REPOSITORY_ID);
-        System.out.println(TestConstant.REPOSITORY_NAME);
     }
 
     @Test

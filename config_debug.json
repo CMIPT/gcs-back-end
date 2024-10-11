@@ -1,6 +1,5 @@
 {
     "deployWithDocker": false,
-    "skipTest": false,
     "deployLogLevel": "debug",
     "profiles": [
         "dev"

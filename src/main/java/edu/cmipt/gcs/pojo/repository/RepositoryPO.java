@@ -41,6 +41,9 @@ public class RepositoryPO {
             this.repositoryDescription = "";
         }
         this.isPrivate = repositoryDTO.isPrivate();
+        if (this.isPrivate == null) {
+            this.isPrivate = false;
+        }
         try {
             this.userId = Long.valueOf(userId);
         } catch (NumberFormatException e) {
@@ -60,12 +63,8 @@ public class RepositoryPO {
                             .append(":")
                             .append(GitConstant.GIT_SERVER_PORT)
                             .append(
-                                    Paths.get(
-                                                    GitConstant.GIT_REPOSITORY_DIRECTORY,
-                                                    userId.toString(),
-                                                    repositoryName
-                                                            + GitConstant.GIT_REPOSITORY_SUFFIX)
-                                            .toString())
+                                    Paths.get("/", userId.toString(),
+                                              repositoryName).toString())
                             .toString();
         }
     }

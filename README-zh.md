@@ -62,17 +62,16 @@
 下面列出了完整的配置选项：
 | 变量                         | 类型     | 默认值                                 | 说明 |
 | -                            | -        | -                                      | - |
-| `deploy`                     | `bool`   | `true`                                 | 是否进行部署，当为 `false` 只进行打包操作。 |
 | `profiles`                   | `list`   | `["dev"]`                              | 启动的配置类型。 |
 | `deployLogLevel`             | `string` | `"info"`                               | 部署脚本的日志级别。 |
-| `skipTest`                   | `bool`   | `true`                                 | 是否跳过测试。 |
+| `adminName`                  | `string` | `"gcs-admin"`                          | `gcsolite` 提交时的用户名。 |
+| `adminEmail`                 | `string` | `"gcs-admin@localhost"`                | `gcsolite` 提交时的邮箱。 |
 | `gitUserName`                | `string` | `"git"`                                | 用于保存 `git` 仓库的用户名。 |
 | `gitHomeDirectory`           | `string` | `"/home/git"`                          | `git` 用户的家目录。 |
 | `gitUserPassword`            | `string` | `"git"`                                | 用于保存 `git` 仓库的用户密码。 |
-| `gitRepositoryDirectory`     | `string` | `"/home/git/repository"`               | `git` 仓库存放目录。不要使用 `~`。 |
 | `gitServerDomain`            | `string` | `"localhost"`                          | 服务器域名。 |
 | `gitServerPort`              | `int`    | `22`                                   | 服务器端口。 |
-| `gitRepositorySuffix`        | `string` | `".git"`                               | `git` 仓库后缀。 |
+| `localSshdPort`              | `int`    | `22`                                   | 本地 `sshd` 端口。 |
 | `deployWithDocker`           | `bool`   | `true`                                 | 是否使用 `Docker` 进行部署。 |
 | `dockerName`                 | `string` | `"gcs-backend"`                        | `Docker` 容器名称。 |
 | `dockerImage`                | `string` | `"ubuntu:latest"`                      | `Docker` 镜像。 |
@@ -85,10 +84,11 @@
 | `servicePIDFile`             | `string` | `"/var/run/gcs.pid"`                   | 服务 `PID` 文件。 |
 | `serviceUser`                | `string` | `"gcs"`                                | 服务运行用户。 |
 | `serviceUserPassword`        | `string` | `"gcs"`                                | 服务运行用户密码。 |
+| `serviceUserHomeDirectory`   | `string` | `"/home/gcs"`                          | 服务运行用户家目录。 |
 | `serviceStartJavaCommand`    | `string` | `"/usr/bin/java"`                      | 服务启动的 `Java` 命令。 |
 | `serviceStartJavaArgs`       | `list`   | `["-jar"]`                             | 服务启动的 `Java` 参数。 |
 | `serviceStartJarFile`        | `string` | `"/opt/gcs/gcs.jar"`                   | 服务启动的 `Jar` 文件。脚本会将 `maven` 打包出来的文件拷贝到该位置。 |
-| `serviceEnable`              | `bool`   | `true`                                 | 是否启用 `systemd` 服务。 |
+| `serviceStartWithBoot`       | `bool`   | `true`                                 | 服务是否随系统启动。 |
 | `serviceSuffix`              | `string` | `".service"`                           | `systemd` 服务文件后缀。 |
 | `serviceWorkingDirectory`    | `string` | `"/opt/gcs"`                           | `systemd` 服务工作目录。 |
 | `serviceRestartPolicy`       | `string` | `"always"`                             | `systemd` 服务重启策略。 |
@@ -97,7 +97,6 @@
 | `serviceWantedBy`            | `list`   | `["multi-user.target"]`                | `systemd` 服务会被这些服务依赖。 |
 | `serviceSystemdDirectory`    | `string` | `"/etc/systemd/system"`                | `systemd` 服务文件存放目录。 |
 | `serviceSysVInitDirectory`   | `string` | `"/etc/init.d"`                        | `Sys-Init-V` 服务文件存放目录。 |
-| `serviceStartWithBoot`       | `bool`   | `true`                                 | `Sys-Init-V` 服务是否随系统启动。 |
 | `serviceLogFile`             | `string` | `"/tmp/log/gcs.log"`                   | `Sys-Init-V` 服务日志文件。 |
 | `postgresUserPassword`       | `string` | `"postgres"`                           | `Linux` 中 `Postgres` 用户密码。 |
 | `postgresqlUserName`         | `string` | `"gcs"`                                | `Postgres` 用户名称。 |
@@ -133,15 +132,68 @@
 数据库的自动初始化 (请确保工作目录为仓库的根目录)。
 
 ### `git` 用户创建
-你需要创建一个用户用于执行仓库创建、克隆等操作，通常取名为 `git`，并且在其家目录下创建 `.ssh` 文件夹
-并将权限修改为 `700`。
+你需要创建一个用户用于执行仓库创建、克隆等操作，通常取名为 `git`，如果你需要重新配置 `gitolite`
+你需要确保该用户是新创建的而不是已有的。
+
+### `gitolite` 初始化
+首先你需要确定最后你的 `Java` 程序会以哪个用户的身份运行，假设你已经确定最后你会以 `gcs` 用户的身份
+运行。按照以下步骤进行 `gitolite` 的初始化：
+
+1. 克隆 `gitolite` 的仓库到 `git` 用户 (取决于你在 [创建 `git` 用户](#git-用户创建) 步骤中创建的用户)
+的家目录。你可以通过 `su -c 'git clone https://github.com/sitaramc/gitolite /home/git/gitolite' git`
+命令来实现 (可能需要输入 `git` 用户密码)。
+2. 通过以下命令安装 `gitolite`：
+
+```bash
+# 可能需要输入 `git` 用户密码
+su -c 'mkdir -p /home/git/bin' git
+su -c '/home/git/gitolite/install -to /home/git/bin' git
+```
+
+3. 拷贝 `gcs` 用户的公钥到 `git` 用户的家目录下面，通常为 `/home/git`，并且重命名为 `gcs.pub`：
+
+```bash
+# 可能 `root` 权限
+su -c 'cp /home/gcs/.ssh/id_rsa.pub /home/git/gcs.pub' git
+chown git:git /home/git/gcs.pub
+```
+
+4. 设置 `gitolite` 的管理员：
+
+```bash
+# 可能需要输入 `git` 用户密码
+su -c '/home/git/bin/gitolite setup -pk /home/git/gcs.pub' git
+```
+
+5. 克隆 `gitolite-admin` 仓库到 `gcs` 用户的家目录下面：
+
+```bash
+# 可能需要输入 `gcs` 用户密码
+# 你需要注意 `sshd` 的端口是否为 `22`
+su -c 'git clone ssh://git@localhost:22/gitolite-admin /home/gcs/gitolite-admin' gcs
+```
+
+6. 初始化 `gitolite-admin` 仓库。为了保证程序的正确运行，你需要用下面代码块中的内容替换
+`conf/gitolite.conf` 文件中的内容，替换后你需要提交并推送：
+`git commit -am "Init gcs commit"` 和 `git push`。这个过程中可能会提示你对 `gcs` 用户 配置提交的
+用户名和邮箱，你可以按照提示进行配置。
+
+```bash
+repo gitolite-admin
+    RW+ = {config.serviceUser}
+repo testing
+    R = @all
+include "gitolite.d/*.conf"
+@all_public_repo =
+repo @all_public_repo
+    R = @all
+```
 
 ### 修改 `sudo` 配置
-你需要保证你运行 `Java` 程序的用户能够在执行 `sudo -u <git_user> rm`，`sudo -u <git_user> tee` 以及
-`sudo -u <git_user> git` 时不需要输入密码，其中 `<git_user>` 为 [git 用户创建](#git-用户创建) 时
-创建的用户名。
+你需要保证你运行 `Java` 程序的用户能够在执行 `sudo -u <git_user> rm`
+时不需要输入密码，其中 `<git_user>` 为 [git 用户创建](#git-用户创建) 时创建的用户名。
 
-通常你需要追加 `<java_user> ALL=(<git_user>) NOPASSWD：/usr/bin/git, /usr/bin/tee, /usr/bin/rm` 到
+通常你需要追加 `<java_user> ALL=(<git_user>) NOPASSWD: /usr/bin/rm` 到
 `/etc/sudoers` 文件中，其中 `<java_user>` 为你运行 `Java` 程序的用户。
 
 ### 配置 `application.yml` 或者 `application.properties`
@@ -168,10 +220,6 @@ git.server.port=
 git.user.name=
 # `git` 用户创建部分创建的家目录
 git.home.directory=
-# 仓库保存位置，需要确保 git.user.name 用户拥有 rwx 的权限
-git.repository.directory=
-# 仓库后缀，通常设置为 .git
-git.repository.suffix=
 # md5 的盐值，用于对用户密码进行加密
 md5.salt=
 # 前端地址，用于进行跨域配置
@@ -180,6 +228,8 @@ front-end.url=
 spring.mvc.static-path-pattern=
 # 静态资源的路径，需要使用绝对路径，例如 file:/static
 spring.resources.static-locations=
+# gitolite 仓库所在的路径
+gitolite.admin.repository.path=
 ```
 
 **注意**：需要注意的是，所有的后端接口均是以 `gcs` 开头，所以在静态资源路径下面不应该有名为 `gcs`
@@ -215,3 +265,48 @@ else
     fi
 fi
 ```
+
+## 开发者工具
+对于开发者而言，使用自动部署脚本并不方便，开发者需要的是一个能够自动部署好所需要环境的脚本，而不需要
+部署整个服务。
+
+为了方便开发者的开发，在仓库的根目录下面提供了 `prepare_dev.sh` 脚本，该脚本会自动完成以下工作：
+* 安装 `postgresql`，`postgresql-client`，`openjdk-17-jdk-headless`，`maven`，`git`，`openssh-server`。
+* 删除名为 `gcs_dev` 的数据库并以 `postgres` 用户创建一个新的 `gcs_dev` 数据库以及相关的表。
+* 删除名为 `git` 的用户并创建一个新的 `git` 用户。为 `git` 用户安装 `gitolite`。
+* 删除 `home/"$USER"/gitolite-admin` 目录并重新克隆 `gitolite-admin` 仓库到
+`home/"$USER"/gitolite-admin` (其中的 `$USER` 将会被替换成脚本的执行者，后续同理)。
+* 初始化 `gitolite-admin` 仓库的相关配置。
+* 覆盖写 `$USER ALL=(git) NOPASSWD: /usr/bin/rm` 到 `/etc/sudoers.d/gcs_dev` 文件。
+* 覆盖写 `application.properties`。
+
+`application.properties` 中的内容将会被覆盖为：
+
+```properties
+spring.datasource.druid.username=postgres
+spring.datasource.druid.password=$1
+spring.datasource.druid.url=jdbc:postgresql://localhost:5432/gcs_dev
+spring.datasource.druid.stat-view-servlet.login-username=druid
+spring.datasource.druid.stat-view-servlet.login-password=druid
+spring.profiles.active=dev
+git.server.domain=localhost
+git.server.port=22
+git.user.name=git
+git.home.directory=/home/git
+md5.salt=Is that the best you can do?
+front-end.url=
+spring.mvc.static-path-pattern=
+spring.resources.static-locations=
+gitolite.admin.repository.path=/home/$USER/gitolite-admin
+```
+
+其中 `$1` 会被替换成执行脚本时传入的第一个参数。脚本的使用方法为
+`bash prepare_dev.sh <db_postgres_password>`，其中的 `<db_postgres_password>` 为
+`postgres` 用户 (这里指数据库中的用户而不是 `OS` 中的用户) 的密码，在执行脚本之前确保当前用户可以使用
+`sudo` 进行操作。
+
+在脚本执行成功后，开发者便可以通过 `mvn spring-boot:run` 启动程序，或者通过 `mvn test` 执行单元测试。
+
+**注意**：有时在执行 `mvn spring-boot:run` 或者 `mvn test` 时会提示 `target` 目录的权限不够，这往往
+是因为在使用 `bash prepare_dev.sh <db_postgres_password` 之前可能以其他用户的身份执行过 `mvn` 命令，
+导致 `target` 的所有者不是当前用户，这时候你只需要删除 `target` 目录即可。
