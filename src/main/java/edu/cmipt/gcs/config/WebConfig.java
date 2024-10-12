@@ -4,8 +4,6 @@ import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 
-import java.util.Arrays;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +14,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+
+import java.util.Arrays;
 
 @Configuration
 public class WebConfig {
@@ -59,14 +59,16 @@ public class WebConfig {
     }
 
     private void addExposedHeader(CorsConfiguration config) {
-        Arrays.stream(HeaderParameter.class.getFields()).forEach(field -> {
-            try {
-                if (field.getType() == String.class && field.canAccess(null)) {
-                    config.addExposedHeader((String)field.get(null));
-                }
-            } catch (IllegalAccessException e) {
-                // ignore
-            }
-        });
+        Arrays.stream(HeaderParameter.class.getFields())
+                .forEach(
+                        field -> {
+                            try {
+                                if (field.getType() == String.class && field.canAccess(null)) {
+                                    config.addExposedHeader((String) field.get(null));
+                                }
+                            } catch (IllegalAccessException e) {
+                                // ignore
+                            }
+                        });
     }
 }
