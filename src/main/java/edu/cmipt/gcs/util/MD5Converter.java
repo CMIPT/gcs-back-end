@@ -13,6 +13,9 @@ public class MD5Converter {
     @Value("${md5.salt}")
     public void setMD5Salt(String salt) {
         MD5_SALT = salt;
+        if (MD5_SALT == null) {
+            MD5_SALT = "";
+        }
     }
 
     public static String convertToMD5(String input) {
