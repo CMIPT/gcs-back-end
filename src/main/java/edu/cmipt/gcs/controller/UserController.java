@@ -72,7 +72,7 @@ public class UserController {
                 description = "User name",
                 example = "admin",
                 required = true,
-                in = ParameterIn.PATH,
+                in = ParameterIn.QUERY,
                 schema = @Schema(implementation = String.class))
     })
     @ApiResponses({
