@@ -14,7 +14,7 @@ import logging
 import inspect
 
 essential_packages = ['postgresql postgresql-client', 'openjdk-17-jdk-headless', 'maven',
-                      'systemd', 'sudo', 'git', 'openssh-server']
+                      'sudo', 'git', 'openssh-server']
 apt_updated = False
 message_tmp = '''\
 The command below failed:
@@ -444,6 +444,18 @@ def deploy_on_ubuntu(config):
     if config.serviceType != 'systemd':
         essential_packages.remove('systemd')
     apt_install_package(parse_iterable_into_str(essential_packages))
+    command = 'service postgresql restart'
+    res = os.system(command)
+    message = message_tmp.format(command, res)
+    command_checker(res, message)
+    command = 'service ssh restart'
+    res = os.system(command)
+    message = message_tmp.format(command, res)
+    command_checker(res, message)
+    command = 'service sshd restart'
+    res = os.system(command)
+    message = message_tmp.format(command, res)
+    command_checker(res, message)
     init_database(config)
     create_or_update_user(config.serviceUser, config.serviceUserPassword)
     if os.path.exists(f'{config.serviceUserHomeDirectory}/.ssh'):

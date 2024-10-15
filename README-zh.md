@@ -13,14 +13,10 @@
 * `sudo`
 * `git`
 * `openssh-server`
-* `systemd` (可选)
 
-其中 `systemd` 是可选项，是否需要取决于 `serviceType` 的值是否是 `"systemd"`，当值为 `"systemd"` 的
-时候需要保证 `systemd` 可以被 `apt` 安装。
-
-自动部署是通过 `bash deploy_ubuntu.sh [config_file]` 来进行部署，当不指定 `config_file` 选项时将会
-使用 `config.json` 作为默认值，所以推荐将配置直接写入到 `config.json` 中，然后通过
-`bash deploy_ubuntu.sh` 进行部署。
+自动部署是通过 `bash deploy_ubuntu.sh [config_file]` 来进行部署 (你需要以 `root` 用户身份运行该命令)，
+当不指定 `config_file` 选项时将会使用 `config.json` 作为默认值，所以推荐将配置直接写入到
+`config.json` 中，然后通过 `bash deploy_ubuntu.sh` 进行部署。
 
 在进行配置的时候，如果用户没有指定配置项，那么将会使用 `config_default.json` 中的值作为默认值，所以
 请不要修改 `config_default.json` 文件中的内容。
@@ -37,7 +33,8 @@
 * `dockerPortMapping`：`Docker` 端口映射，如果 `deployWithDocker` 为 `true`，那么将会使用该端口映射。
 * `serviceType`：部署的服务类型，如果 `deployWithDocker` 为真，那么该值只有为 `sys-init-v` 时脚本才
 能正确执行，当然如果直接在 `docker` 内部执行自动部署脚本，那么该值可以为 `systemd` (`docker` 必须
-使用 `--privileged` 选项进行创建)。
+使用 `--privileged` 选项进行创建)，如果部署主机使用 `systemd` 进行服务管理，那么该值应为 `systemd`；
+如果使用 `Sys-Init-V` 进行服务管理，那么该值应为 `sys-init-v`。
 * `serviceUserPassword`：服务的用户密码，部署的服务 (`Java` 程序) 会以一个新的用户身份执行，该用户
 的密码将会被设置为该值。
 * `postgresUserPassword`：操作系统中的 `postgres` 用户的密码，`postgres` 用户会在安装 `postgresql`
@@ -59,6 +56,9 @@
 **注意**：如果将前端直接部署在同一个域上面，那么可以设置 `frontEndUrl` 为空字符串，然后配置
 `staticPathPattern` 和 `staticLocations` 为前端的静态资源路径。
 
+**注意**：如果启用 `deployWithDocker` 你需要确保 `Docker` 已经安装并且 `Docker` 守护进程已经启动。
+同时你需要拉取子仓库，你可以通过 `git submodule update --init --recursive` 来拉取子仓库。
+
 下面列出了完整的配置选项：
 | 变量                         | 类型     | 默认值                                 | 说明 |
 | -                            | -        | -                                      | - |
@@ -72,13 +72,13 @@
 | `gitServerDomain`            | `string` | `"localhost"`                          | 服务器域名。 |
 | `gitServerPort`              | `int`    | `22`                                   | 服务器端口。 |
 | `localSshdPort`              | `int`    | `22`                                   | 本地 `sshd` 端口。 |
-| `deployWithDocker`           | `bool`   | `true`                                 | 是否使用 `Docker` 进行部署。 |
+| `deployWithDocker`           | `bool`   | `false`                                | 是否使用 `Docker` 进行部署。 |
 | `dockerName`                 | `string` | `"gcs-backend"`                        | `Docker` 容器名称。 |
 | `dockerImage`                | `string` | `"ubuntu:latest"`                      | `Docker` 镜像。 |
 | `dockerPortMapping`          | `list`   | `["8080:8080"]`                        | `Docker` 端口映射。 |
 | `dockerWithGpu`              | `bool`   | `false`                                | `Docker` 是否使用 `GPU`。 |
 | `dockerSrcPath`              | `string` | `"/opt/gcs-back-end-src"`              | `Docker` 中源码路径。源码会被拷贝到该路径进行编译。 |
-| `serviceType`                | `string` | `"systemd"`                            | 部署的服务类型，可选值为 `"systemd"` 和 `"sys-init-v"` |
+| `serviceType`                | `string` | `"sys-init-v"`                         | 部署的服务类型，可选值为 `"systemd"` 和 `"sys-init-v"` |
 | `serviceName`                | `string` | `"gcs"`                                | 服务名称。 |
 | `serviceDescription`         | `string` | `"Git server center back-end service"` | 服务描述。 |
 | `servicePIDFile`             | `string` | `"/var/run/gcs.pid"`                   | 服务 `PID` 文件。 |
