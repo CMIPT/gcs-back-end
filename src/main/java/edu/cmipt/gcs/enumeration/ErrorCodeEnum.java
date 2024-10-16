@@ -66,7 +66,10 @@ public enum ErrorCodeEnum {
     SSH_KEY_DELETE_FAILED("SSH_KEY_DELETE_FAILED"),
     SSH_KEY_NOT_FOUND("SSH_KEY_NOT_FOUND"),
 
-    OPERATION_NOT_IMPLEMENTED("OPERATION_NOT_IMPLEMENTED");
+    OPERATION_NOT_IMPLEMENTED("OPERATION_NOT_IMPLEMENTED"),
+
+    SERVER_ERROR("SERVER_ERROR");
+
 
     // code means the error code in the message.properties
     private String code;
