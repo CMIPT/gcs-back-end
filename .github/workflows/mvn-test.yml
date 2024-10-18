@@ -1,0 +1,40 @@
+name: Maven Test
+on:
+  pull_request:
+    branches: [ master, develop ]
+
+permissions:
+  contents: write
+
+jobs:
+  maven-test:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Preparation
+        run: |
+          bash prepare_dev.sh postgres
+        env:
+          POSTGRES_HOST: postgres
+          POSTGRES_PORT: 5432
+      - name: Maven Test
+        run: |
+          mvn test
