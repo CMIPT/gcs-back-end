@@ -33,22 +33,28 @@ public class JwtUtil {
      * @return The generated access token
      */
     public static String generateToken(long id, TokenTypeEnum tokenType) {
-        String token = Jwts.builder()
-                .issuedAt(new Date())
-                .expiration(
-                        new Date(
-                                System.currentTimeMillis()
-                                        + (tokenType == TokenTypeEnum.ACCESS_TOKEN
-                                                ? ApplicationConstant.ACCESS_TOKEN_EXPIRATION
-                                                : ApplicationConstant.REFRESH_TOKEN_EXPIRATION)))
-                .claim(ID_CLAIM, id)
-                .claim(TOKEN_TYPE_CLAIM, tokenType.name())
-                .signWith(SECRET_KEY)
-                .compact();
+        String token =
+                Jwts.builder()
+                        .issuedAt(new Date())
+                        .expiration(
+                                new Date(
+                                        System.currentTimeMillis()
+                                                + (tokenType == TokenTypeEnum.ACCESS_TOKEN
+                                                        ? ApplicationConstant
+                                                                .ACCESS_TOKEN_EXPIRATION
+                                                        : ApplicationConstant
+                                                                .REFRESH_TOKEN_EXPIRATION)))
+                        .claim(ID_CLAIM, id)
+                        .claim(TOKEN_TYPE_CLAIM, tokenType.name())
+                        .signWith(SECRET_KEY)
+                        .compact();
         // we just need to store the token in redis, the value is not important
-        RedisUtil.set(token, "", (tokenType == TokenTypeEnum.ACCESS_TOKEN
-                ? ApplicationConstant.ACCESS_TOKEN_EXPIRATION
-                : ApplicationConstant.REFRESH_TOKEN_EXPIRATION));
+        RedisUtil.set(
+                token,
+                "",
+                (tokenType == TokenTypeEnum.ACCESS_TOKEN
+                        ? ApplicationConstant.ACCESS_TOKEN_EXPIRATION
+                        : ApplicationConstant.REFRESH_TOKEN_EXPIRATION));
         return token;
     }
 

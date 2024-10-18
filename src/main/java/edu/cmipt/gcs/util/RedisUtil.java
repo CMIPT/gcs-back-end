@@ -1,9 +1,9 @@
 package edu.cmipt.gcs.util;
 
-import java.util.concurrent.TimeUnit;
-
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class RedisUtil {

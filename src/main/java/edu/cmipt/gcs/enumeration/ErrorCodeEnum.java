@@ -70,7 +70,6 @@ public enum ErrorCodeEnum {
 
     SERVER_ERROR("SERVER_ERROR");
 
-
     // code means the error code in the message.properties
     private String code;
 
