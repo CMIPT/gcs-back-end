@@ -58,5 +58,7 @@
     "md5Salt": "",
     "frontEndUrl": "http://localhost:3000",
     "staticPathPattern": null,
-    "staticLocations": null
+    "staticLocations": null,
+    "redisHost": "localhost",
+    "redisPort": 6379
 }
