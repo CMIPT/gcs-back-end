@@ -81,6 +81,9 @@ public class GlobalExceptionHandler {
             case OPERATION_NOT_IMPLEMENTED:
                 return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
                         .body(new ErrorVO(e.getCode(), e.getMessage()));
+            case SERVER_ERROR:
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ErrorVO(e.getCode(), e.getMessage()));
             default:
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(new ErrorVO(e.getCode(), e.getMessage()));
@@ -97,10 +100,11 @@ public class GlobalExceptionHandler {
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
-    public void handleException(Exception e) {
+    public ResponseEntity<ErrorVO> handleException(Exception e, HttpServletRequest request) {
         logger.error(e.getMessage());
         // TODO: use logger to log the exception
         e.printStackTrace();
+        return handleGenericException(new GenericException(ErrorCodeEnum.SERVER_ERROR), request);
     }
 
     private ResponseEntity<ErrorVO> handleValidationException(

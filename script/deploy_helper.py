@@ -337,6 +337,8 @@ def write_other_config(config):
         "md5Salt": "md5.salt",
         "staticPathPattern": "spring.mvc.static-path-pattern",
         "staticLocations": "spring.web.resources.static-locations",
+        "redisHost": "spring.redis.host",
+        "redisPort": "spring.redis.port",
     }
     if config.frontEndUrl is None:
         config.frontEndUrl = ""
@@ -438,12 +440,27 @@ repo @all_public_repo
     log_debug(f"Push command: {command}")
     command_checker(os.system(command), f"Failed to push the change")
 
+def install_redis():
+    # check if redis has been installed
+    if os.system('command -v redis-cli') == 0:
+        return
+    command = '''
+    apt-get install lsb-release curl gpg &&
+    curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg &&
+    chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg &&
+    echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" > /etc/apt/sources.list.d/redis.list &&
+    apt-get update &&
+    apt-get install -y redis'''
+    res = os.system(command)
+    command_checker(res, "Failed to install redis")
+
 
 def deploy_on_ubuntu(config):
     assert(config != None)
     if config.serviceType != 'systemd':
         essential_packages.remove('systemd')
     apt_install_package(parse_iterable_into_str(essential_packages))
+    install_redis()
     command = 'service postgresql restart'
     res = os.system(command)
     message = message_tmp.format(command, res)

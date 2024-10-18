@@ -49,8 +49,10 @@
 * `frontEndUrl`: 前端地址，用于进行跨域配置。
 * `staticPathPattern`：静态资源的匹配模式。
 * `staticLocations`：静态资源的路径，需要使用绝对路径。
+* `redisHost`：`Redis` 主机地址。
+* `redisPort`：`Redis` 端口。
 
-**注意**：需要注意的是，所有的后端接口均是以 `gcs` 开头，所以在静态资源路径下面不应该有名为 `gcs`
+**注意**：所有的后端接口均是以 `gcs` 开头，所以在静态资源路径下面不应该有名为 `gcs`
 的文件或者文件夹。
 
 **注意**：如果将前端直接部署在同一个域上面，那么可以设置 `frontEndUrl` 为空字符串，然后配置
@@ -58,6 +60,8 @@
 
 **注意**：如果启用 `deployWithDocker` 你需要确保 `Docker` 已经安装并且 `Docker` 守护进程已经启动。
 同时你需要拉取子仓库，你可以通过 `git submodule update --init --recursive` 来拉取子仓库。
+
+**注意**：如果你的主机没有 `Redis` 等服务，那么脚本只会进行安装操作，不会进行任何的配置。
 
 下面列出了完整的配置选项：
 | 变量                         | 类型     | 默认值                                 | 说明 |
@@ -112,6 +116,8 @@
 | `frontEndUrl`                | `string` | `"http://localhost:3000"`              | 前端地址。 |
 | `staticPathPattern`          | `string` | `null`                                 | 静态资源的匹配模式。 |
 | `staticLocations`            | `list`   | `null`                                 | 静态资源的路径，使用绝对路径，例如 `['/home/gcs/static']`。 |
+| `redisHost`                  | `string` | `"localhost"`                          | `Redis` 主机地址。 |
+| `redisPort`                  | `int`    | `6379`                                 | `Redis` 端口。 |
 
 ## 手动部署
 手动部署可以在任意的 `UNIX-like` 系统上面进行，下面依次介绍你需要手动完成的操作。
@@ -125,6 +131,7 @@
 * `sudo`
 * `git`
 * `openssh-server`
+* `redis`
 
 ### 初始化数据库
 当你完成了数据库的配置后 (通常包括创建一个新的数据库和用户以及相关的授权工作)，你可以直接执行
@@ -153,7 +160,7 @@ su -c '/home/git/gitolite/install -to /home/git/bin' git
 3. 拷贝 `gcs` 用户的公钥到 `git` 用户的家目录下面，通常为 `/home/git`，并且重命名为 `gcs.pub`：
 
 ```bash
-# 可能 `root` 权限
+# 可能需要 `root` 权限
 su -c 'cp /home/gcs/.ssh/id_rsa.pub /home/git/gcs.pub' git
 chown git:git /home/git/gcs.pub
 ```
@@ -179,8 +186,9 @@ su -c 'git clone ssh://git@localhost:22/gitolite-admin /home/gcs/gitolite-admin'
 用户名和邮箱，你可以按照提示进行配置。
 
 ```bash
+# gcs 对应的是 /home/git/gcs.pub 所以如果 primary key 的名字不同，需要修改
 repo gitolite-admin
-    RW+ = {config.serviceUser}
+    RW+ = gcs
 repo testing
     R = @all
 include "gitolite.d/*.conf"
@@ -188,6 +196,8 @@ include "gitolite.d/*.conf"
 repo @all_public_repo
     R = @all
 ```
+
+7. 你需要保证 `/home/gcs/gitolite-admin/conf/gitolite.d` 目录存在。该目录用来管理用户对私有仓库的权限。
 
 ### 修改 `sudo` 配置
 你需要保证你运行 `Java` 程序的用户能够在执行 `sudo -u <git_user> rm`
@@ -230,9 +240,13 @@ spring.mvc.static-path-pattern=
 spring.resources.static-locations=
 # gitolite 仓库所在的路径
 gitolite.admin.repository.path=
+# redis 主机地址
+spring.redis.host=
+# redis 端口
+spring.redis.port=
 ```
 
-**注意**：需要注意的是，所有的后端接口均是以 `gcs` 开头，所以在静态资源路径下面不应该有名为 `gcs`
+**注意**：所有的后端接口均是以 `gcs` 开头，所以在静态资源路径下面不应该有名为 `gcs`
 的文件或者文件夹。
 
 **注意**：如果将前端直接部署在同一个域上面，那么可以设置 `front-end.url` 为空字符串，然后配置

@@ -23,8 +23,6 @@ import javax.crypto.SecretKey;
 public class JwtUtil {
     private static final String TOKEN_TYPE_CLAIM = "tokenType";
     private static final String ID_CLAIM = "id";
-    // TODO: every restart of the server will invalidate all tokens, may need to
-    // change this
     private static final SecretKey SECRET_KEY = Jwts.SIG.HS256.key().build();
 
     /**
@@ -35,18 +33,29 @@ public class JwtUtil {
      * @return The generated access token
      */
     public static String generateToken(long id, TokenTypeEnum tokenType) {
-        return Jwts.builder()
-                .issuedAt(new Date())
-                .expiration(
-                        new Date(
-                                System.currentTimeMillis()
-                                        + (tokenType == TokenTypeEnum.ACCESS_TOKEN
-                                                ? ApplicationConstant.ACCESS_TOKEN_EXPIRATION
-                                                : ApplicationConstant.REFRESH_TOKEN_EXPIRATION)))
-                .claim(ID_CLAIM, id)
-                .claim(TOKEN_TYPE_CLAIM, tokenType.name())
-                .signWith(SECRET_KEY)
-                .compact();
+        String token =
+                Jwts.builder()
+                        .issuedAt(new Date())
+                        .expiration(
+                                new Date(
+                                        System.currentTimeMillis()
+                                                + (tokenType == TokenTypeEnum.ACCESS_TOKEN
+                                                        ? ApplicationConstant
+                                                                .ACCESS_TOKEN_EXPIRATION
+                                                        : ApplicationConstant
+                                                                .REFRESH_TOKEN_EXPIRATION)))
+                        .claim(ID_CLAIM, id)
+                        .claim(TOKEN_TYPE_CLAIM, tokenType.name())
+                        .signWith(SECRET_KEY)
+                        .compact();
+        // we just need to store the token in redis, the value is not important
+        RedisUtil.set(
+                token,
+                "",
+                (tokenType == TokenTypeEnum.ACCESS_TOKEN
+                        ? ApplicationConstant.ACCESS_TOKEN_EXPIRATION
+                        : ApplicationConstant.REFRESH_TOKEN_EXPIRATION));
+        return token;
     }
 
     public static String generateToken(String id, TokenTypeEnum tokenType) {
@@ -54,6 +63,9 @@ public class JwtUtil {
     }
 
     public static String getId(String token) {
+        if (!RedisUtil.hasKey(token)) {
+            throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
+        }
         try {
             return String.valueOf(
                     Jwts.parser()
@@ -68,6 +80,9 @@ public class JwtUtil {
     }
 
     public static TokenTypeEnum getTokenType(String token) {
+        if (!RedisUtil.hasKey(token)) {
+            throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
+        }
         try {
             return TokenTypeEnum.valueOf(
                     Jwts.parser()
@@ -102,7 +117,7 @@ public class JwtUtil {
      * @param tokens
      */
     public static void blacklistToken(String... tokens) {
-        // TODO: add token to blacklist, we will consider this later
+        RedisUtil.del(tokens);
     }
 
     public static void blacklistToken(List<String> tokenList) {
