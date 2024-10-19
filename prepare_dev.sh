@@ -5,6 +5,14 @@
 # install necessary packages
 sudo apt-get update
 sudo apt-get install -y postgresql postgresql-client openjdk-17-jdk-headless maven git openssh-server
+if ! command -v redis-cli; then
+    sudo apt-get install lsb-release curl gpg
+    curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+    sudo chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+    sudo apt-get update
+    sudo apt-get install redis
+fi
 
 # init the database
 sudo su -c 'psql -c "DROP DATABASE IF EXISTS gcs_dev;"' postgres
@@ -54,4 +62,6 @@ front-end.url=
 spring.mvc.static-path-pattern=
 spring.resources.static-locations=
 gitolite.admin.repository.path=/home/$USER/gitolite-admin
+spring.redis.host=localhost
+spring.redis.port=6379
 " > src/main/resources/application.properties

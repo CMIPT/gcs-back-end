@@ -31,6 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -297,6 +298,9 @@ public class UserController {
                             max = ValidationConstant.MAX_USERNAME_LENGTH,
                             message = "USERDTO_USERNAME_SIZE {UserDTO.username.Size}")
                     @NotBlank(message = "USERDTO_USERNAME_NOTBLANK {UserDTO.username.NotBlank}")
+                    @Pattern(
+                            regexp = ValidationConstant.USERNAME_PATTERN,
+                            message = "USERNAME_PATTERN_MISMATCH {USERNAME_PATTERN_MISMATCH}")
                     String username) {
         QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
         wrapper.eq("username", username);
