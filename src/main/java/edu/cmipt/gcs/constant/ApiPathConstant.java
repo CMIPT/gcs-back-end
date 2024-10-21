@@ -25,6 +25,8 @@ public class ApiPathConstant {
     public static final String USER_CHECK_EMAIL_VALIDITY_API_PATH = USER_API_PREFIX + "/email";
     public static final String USER_CHECK_USERNAME_VALIDITY_API_PATH =
             USER_API_PREFIX + "/username";
+    public static final String USER_CHECK_USER_PASSWORD_VALIDITY_API_PATH =
+            USER_API_PREFIX + "/user-password";
     public static final String USER_DELETE_USER_API_PATH = USER_API_PREFIX + "/delete";
     public static final String USER_PAGE_USER_REPOSITORY_API_PATH =
             USER_API_PREFIX + "/page/repository";
@@ -36,6 +38,8 @@ public class ApiPathConstant {
             REPOSITORY_API_PREFIX + "/delete";
     public static final String REPOSITORY_UPDATE_REPOSITORY_API_PATH =
             REPOSITORY_API_PREFIX + "/update";
+    public static final String REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH =
+            REPOSITORY_API_PREFIX + "/repository-name";
 
     public static final String SSH_KEY_API_PREFIX = ALL_API_PREFIX + "/ssh";
     public static final String SSH_KEY_UPLOAD_SSH_KEY_API_PATH = SSH_KEY_API_PREFIX + "/upload";
