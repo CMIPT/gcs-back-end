@@ -406,16 +406,21 @@ def init_gitolite(config):
                f"{config.serviceUserHomeDirectory}/gitolite-admin\" {config.serviceUser}")
     log_debug(f"Clone gitolite-admin command: {command}")
     command_checker(os.system(command), f"Failed to clone gitolite-admin")
-    command = (f"su -c 'mkdir -p {config.serviceUserHomeDirectory}/gitolite-admin/conf/gitolite.d' "
+    command = (f"su -c 'mkdir -p {config.serviceUserHomeDirectory}/gitolite-admin/conf/gitolite.d/user' "
                f"{config.serviceUser}")
     log_debug(f"Create usr directory command: {command}")
     command_checker(os.system(command), f"Failed to create usr directory in gitolite-admin/conf")
+    command = (f"su -c 'mkdir -p {config.serviceUserHomeDirectory}/gitolite-admin/conf/gitolite.d/repository' "
+                f"{config.serviceUser}")
+    log_debug(f"Create repository directory command: {command}")
+    command_checker(os.system(command), f"Failed to create repository directory in gitolite-admin/conf")
     content = f'''
 repo gitolite-admin
     RW+ = {config.serviceUser}
 repo testing
     R = @all
-include "gitolite.d/*.conf"
+include "gitolite.d/user/*.conf"
+include "gitolite.d/repository/*.conf"
 @all_public_repo =
 repo @all_public_repo
     R = @all

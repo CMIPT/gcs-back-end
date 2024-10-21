@@ -114,6 +114,46 @@ public class RepositoryControllerTest {
 
     @Test
     @Order(Ordered.HIGHEST_PRECEDENCE + 2)
+    public void testAddCollaboratorByIdValid() throws Exception {
+        mvc.perform(
+                        post(ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_BY_ID_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("repositoryId", TestConstant.REPOSITORY_ID)
+                                .param("collaboratorId", TestConstant.OTHER_ID))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(Ordered.HIGHEST_PRECEDENCE + 3)
+    public void testPageCollaboratorValid() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.REPOSITORY_PAGE_COLLABORATOR_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("repositoryId", TestConstant.REPOSITORY_ID)
+                                .param("page", "1")
+                                .param("size", "10"))
+                .andExpectAll(
+                        status().isOk(),
+                        jsonPath("$").isArray(),
+                        jsonPath("$.length()").value(1),
+                        jsonPath("$[0].id").value(TestConstant.OTHER_ID),
+                        jsonPath("$[0].username").value(TestConstant.OTHER_USERNAME),
+                        jsonPath("$[0].email").value(TestConstant.OTHER_EMAIL));
+    }
+
+    @Test
+    @Order(Ordered.HIGHEST_PRECEDENCE + 4)
+    public void testRemoveCollaborationValid() throws Exception {
+        mvc.perform(
+                        delete(ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("repositoryId", TestConstant.REPOSITORY_ID)
+                                .param("collaboratorId", TestConstant.OTHER_ID))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(Ordered.HIGHEST_PRECEDENCE + 5)
     public void testDeleteRepositoryValid() throws Exception {
         mvc.perform(
                         delete(ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH)

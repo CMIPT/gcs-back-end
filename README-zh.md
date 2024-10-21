@@ -191,13 +191,16 @@ repo gitolite-admin
     RW+ = gcs
 repo testing
     R = @all
-include "gitolite.d/*.conf"
+include "gitolite.d/user/*.conf"
+include "gitolite.d/repository/*.conf"
 @all_public_repo =
 repo @all_public_repo
     R = @all
 ```
 
-7. 你需要保证 `/home/gcs/gitolite-admin/conf/gitolite.d` 目录存在。该目录用来管理用户对私有仓库的权限。
+7. 你需要保证 `/home/gcs/gitolite-admin/conf/gitolite.d/user` 与
+`home/gcs/gitolite-admin/conf/gitolite.d/repository`目录存在。第一个目录用来管理私有仓库的权限，
+第二个目录用于实现合作者功能。
 
 ### 修改 `sudo` 配置
 你需要保证你运行 `Java` 程序的用户能够在执行 `sudo -u <git_user> rm`

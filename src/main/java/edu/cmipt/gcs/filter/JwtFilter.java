@@ -170,6 +170,10 @@ public class JwtFilter extends OncePerRequestFilter {
                                 "User[{}] tried to get SSH key of user[{}]", idInToken, idInParam);
                         throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                     }
+                } else if (request.getRequestURI()
+                        .equals(ApiPathConstant.REPOSITORY_PAGE_COLLABORATOR_API_PATH)) {
+                    // this will be checked in controller
+                    // because we must query the database to get the user id of the repository
                 } else {
                     throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                 }
@@ -209,6 +213,10 @@ public class JwtFilter extends OncePerRequestFilter {
                         .equals(ApiPathConstant.REPOSITORY_UPDATE_REPOSITORY_API_PATH)) {
                     // this will be checked in controller
                     // because we must query the database to get the user id of the repository
+                } else if (request.getRequestURI()
+                        .startsWith(ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_API_PREFIX)) {
+                    // this will be checked in controller
+                    // because we must query the database to get the user id of the repository
                 } else {
                     throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                 }
@@ -235,6 +243,10 @@ public class JwtFilter extends OncePerRequestFilter {
                     // because we must query the database to get the user id of the ssh key
                 } else if (request.getRequestURI()
                         .equals(ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH)) {
+                    // this will be checked in controller
+                    // because we must query the database to get the user id of the repository
+                } else if (request.getRequestURI()
+                        .startsWith(ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH)) {
                     // this will be checked in controller
                     // because we must query the database to get the user id of the repository
                 } else {
