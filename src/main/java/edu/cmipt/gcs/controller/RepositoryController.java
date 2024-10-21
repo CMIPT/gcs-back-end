@@ -207,16 +207,16 @@ public class RepositoryController {
                             max = ValidationConstant.MAX_REPOSITORY_NAME_LENGTH,
                             message =
                                     "REPOSITORYDTO_REPOSITORYNAME_SIZE"
-                                        + " {RepositoryDTO.repositoryName.Size}")
+                                            + " {RepositoryDTO.repositoryName.Size}")
                     @NotBlank(
                             message =
                                     "REPOSITORYDTO_REPOSITORYNAME_NOTBLANK"
-                                        + " {RepositoryDTO.repositoryName.NotBlank}")
+                                            + " {RepositoryDTO.repositoryName.NotBlank}")
                     @Pattern(
                             regexp = ValidationConstant.REPOSITORY_NAME_PATTERN,
                             message =
                                     "REPOSITORYNAME_PATTERN_MISMATCH"
-                                        + " {REPOSITORYNAME_PATTERN_MISMATCH}")
+                                            + " {REPOSITORYNAME_PATTERN_MISMATCH}")
                     String repositoryName,
             @RequestParam("userId") Long userId) {
         QueryWrapper<RepositoryPO> queryWrapper = new QueryWrapper<>();
