@@ -452,7 +452,7 @@ public class RepositoryController {
         if (!idInToken.equals(repositoryUserId)) {
             logger.error(
                     "User[{}] tried to remove collaborator from repository[{}] whose creator is"
-                        + " [{}]",
+                            + " [{}]",
                     idInToken,
                     repositoryId,
                     repositoryUserId);
