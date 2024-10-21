@@ -53,4 +53,5 @@ public record RepositoryDTO(
                                 "REPOSITORYDTO_REPOSITORYDESCRIPTION_SIZE"
                                         + " {RepositoryDTO.repositoryDescription.Size}")
                 String repositoryDescription,
-        @Schema(description = "Whether or Not Private Repo", example = "false") Boolean isPrivate) {}
+        @Schema(description = "Whether or Not Private Repo", example = "false")
+                Boolean isPrivate) {}

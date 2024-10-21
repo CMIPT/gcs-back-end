@@ -329,15 +329,14 @@ public class UserController {
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
     public void checkPasswordValidity(
-        @RequestParam("userPassword")
-        @Size(
-            min = ValidationConstant.MIN_PASSWORD_LENGTH,
-            max = ValidationConstant.MAX_PASSWORD_LENGTH,
-            message = "USERDTO_PASSWORD_SIZE {UserDTO.password.Size}")
-        @NotBlank(message = "USERDTO_PASSWORD_NOTBLANK {UserDTO.password.NotBlank}")
-        @Pattern(
-            regexp = ValidationConstant.PASSWORD_PATTERN,
-            message = "PASSWORD_PATTERN_MISMATCH {PASSWORD_PATTERN_MISMATCH}")
-        String password) {
-    }
+            @RequestParam("userPassword")
+                    @Size(
+                            min = ValidationConstant.MIN_PASSWORD_LENGTH,
+                            max = ValidationConstant.MAX_PASSWORD_LENGTH,
+                            message = "USERDTO_PASSWORD_SIZE {UserDTO.password.Size}")
+                    @NotBlank(message = "USERDTO_PASSWORD_NOTBLANK {UserDTO.password.NotBlank}")
+                    @Pattern(
+                            regexp = ValidationConstant.PASSWORD_PATTERN,
+                            message = "PASSWORD_PATTERN_MISMATCH {PASSWORD_PATTERN_MISMATCH}")
+                    String password) {}
 }

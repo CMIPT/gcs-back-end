@@ -53,7 +53,9 @@ public class RepositoryControllerTest {
                                                 "isPrivate": %s
                                             }
                                             """
-                                                    .formatted(repositoryName, i % 2 == 0 ? "false" : "true")))
+                                                    .formatted(
+                                                            repositoryName,
+                                                            i % 2 == 0 ? "false" : "true")))
                     .andExpect(status().isOk());
         }
         var content =

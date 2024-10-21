@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -183,12 +184,11 @@ public class RepositoryController {
             tags = {"Repository", "Get Method"})
     @Parameters({
         @Parameter(
-            name = "userId",
-            description = "User id",
-            required = true,
-            in = ParameterIn.QUERY,
-            schema = @Schema(implementation = Long.class)
-        ),
+                name = "userId",
+                description = "User id",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = Long.class)),
         @Parameter(
                 name = "repositoryName",
                 description = "Repository name",
@@ -201,12 +201,24 @@ public class RepositoryController {
         @ApiResponse(responseCode = "400", description = "Repository name is invalid")
     })
     public void checkRepositoryNameValidity(
-        @RequestParam("repositoryName")
-        @Size(min = ValidationConstant.MIN_REPOSITORY_NAME_LENGTH, max = ValidationConstant.MAX_REPOSITORY_NAME_LENGTH, message ="REPOSITORYDTO_REPOSITORYNAME_SIZE {RepositoryDTO.repositoryName.Size}")
-        @NotBlank(message = "REPOSITORYDTO_REPOSITORYNAME_NOTBLANK {RepositoryDTO.repositoryName.NotBlank}")
-        @Pattern(regexp = ValidationConstant.REPOSITORY_NAME_PATTERN, message = "REPOSITORYNAME_PATTERN_MISMATCH {REPOSITORYNAME_PATTERN_MISMATCH}")
-        String repositoryName,
-        @RequestParam("userId") Long userId) {
+            @RequestParam("repositoryName")
+                    @Size(
+                            min = ValidationConstant.MIN_REPOSITORY_NAME_LENGTH,
+                            max = ValidationConstant.MAX_REPOSITORY_NAME_LENGTH,
+                            message =
+                                    "REPOSITORYDTO_REPOSITORYNAME_SIZE"
+                                        + " {RepositoryDTO.repositoryName.Size}")
+                    @NotBlank(
+                            message =
+                                    "REPOSITORYDTO_REPOSITORYNAME_NOTBLANK"
+                                        + " {RepositoryDTO.repositoryName.NotBlank}")
+                    @Pattern(
+                            regexp = ValidationConstant.REPOSITORY_NAME_PATTERN,
+                            message =
+                                    "REPOSITORYNAME_PATTERN_MISMATCH"
+                                        + " {REPOSITORYNAME_PATTERN_MISMATCH}")
+                    String repositoryName,
+            @RequestParam("userId") Long userId) {
         QueryWrapper<RepositoryPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", userId);
         queryWrapper.eq("repository_name", repositoryName);
