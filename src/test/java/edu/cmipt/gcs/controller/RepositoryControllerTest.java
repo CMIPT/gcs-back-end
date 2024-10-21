@@ -49,10 +49,13 @@ public class RepositoryControllerTest {
                                     .content(
                                             """
                                             {
-                                                "repositoryName": "%s"
+                                                "repositoryName": "%s",
+                                                "isPrivate": %s
                                             }
                                             """
-                                                    .formatted(repositoryName)))
+                                                    .formatted(
+                                                            repositoryName,
+                                                            i % 2 == 0 ? "false" : "true")))
                     .andExpect(status().isOk());
         }
         var content =
@@ -103,7 +106,6 @@ public class RepositoryControllerTest {
                         jsonPath("$.id").value(TestConstant.REPOSITORY_ID),
                         jsonPath("$.repositoryName").value(TestConstant.REPOSITORY_NAME),
                         jsonPath("$.repositoryDescription").value(newDescription),
-                        jsonPath("$.isPrivate").value(false),
                         jsonPath("$.userId").value(TestConstant.ID),
                         jsonPath("$.star").value(0),
                         jsonPath("$.fork").value(0),

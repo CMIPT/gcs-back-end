@@ -308,4 +308,35 @@ public class UserController {
             throw new GenericException(ErrorCodeEnum.USERNAME_ALREADY_EXISTS, username);
         }
     }
+
+    @GetMapping(ApiPathConstant.USER_CHECK_USER_PASSWORD_VALIDITY_API_PATH)
+    @Operation(
+            summary = "Check password validity",
+            description = "Check if the password is valid",
+            tags = {"User", "Get Method"})
+    @Parameter(
+            name = "userPassword",
+            description = "User's Password",
+            example = "123456",
+            required = true,
+            in = ParameterIn.QUERY,
+            schema = @Schema(implementation = String.class))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Password validity checked successfully"),
+        @ApiResponse(
+                responseCode = "400",
+                description = "Password is not valid",
+                content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    })
+    public void checkPasswordValidity(
+            @RequestParam("userPassword")
+                    @Size(
+                            min = ValidationConstant.MIN_PASSWORD_LENGTH,
+                            max = ValidationConstant.MAX_PASSWORD_LENGTH,
+                            message = "USERDTO_PASSWORD_SIZE {UserDTO.password.Size}")
+                    @NotBlank(message = "USERDTO_PASSWORD_NOTBLANK {UserDTO.password.NotBlank}")
+                    @Pattern(
+                            regexp = ValidationConstant.PASSWORD_PATTERN,
+                            message = "PASSWORD_PATTERN_MISMATCH {PASSWORD_PATTERN_MISMATCH}")
+                    String password) {}
 }

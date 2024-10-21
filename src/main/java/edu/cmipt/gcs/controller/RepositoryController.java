@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
+import edu.cmipt.gcs.constant.ValidationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.repository.RepositoryDTO;
@@ -23,18 +24,24 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Validated
 @RestController
 @Tag(name = "Repository", description = "Repository Related APIs")
 public class RepositoryController {
@@ -168,5 +175,55 @@ public class RepositoryController {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_UPDATE_FAILED, repository);
         }
         return ResponseEntity.ok().body(new RepositoryVO(repositoryService.getById(id)));
+    }
+
+    @GetMapping(ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH)
+    @Operation(
+            summary = "Check repository name validity",
+            description = "Check if the repository name is valid",
+            tags = {"Repository", "Get Method"})
+    @Parameters({
+        @Parameter(
+                name = "userId",
+                description = "User id",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = Long.class)),
+        @Parameter(
+                name = "repositoryName",
+                description = "Repository name",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class))
+    })
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Repository name is valid"),
+        @ApiResponse(responseCode = "400", description = "Repository name is invalid")
+    })
+    public void checkRepositoryNameValidity(
+            @RequestParam("repositoryName")
+                    @Size(
+                            min = ValidationConstant.MIN_REPOSITORY_NAME_LENGTH,
+                            max = ValidationConstant.MAX_REPOSITORY_NAME_LENGTH,
+                            message =
+                                    "REPOSITORYDTO_REPOSITORYNAME_SIZE"
+                                            + " {RepositoryDTO.repositoryName.Size}")
+                    @NotBlank(
+                            message =
+                                    "REPOSITORYDTO_REPOSITORYNAME_NOTBLANK"
+                                            + " {RepositoryDTO.repositoryName.NotBlank}")
+                    @Pattern(
+                            regexp = ValidationConstant.REPOSITORY_NAME_PATTERN,
+                            message =
+                                    "REPOSITORYNAME_PATTERN_MISMATCH"
+                                            + " {REPOSITORYNAME_PATTERN_MISMATCH}")
+                    String repositoryName,
+            @RequestParam("userId") Long userId) {
+        QueryWrapper<RepositoryPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", userId);
+        queryWrapper.eq("repository_name", repositoryName);
+        if (repositoryService.exists(queryWrapper)) {
+            throw new GenericException(ErrorCodeEnum.REPOSITORY_ALREADY_EXISTS, repositoryName);
+        }
     }
 }

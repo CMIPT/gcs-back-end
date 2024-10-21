@@ -49,9 +49,6 @@ public class RepositoryPO {
         } catch (NumberFormatException e) {
             this.userId = null;
         }
-        this.star = repositoryDTO.star();
-        this.fork = repositoryDTO.fork();
-        this.watcher = repositoryDTO.watcher();
         if (generateUrl) {
             // TODO: https is not supported now
             this.httpsUrl = "";

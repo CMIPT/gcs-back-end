@@ -6,7 +6,6 @@ import edu.cmipt.gcs.validation.group.UpdateGroup;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
@@ -54,31 +53,5 @@ public record RepositoryDTO(
                                 "REPOSITORYDTO_REPOSITORYDESCRIPTION_SIZE"
                                         + " {RepositoryDTO.repositoryDescription.Size}")
                 String repositoryDescription,
-        @Schema(description = "Whether or Not Private Repo", example = "false") Boolean isPrivate,
-        @Schema(description = "Star Count")
-                @Null(
-                        groups = CreateGroup.class,
-                        message = "REPOSITORYDTO_STAR_NULL {RepositoryDTO.star.Null}")
-                @Min(
-                        groups = UpdateGroup.class,
-                        value = 0,
-                        message = "REPOSITORYDTO_STAR_MIN {RepositoryDTO.star.Min}")
-                Integer star,
-        @Schema(description = "Fork Count")
-                @Null(
-                        groups = CreateGroup.class,
-                        message = "REPOSITORYDTO_FORK_NULL {RepositoryDTO.fork.Null}")
-                @Min(
-                        groups = UpdateGroup.class,
-                        value = 0,
-                        message = "REPOSITORYDTO_FORK_MIN {RepositoryDTO.fork.Min}")
-                Integer fork,
-        @Schema(description = "Watcher Count")
-                @Null(
-                        groups = CreateGroup.class,
-                        message = "REPOSITORYDTO_WATCHER_NULL {RepositoryDTO.watcher.Null}")
-                @Min(
-                        groups = UpdateGroup.class,
-                        value = 0,
-                        message = "REPOSITORYDTO_WATCHER_MIN {RepositoryDTO.watcher.Min}")
-                Integer watcher) {}
+        @Schema(description = "Whether or Not Private Repo", example = "false")
+                Boolean isPrivate) {}
