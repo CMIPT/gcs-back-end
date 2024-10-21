@@ -30,13 +30,15 @@ sudo su -c "/home/git/bin/gitolite setup -pk /home/git/$USER.pub" git
 rm -rf /home/"$USER"/gitolite-admin
 GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=no' git clone \
     ssh://git@localhost:22/gitolite-admin /home/"$USER"/gitolite-admin
-mkdir -p /home/"$USER"/gitolite-admin/conf/gitolite.d
+mkdir -p /home/"$USER"/gitolite-admin/conf/gitolite.d/user
+mkdir -p /home/"$USER"/gitolite-admin/conf/gitolite.d/repository
 echo "
 repo gitolite-admin
     RW+ = $USER
 repo testing
     R = @all
-include \"gitolite.d/*.conf\"
+include \"gitolite.d/user/*.conf\"
+include \"gitolite.d/repository/*.conf\"
 @all_public_repo =
 repo @all_public_repo
     R = @all" > /home/"$USER"/gitolite-admin/conf/gitolite.conf

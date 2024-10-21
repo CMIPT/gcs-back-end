@@ -34,6 +34,7 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
             return false;
         }
         if (!GitoliteUtil.createRepository(
+                repositoryPO.getId(),
                 repositoryPO.getRepositoryName(),
                 repositoryPO.getUserId(),
                 repositoryPO.getIsPrivate())) {

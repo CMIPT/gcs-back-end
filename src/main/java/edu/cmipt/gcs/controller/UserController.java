@@ -47,7 +47,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Validated
 @RestController
@@ -238,7 +237,7 @@ public class UserController {
         wrapper.eq("user_id", userId);
         return repositoryService.list(new Page<>(page, size), wrapper).stream()
                 .map(RepositoryVO::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @GetMapping(ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH)

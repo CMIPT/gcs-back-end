@@ -23,6 +23,8 @@ public class GitConstant {
 
     public static String GITOLITE_USER_CONF_DIR_PATH;
 
+    public static String GITOLITE_REPOSITORY_CONF_DIR_PATH;
+
     public static String GITOLITE_KEY_DIR_PATH;
 
     @Value("${git.user.name}")
@@ -53,7 +55,9 @@ public class GitConstant {
         GitConstant.GITOLITE_CONF_FILE_PATH =
                 Paths.get(GITOLITE_CONF_DIR_PATH, "gitolite.conf").toString();
         GitConstant.GITOLITE_USER_CONF_DIR_PATH =
-                Paths.get(GITOLITE_CONF_DIR_PATH, "gitolite.d").toString();
+                Paths.get(GITOLITE_CONF_DIR_PATH, "gitolite.d", "user").toString();
+        GitConstant.GITOLITE_REPOSITORY_CONF_DIR_PATH =
+                Paths.get(GITOLITE_CONF_DIR_PATH, "gitolite.d", "repository").toString();
         GitConstant.GITOLITE_KEY_DIR_PATH =
                 Paths.get(gitoliteAdminRepositoryPath, "keydir").toString();
     }

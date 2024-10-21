@@ -40,7 +40,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @Tag(name = "SSH", description = "SSH APIs")
@@ -209,6 +208,6 @@ public class SshKeyController {
         wrapper.eq("user_id", userId);
         return sshKeyService.list(new Page<>(page, size), wrapper).stream()
                 .map(SshKeyVO::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 }
