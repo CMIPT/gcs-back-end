@@ -169,7 +169,8 @@ public class GitoliteUtil {
     public static synchronized boolean createRepository(
             Long repositoryId, String repositoryName, Long userId, boolean isPrivate) {
         var userFileName = new StringBuilder().append(userId).append(".conf").toString();
-        var repositoryFileName = new StringBuilder().append(repositoryId).append(".conf").toString();
+        var repositoryFileName =
+                new StringBuilder().append(repositoryId).append(".conf").toString();
         var repositoryConfPath =
                 Paths.get(GitConstant.GITOLITE_REPOSITORY_CONF_DIR_PATH, repositoryFileName);
         if (Files.exists(repositoryConfPath)) {
@@ -200,7 +201,8 @@ public class GitoliteUtil {
                     String message = "Add repository " + userId + '/' + repositoryName;
                     Path[] files = {
                         Paths.get("conf", "gitolite.d", "user", userFileName),
-                        Paths.get("conf", "gitolite.d", "repository", repositoryFileName)};
+                        Paths.get("conf", "gitolite.d", "repository", repositoryFileName)
+                    };
                     if (!GitoliteUtil.commitAndPush(message, files)) {
                         logger.error("Failed to commit and push");
                         return false;
@@ -271,9 +273,12 @@ public class GitoliteUtil {
         return false;
     }
 
-    public static synchronized boolean addCollaborator(Long repositoryOwnerId, Long repositoryId, Long collaboratorId) {
-        var repositoryFileName = new StringBuilder().append(repositoryId).append(".conf").toString();
-        var repositoryConfPath = Paths.get(GitConstant.GITOLITE_REPOSITORY_CONF_DIR_PATH, repositoryFileName);
+    public static synchronized boolean addCollaborator(
+            Long repositoryOwnerId, Long repositoryId, Long collaboratorId) {
+        var repositoryFileName =
+                new StringBuilder().append(repositoryId).append(".conf").toString();
+        var repositoryConfPath =
+                Paths.get(GitConstant.GITOLITE_REPOSITORY_CONF_DIR_PATH, repositoryFileName);
         if (!Files.exists(repositoryConfPath)) {
             logger.error("Repository file does not exist");
             return false;
@@ -285,8 +290,11 @@ public class GitoliteUtil {
                 if (line.startsWith("@%d_repo_collaborator".formatted(repositoryId))) {
                     lines.set(i, line + " @%d_ssh_key".formatted(collaboratorId));
                     Files.write(repositoryConfPath, lines);
-                    String message = "Add collaborator " + collaboratorId + " to repository " + repositoryId;
-                    Path[] files = {Paths.get("conf", "gitolite.d", "repository", repositoryFileName)};
+                    String message =
+                            "Add collaborator " + collaboratorId + " to repository " + repositoryId;
+                    Path[] files = {
+                        Paths.get("conf", "gitolite.d", "repository", repositoryFileName)
+                    };
                     if (!GitoliteUtil.commitAndPush(message, files)) {
                         logger.error("Failed to commit and push");
                         return false;
@@ -298,13 +306,18 @@ public class GitoliteUtil {
             logger.error(e.getMessage());
             return false;
         }
-        logger.error("Can not find @{}_repo_collaborator in repository configuration".formatted(repositoryId));
+        logger.error(
+                "Can not find @{}_repo_collaborator in repository configuration"
+                        .formatted(repositoryId));
         return false;
     }
 
-    public static synchronized boolean removeCollaborator(Long repositoryOwnerId, Long repositoryId, Long collaboratorId) {
-        var repositoryFileName = new StringBuilder().append(repositoryId).append(".conf").toString();
-        var repositoryConfPath = Paths.get(GitConstant.GITOLITE_REPOSITORY_CONF_DIR_PATH, repositoryFileName);
+    public static synchronized boolean removeCollaborator(
+            Long repositoryOwnerId, Long repositoryId, Long collaboratorId) {
+        var repositoryFileName =
+                new StringBuilder().append(repositoryId).append(".conf").toString();
+        var repositoryConfPath =
+                Paths.get(GitConstant.GITOLITE_REPOSITORY_CONF_DIR_PATH, repositoryFileName);
         if (!Files.exists(repositoryConfPath)) {
             logger.error("Repository file does not exist");
             return false;
@@ -316,8 +329,14 @@ public class GitoliteUtil {
                 if (line.startsWith("@%d_repo_collaborator".formatted(repositoryId))) {
                     lines.set(i, line.replace(" @%d_ssh_key".formatted(collaboratorId), ""));
                     Files.write(repositoryConfPath, lines);
-                    String message = "Remove collaborator " + collaboratorId + " from repository " + repositoryId;
-                    Path[] files = {Paths.get("conf", "gitolite.d", "repository", repositoryFileName)};
+                    String message =
+                            "Remove collaborator "
+                                    + collaboratorId
+                                    + " from repository "
+                                    + repositoryId;
+                    Path[] files = {
+                        Paths.get("conf", "gitolite.d", "repository", repositoryFileName)
+                    };
                     if (!GitoliteUtil.commitAndPush(message, files)) {
                         logger.error("Failed to commit and push");
                         return false;
@@ -329,7 +348,9 @@ public class GitoliteUtil {
             logger.error(e.getMessage());
             return false;
         }
-        logger.error("Can not find @{}_repo_collaborator in repository configuration".formatted(repositoryId));
+        logger.error(
+                "Can not find @{}_repo_collaborator in repository configuration"
+                        .formatted(repositoryId));
         return false;
     }
 
