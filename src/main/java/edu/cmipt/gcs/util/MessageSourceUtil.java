@@ -6,9 +6,6 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 @Component
 public class MessageSourceUtil {
     private static MessageSource messageSource;
@@ -18,20 +15,19 @@ public class MessageSourceUtil {
     }
 
     public static String getMessage(ErrorCodeEnum code, Object... args) {
+        return getMessage(code.getCode(), args);
+    }
+
+    public static String getMessage(String code, Object... args) {
         try {
-            return messageSource.getMessage(code.getCode(), args, LocaleContextHolder.getLocale());
+            return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
         } catch (Exception e) {
             // ignore
         }
-        String message =
-                messageSource.getMessage(code.getCode(), null, LocaleContextHolder.getLocale());
-        Pattern pattern = Pattern.compile("\\{.*?\\}");
-        Matcher matcher = pattern.matcher(message);
-        int i = 0;
-        while (matcher.find()) {
-            message = message.replace(matcher.group(), args[i].toString());
-            i++;
+        try {
+            return messageSource.getMessage(code, null, LocaleContextHolder.getLocale());
+        } catch (Exception e) {
+            return "";
         }
-        return message;
     }
 }

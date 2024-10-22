@@ -16,11 +16,9 @@ import jakarta.validation.constraints.Size;
 public record RepositoryDTO(
         @Schema(description = "Repository ID")
                 @Null(
-                        groups = CreateGroup.class,
-                        message = "REPOSITORYDTO_ID_NULL {RepositoryDTO.id.Null}")
+                        groups = CreateGroup.class)
                 @NotNull(
-                        groups = UpdateGroup.class,
-                        message = "REPOSITORYDTO_ID_NOTNULL {RepositoryDTO.id.NotNull}")
+                        groups = UpdateGroup.class)
                 String id,
         @Schema(
                         description = "Repository Name",
@@ -29,29 +27,18 @@ public record RepositoryDTO(
                 @Size(
                         groups = {CreateGroup.class, UpdateGroup.class},
                         min = ValidationConstant.MIN_REPOSITORY_NAME_LENGTH,
-                        max = ValidationConstant.MAX_REPOSITORY_NAME_LENGTH,
-                        message =
-                                "REPOSITORYDTO_REPOSITORYNAME_SIZE"
-                                        + " {RepositoryDTO.repositoryName.Size}")
+                        max = ValidationConstant.MAX_REPOSITORY_NAME_LENGTH)
                 @NotBlank(
-                        groups = CreateGroup.class,
-                        message =
-                                "REPOSITORYDTO_REPOSITORYNAME_NOTBLANK"
-                                        + " {RepositoryDTO.repositoryName.NotBlank}")
+                        groups = CreateGroup.class)
                 @Pattern(
                         regexp = ValidationConstant.REPOSITORY_NAME_PATTERN,
-                        groups = {CreateGroup.class, UpdateGroup.class},
-                        message =
-                                "REPOSITORYNAME_PATTERN_MISMATCH {REPOSITORYNAME_PATTERN_MISMATCH}")
+                        groups = {CreateGroup.class, UpdateGroup.class})
                 String repositoryName,
         @Schema(description = "Repository Description")
                 @Size(
                         groups = {CreateGroup.class, UpdateGroup.class},
                         min = ValidationConstant.MIN_REPOSITORY_DESCRIPTION_LENGTH,
-                        max = ValidationConstant.MAX_REPOSITORY_DESCRIPTION_LENGTH,
-                        message =
-                                "REPOSITORYDTO_REPOSITORYDESCRIPTION_SIZE"
-                                        + " {RepositoryDTO.repositoryDescription.Size}")
+                        max = ValidationConstant.MAX_REPOSITORY_DESCRIPTION_LENGTH)
                 String repositoryDescription,
         @Schema(description = "Whether or Not Private Repo", example = "false")
                 Boolean isPrivate) {}

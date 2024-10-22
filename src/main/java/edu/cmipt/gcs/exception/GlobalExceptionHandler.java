@@ -2,7 +2,7 @@ package edu.cmipt.gcs.exception;
 
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
-
+import edu.cmipt.gcs.util.MessageSourceUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 
@@ -37,7 +37,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorVO> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException e, HttpServletRequest request) {
-        return handleValidationException(e.getFieldError().getDefaultMessage(), request);
+        var fieldError = e.getBindingResult().getFieldError();
+        return handleValidationException(MessageSourceUtil.getMessage(fieldError.getCodes()[0], fieldError.getArguments()), request);
     }
 
     /**
@@ -108,13 +109,7 @@ public class GlobalExceptionHandler {
     }
 
     private ResponseEntity<ErrorVO> handleValidationException(
-            String codeAndMessage, HttpServletRequest request) {
-        int firstSpaceIndex = codeAndMessage.indexOf(" ");
-        // There must be a space and not at the end of the message
-        assert firstSpaceIndex != -1;
-        assert firstSpaceIndex != codeAndMessage.length() - 1;
-        var exception = new GenericException(codeAndMessage.substring(firstSpaceIndex + 1));
-        exception.setCode(ErrorCodeEnum.valueOf(codeAndMessage.substring(0, firstSpaceIndex)));
-        return handleGenericException(exception, request);
+            String message, HttpServletRequest request) {
+        return handleGenericException(new GenericException(ErrorCodeEnum.VALIDATION_ERROR, message), request);
     }
 }

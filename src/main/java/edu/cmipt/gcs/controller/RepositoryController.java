@@ -178,8 +178,7 @@ public class RepositoryController {
                         .repositoryName()
                         .equals(repositoryService.getById(id).getRepositoryName())) {
             throw new GenericException(
-                    ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED,
-                    "update repository name is not implemented");
+                    ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
         }
         if (!repositoryService.updateById(new RepositoryPO(repository))) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_UPDATE_FAILED, repository);
@@ -215,18 +214,12 @@ public class RepositoryController {
                     @Size(
                             min = ValidationConstant.MIN_REPOSITORY_NAME_LENGTH,
                             max = ValidationConstant.MAX_REPOSITORY_NAME_LENGTH,
-                            message =
-                                    "REPOSITORYDTO_REPOSITORYNAME_SIZE"
-                                            + " {RepositoryDTO.repositoryName.Size}")
+                            message ="{Size.repositoryController#checkRepositoryNameValidity.repositoryName}")
                     @NotBlank(
-                            message =
-                                    "REPOSITORYDTO_REPOSITORYNAME_NOTBLANK"
-                                            + " {RepositoryDTO.repositoryName.NotBlank}")
+                            message ="{NotBlank.repositoryController#checkRepositoryNameValidity.repositoryName}")
                     @Pattern(
                             regexp = ValidationConstant.REPOSITORY_NAME_PATTERN,
-                            message =
-                                    "REPOSITORYNAME_PATTERN_MISMATCH"
-                                            + " {REPOSITORYNAME_PATTERN_MISMATCH}")
+                            message = "{Pattern.repositoryController#checkRepositoryNameValidity.repositoryName}")
                     String repositoryName,
             @RequestParam("userId") Long userId) {
         QueryWrapper<RepositoryPO> queryWrapper = new QueryWrapper<>();
