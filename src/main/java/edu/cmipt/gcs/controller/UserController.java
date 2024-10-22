@@ -89,7 +89,8 @@ public class UserController {
                 description = "User not found",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public UserVO getUser(@RequestParam("user") String user, @RequestParam("userType") String userType) {
+    public UserVO getUser(
+            @RequestParam("user") String user, @RequestParam("userType") String userType) {
         if (!userType.equals("id") && !userType.equals("username") && !userType.equals("email")) {
             throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
         }
