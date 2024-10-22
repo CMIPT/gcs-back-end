@@ -10,16 +10,11 @@ public record UserSignInDTO(
                         description = "Username",
                         requiredMode = Schema.RequiredMode.REQUIRED,
                         example = "admin")
-                @NotBlank(
-                        message =
-                                "USERSIGNINDTO_USERNAME_NOTBLANK {UserSignInDTO.username.NotBlank}")
+                @NotBlank
                 String username,
         @Schema(
                         description = "User Password (Unencrypted)",
                         requiredMode = Schema.RequiredMode.REQUIRED,
                         example = "123456")
-                @NotBlank(
-                        message =
-                                "USERSIGNINDTO_USERPASSWORD_NOTBLANK"
-                                        + " {UserSignInDTO.userPassword.NotBlank}")
+                @NotBlank
                 String userPassword) {}

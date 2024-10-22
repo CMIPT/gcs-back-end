@@ -21,10 +21,8 @@ import jakarta.validation.constraints.Size;
 @Schema(description = "User Data Transfer Object")
 public record UserDTO(
         @Schema(description = "User ID")
-                @Null(groups = CreateGroup.class, message = "USERDTO_ID_NULL {UserDTO.id.Null}")
-                @NotNull(
-                        groups = UpdateGroup.class,
-                        message = "USERDTO_ID_NOTNULL {UserDTO.id.NotNull}")
+                @Null(groups = CreateGroup.class)
+                @NotNull(groups = UpdateGroup.class)
                 // The Long can not be expressed correctly in json, so use String instead
                 String id,
         @Schema(
@@ -34,26 +32,18 @@ public record UserDTO(
                 @Size(
                         groups = {CreateGroup.class, UpdateGroup.class},
                         min = ValidationConstant.MIN_USERNAME_LENGTH,
-                        max = ValidationConstant.MAX_USERNAME_LENGTH,
-                        message = "USERDTO_USERNAME_SIZE {UserDTO.username.Size}")
-                @NotBlank(
-                        groups = {CreateGroup.class},
-                        message = "USERDTO_USERNAME_NOTBLANK {UserDTO.username.NotBlank}")
+                        max = ValidationConstant.MAX_USERNAME_LENGTH)
+                @NotBlank(groups = {CreateGroup.class})
                 @Pattern(
                         regexp = ValidationConstant.USERNAME_PATTERN,
-                        groups = {CreateGroup.class, UpdateGroup.class},
-                        message = "USERNAME_PATTERN_MISMATCH {USERNAME_PATTERN_MISMATCH}")
+                        groups = {CreateGroup.class, UpdateGroup.class})
                 String username,
         @Schema(
                         description = "Email",
                         requiredMode = Schema.RequiredMode.REQUIRED,
                         example = "admin@cmipt.edu")
-                @Email(
-                        groups = {CreateGroup.class, UpdateGroup.class},
-                        message = "USERDTO_EMAIL_EMAIL {UserDTO.email.Email}")
-                @NotBlank(
-                        groups = {CreateGroup.class},
-                        message = "USERDTO_EMAIL_NOTBLANK {UserDTO.email.NotBlank}")
+                @Email(groups = {CreateGroup.class, UpdateGroup.class})
+                @NotBlank(groups = {CreateGroup.class})
                 String email,
         @Schema(
                         description = "User Password (Unencrypted)",
@@ -62,13 +52,9 @@ public record UserDTO(
                 @Size(
                         groups = {CreateGroup.class, UpdateGroup.class},
                         min = ValidationConstant.MIN_PASSWORD_LENGTH,
-                        max = ValidationConstant.MAX_PASSWORD_LENGTH,
-                        message = "USERDTO_USERPASSWORD_SIZE {UserDTO.userPassword.Size}")
-                @NotBlank(
-                        groups = {CreateGroup.class},
-                        message = "USERDTO_USERPASSWORD_NOTBLANK {UserDTO.userPassword.NotBlank}")
+                        max = ValidationConstant.MAX_PASSWORD_LENGTH)
+                @NotBlank(groups = {CreateGroup.class})
                 @Pattern(
                         regexp = ValidationConstant.PASSWORD_PATTERN,
-                        groups = {CreateGroup.class, UpdateGroup.class},
-                        message = "PASSWORD_PATTERN_MISMATCH {PASSWORD_PATTERN_MISMATCH}")
+                        groups = {CreateGroup.class, UpdateGroup.class})
                 String userPassword) {}

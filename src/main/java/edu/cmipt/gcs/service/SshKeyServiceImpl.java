@@ -30,8 +30,7 @@ public class SshKeyServiceImpl extends ServiceImpl<SshKeyMapper, SshKeyPO>
         if (!GitoliteUtil.addSshKey(
                 sshKeyPO.getId(), sshKeyPO.getPublicKey(), sshKeyPO.getUserId())) {
             logger.error("Failed to add SSH key to gitolite");
-            throw new GenericException(
-                    ErrorCodeEnum.SSH_KEY_UPLOAD_FAILED, "Failed to add SSH key to gitolite");
+            throw new GenericException(ErrorCodeEnum.SSH_KEY_UPLOAD_FAILED, sshKeyPO);
         }
         return true;
     }
@@ -47,8 +46,7 @@ public class SshKeyServiceImpl extends ServiceImpl<SshKeyMapper, SshKeyPO>
         }
         if (!GitoliteUtil.removeSshKey(sshKeyPO.getId(), sshKeyPO.getUserId())) {
             logger.error("Failed to remove SSH key from gitolite");
-            throw new GenericException(
-                    ErrorCodeEnum.SSH_KEY_DELETE_FAILED, "Failed to remove SSH key from gitolite");
+            throw new GenericException(ErrorCodeEnum.SSH_KEY_DELETE_FAILED, sshKeyPO);
         }
         return true;
     }

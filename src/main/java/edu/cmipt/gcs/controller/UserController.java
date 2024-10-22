@@ -261,8 +261,8 @@ public class UserController {
     })
     public void checkEmailValidity(
             @RequestParam("email")
-                    @Email(message = "USERDTO_EMAIL_EMAIL {UserDTO.email.Email}")
-                    @NotBlank(message = "USERDTO_EMAIL_NOTBLANK {UserDTO.email.NotBlank}")
+                    @Email(message = "{Email.userController#checkEmailValidity.email}")
+                    @NotBlank(message = "{NotBlank.userController#checkEmailValidity.email}")
                     String email) {
         QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
         wrapper.eq("email", email);
@@ -295,11 +295,11 @@ public class UserController {
                     @Size(
                             min = ValidationConstant.MIN_USERNAME_LENGTH,
                             max = ValidationConstant.MAX_USERNAME_LENGTH,
-                            message = "USERDTO_USERNAME_SIZE {UserDTO.username.Size}")
-                    @NotBlank(message = "USERDTO_USERNAME_NOTBLANK {UserDTO.username.NotBlank}")
+                            message = "{Size.userController#checkUsernameValidity.username}")
+                    @NotBlank(message = "{NotBlank.userController#checkUsernameValidity.username}")
                     @Pattern(
                             regexp = ValidationConstant.USERNAME_PATTERN,
-                            message = "USERNAME_PATTERN_MISMATCH {USERNAME_PATTERN_MISMATCH}")
+                            message = "{Pattern.userController#checkUsernameValidity.username}")
                     String username) {
         QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
         wrapper.eq("username", username);
@@ -332,10 +332,10 @@ public class UserController {
                     @Size(
                             min = ValidationConstant.MIN_PASSWORD_LENGTH,
                             max = ValidationConstant.MAX_PASSWORD_LENGTH,
-                            message = "USERDTO_PASSWORD_SIZE {UserDTO.password.Size}")
-                    @NotBlank(message = "USERDTO_PASSWORD_NOTBLANK {UserDTO.password.NotBlank}")
+                            message = "{Size.userController#checkPasswordValidity.password}")
+                    @NotBlank(message = "{NotBlank.userController#checkPasswordValidity.password}")
                     @Pattern(
                             regexp = ValidationConstant.PASSWORD_PATTERN,
-                            message = "PASSWORD_PATTERN_MISMATCH {PASSWORD_PATTERN_MISMATCH}")
+                            message = "{Pattern.userController#checkPasswordValidity.password}")
                     String password) {}
 }

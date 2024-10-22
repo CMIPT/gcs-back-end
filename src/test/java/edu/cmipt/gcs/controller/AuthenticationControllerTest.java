@@ -219,19 +219,7 @@ public class AuthenticationControllerTest {
                                 .content(invalidUserDTO))
                 .andExpectAll(
                         status().isBadRequest(),
-                        content()
-                                .json(
-                                        """
-                                        {
-                                            "code": %d,
-                                            "message": "%s"
-                                        }
-                                        """
-                                                .formatted(
-                                                        ErrorCodeEnum.USERDTO_EMAIL_EMAIL.ordinal(),
-                                                        MessageSourceUtil.getMessage(
-                                                                ErrorCodeEnum
-                                                                        .USERDTO_EMAIL_EMAIL))));
+                        jsonPath("$.code", is(ErrorCodeEnum.VALIDATION_ERROR.ordinal())));
     }
 
     @Test
