@@ -114,12 +114,13 @@ public class RepositoryControllerTest {
 
     @Test
     @Order(Ordered.HIGHEST_PRECEDENCE + 2)
-    public void testAddCollaboratorByIdValid() throws Exception {
+    public void testAddCollaboratorValid() throws Exception {
         mvc.perform(
-                        post(ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_BY_ID_API_PATH)
+                        post(ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                                 .param("repositoryId", TestConstant.REPOSITORY_ID)
-                                .param("collaboratorId", TestConstant.OTHER_ID))
+                                .param("collaborator", TestConstant.OTHER_ID)
+                                .param("collaboratorType", "id"))
                 .andExpect(status().isOk());
     }
 

@@ -232,9 +232,9 @@ public class RepositoryController {
         }
     }
 
-    @PostMapping(ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_BY_NAME_API_PATH)
+    @PostMapping(ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_API_PATH)
     @Operation(
-            summary = "Add a collaborator by names",
+            summary = "Add a collaborator",
             description = "Add a collaborator to the repository",
             tags = {"Repository", "Post Method"})
     @Parameters({
@@ -251,8 +251,16 @@ public class RepositoryController {
                 in = ParameterIn.QUERY,
                 schema = @Schema(implementation = Long.class)),
         @Parameter(
-                name = "collaboratorName",
-                description = "Collaborator's name",
+                name = "collaborator",
+                description = "Collaborator's Information",
+                example = "admin",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = Long.class)),
+        @Parameter(
+                name = "collaboratorType",
+                description = "Collaborator's Type. The value can be 'id', 'username' or 'email'",
+                example = "username",
                 required = true,
                 in = ParameterIn.QUERY,
                 schema = @Schema(implementation = String.class))
@@ -262,99 +270,31 @@ public class RepositoryController {
         @ApiResponse(responseCode = "403", description = "Access denied"),
         @ApiResponse(responseCode = "404", description = "Collaborator or repository not found")
     })
-    public void addCollaboratorByName(
+    public void addCollaborator(
             @RequestParam("repositoryId") Long repositoryId,
-            @RequestParam("collaboratorName") String collaboratorName,
+            @RequestParam("collaborator") String collaborator,
+            @RequestParam("collaboratorType") String collaboratorType,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("username", collaboratorName);
-        if (!userService.exists(queryWrapper)) {
-            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, collaboratorName);
+        if (!collaboratorType.equals("id")
+                && !collaboratorType.equals("username")
+                && !collaboratorType.equals("email")) {
+            throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
         }
-        Long userId = userService.getOne(queryWrapper).getId();
-        addCollaboratorById(repositoryId, userId, accessToken);
-    }
-
-    @PostMapping(ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_BY_EMAIL_API_PATH)
-    @Operation(
-            summary = "Add a collaborator by email",
-            description = "Add a collaborator to the repository",
-            tags = {"Repository", "Post Method"})
-    @Parameters({
-        @Parameter(
-                name = HeaderParameter.ACCESS_TOKEN,
-                description = "Access token",
-                required = true,
-                in = ParameterIn.HEADER,
-                schema = @Schema(implementation = String.class)),
-        @Parameter(
-                name = "repositoryId",
-                description = "Repository ID",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = Long.class)),
-        @Parameter(
-                name = "collaboratorEmail",
-                description = "Collaborator's email",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = String.class))
-    })
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Collaborator added successfully"),
-        @ApiResponse(responseCode = "403", description = "Access denied"),
-        @ApiResponse(responseCode = "404", description = "Collaborator or repository not found")
-    })
-    public void addCollaboratorByEmail(
-            @RequestParam("repositoryId") Long repositoryId,
-            @RequestParam("collaboratorEmail") String collaboratorEmail,
-            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("email", collaboratorEmail);
-        if (!userService.exists(queryWrapper)) {
-            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, collaboratorEmail);
+        QueryWrapper<UserPO> userQueryWrapper = new QueryWrapper<>();
+        if (collaboratorType.equals("id")) {
+            try {
+                userQueryWrapper.eq(collaboratorType, Long.valueOf(collaborator));
+            } catch (Exception e) {
+                throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+            }
+        } else {
+            userQueryWrapper.eq(collaboratorType, collaborator);
         }
-        Long userId = userService.getOne(queryWrapper).getId();
-        addCollaboratorById(repositoryId, userId, accessToken);
-    }
-
-    @PostMapping(ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_BY_ID_API_PATH)
-    @Operation(
-            summary = "Add a collaborator by id",
-            description = "Add a collaborator to the repository",
-            tags = {"Repository", "Post Method"})
-    @Parameters({
-        @Parameter(
-                name = HeaderParameter.ACCESS_TOKEN,
-                description = "Access token",
-                required = true,
-                in = ParameterIn.HEADER,
-                schema = @Schema(implementation = String.class)),
-        @Parameter(
-                name = "repositoryId",
-                description = "Repository ID",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = Long.class)),
-        @Parameter(
-                name = "collaboratorId",
-                description = "Collaborator's ID",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = Long.class))
-    })
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Collaborator added successfully"),
-        @ApiResponse(responseCode = "403", description = "Access denied"),
-        @ApiResponse(responseCode = "404", description = "Collaborator or repository not found")
-    })
-    public void addCollaboratorById(
-            @RequestParam("repositoryId") Long repositoryId,
-            @RequestParam("collaboratorId") Long collaboratorId,
-            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        if (userService.getById(collaboratorId) == null) {
-            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, collaboratorId);
+        UserPO user = userService.getOne(userQueryWrapper);
+        if (user == null) {
+            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, collaborator);
         }
+        Long collaboratorId = user.getId();
         RepositoryPO repository = repositoryService.getById(repositoryId);
         if (repository == null) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
@@ -376,10 +316,10 @@ public class RepositoryController {
                     repositoryId);
             throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
         }
-        QueryWrapper<UserCollaborateRepositoryPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("collaborator_id", collaboratorId);
-        queryWrapper.eq("repository_id", repositoryId);
-        if (userCollaborateRepositoryService.exists(queryWrapper)) {
+        QueryWrapper<UserCollaborateRepositoryPO> collaborationQueryWrapper = new QueryWrapper<>();
+        collaborationQueryWrapper.eq("collaborator_id", collaboratorId);
+        collaborationQueryWrapper.eq("repository_id", repositoryId);
+        if (userCollaborateRepositoryService.exists(collaborationQueryWrapper)) {
             logger.error(
                     "Collaborator[{}] already exists in repository[{}]",
                     collaboratorId,
