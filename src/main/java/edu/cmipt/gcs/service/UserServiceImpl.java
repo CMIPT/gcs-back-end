@@ -36,9 +36,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserPO> implements 
         var sshKeyList = sshKeyService.list(wrapper);
         for (var sshKey : sshKeyList) {
             if (!sshKeyService.removeById(sshKey.getId())) {
-                throw new GenericException(
-                        ErrorCodeEnum.USER_DELETE_FAILED,
-                        sshKey);
+                throw new GenericException(ErrorCodeEnum.USER_DELETE_FAILED, sshKey);
             }
         }
         return true;
@@ -53,8 +51,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserPO> implements 
         }
         if (!GitoliteUtil.initUserConfig(user.getId())) {
             logger.error("Failed to add user to gitolite");
-            throw new GenericException(
-                    ErrorCodeEnum.USER_CREATE_FAILED, user);
+            throw new GenericException(ErrorCodeEnum.USER_CREATE_FAILED, user);
         }
         return true;
     }

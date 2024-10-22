@@ -39,8 +39,7 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
                 repositoryPO.getUserId(),
                 repositoryPO.getIsPrivate())) {
             logger.error("Failed to create repository in gitolite");
-            throw new GenericException(
-                    ErrorCodeEnum.REPOSITORY_CREATE_FAILED, repositoryPO);
+            throw new GenericException(ErrorCodeEnum.REPOSITORY_CREATE_FAILED, repositoryPO);
         }
         return true;
     }
@@ -59,8 +58,7 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
                 repositoryPO.getUserId(),
                 repositoryPO.getIsPrivate())) {
             logger.error("Failed to remove repository from gitolite");
-            throw new GenericException(
-                    ErrorCodeEnum.REPOSITORY_DELETE_FAILED, repositoryPO);
+            throw new GenericException(ErrorCodeEnum.REPOSITORY_DELETE_FAILED, repositoryPO);
         }
         return true;
     }

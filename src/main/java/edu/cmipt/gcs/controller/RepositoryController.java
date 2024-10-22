@@ -177,8 +177,7 @@ public class RepositoryController {
                 && !repository
                         .repositoryName()
                         .equals(repositoryService.getById(id).getRepositoryName())) {
-            throw new GenericException(
-                    ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
+            throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
         }
         if (!repositoryService.updateById(new RepositoryPO(repository))) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_UPDATE_FAILED, repository);
@@ -214,12 +213,15 @@ public class RepositoryController {
                     @Size(
                             min = ValidationConstant.MIN_REPOSITORY_NAME_LENGTH,
                             max = ValidationConstant.MAX_REPOSITORY_NAME_LENGTH,
-                            message ="{Size.repositoryController#checkRepositoryNameValidity.repositoryName}")
+                            message =
+                                    "{Size.repositoryController#checkRepositoryNameValidity.repositoryName}")
                     @NotBlank(
-                            message ="{NotBlank.repositoryController#checkRepositoryNameValidity.repositoryName}")
+                            message =
+                                    "{NotBlank.repositoryController#checkRepositoryNameValidity.repositoryName}")
                     @Pattern(
                             regexp = ValidationConstant.REPOSITORY_NAME_PATTERN,
-                            message = "{Pattern.repositoryController#checkRepositoryNameValidity.repositoryName}")
+                            message =
+                                    "{Pattern.repositoryController#checkRepositoryNameValidity.repositoryName}")
                     String repositoryName,
             @RequestParam("userId") Long userId) {
         QueryWrapper<RepositoryPO> queryWrapper = new QueryWrapper<>();

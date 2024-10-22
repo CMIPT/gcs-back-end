@@ -3,6 +3,7 @@ package edu.cmipt.gcs.exception;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.util.MessageSourceUtil;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 
@@ -38,7 +39,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorVO> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException e, HttpServletRequest request) {
         var fieldError = e.getBindingResult().getFieldError();
-        return handleValidationException(MessageSourceUtil.getMessage(fieldError.getCodes()[0], fieldError.getArguments()), request);
+        return handleValidationException(
+                MessageSourceUtil.getMessage(fieldError.getCodes()[0], fieldError.getArguments()),
+                request);
     }
 
     /**
@@ -110,6 +113,7 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<ErrorVO> handleValidationException(
             String message, HttpServletRequest request) {
-        return handleGenericException(new GenericException(ErrorCodeEnum.VALIDATION_ERROR, message), request);
+        return handleGenericException(
+                new GenericException(ErrorCodeEnum.VALIDATION_ERROR, message), request);
     }
 }

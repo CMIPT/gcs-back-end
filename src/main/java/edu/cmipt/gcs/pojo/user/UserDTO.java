@@ -33,8 +33,7 @@ public record UserDTO(
                         groups = {CreateGroup.class, UpdateGroup.class},
                         min = ValidationConstant.MIN_USERNAME_LENGTH,
                         max = ValidationConstant.MAX_USERNAME_LENGTH)
-                @NotBlank(
-                        groups = {CreateGroup.class})
+                @NotBlank(groups = {CreateGroup.class})
                 @Pattern(
                         regexp = ValidationConstant.USERNAME_PATTERN,
                         groups = {CreateGroup.class, UpdateGroup.class})
@@ -43,10 +42,8 @@ public record UserDTO(
                         description = "Email",
                         requiredMode = Schema.RequiredMode.REQUIRED,
                         example = "admin@cmipt.edu")
-                @Email(
-                        groups = {CreateGroup.class, UpdateGroup.class})
-                @NotBlank(
-                        groups = {CreateGroup.class})
+                @Email(groups = {CreateGroup.class, UpdateGroup.class})
+                @NotBlank(groups = {CreateGroup.class})
                 String email,
         @Schema(
                         description = "User Password (Unencrypted)",
@@ -56,8 +53,7 @@ public record UserDTO(
                         groups = {CreateGroup.class, UpdateGroup.class},
                         min = ValidationConstant.MIN_PASSWORD_LENGTH,
                         max = ValidationConstant.MAX_PASSWORD_LENGTH)
-                @NotBlank(
-                        groups = {CreateGroup.class})
+                @NotBlank(groups = {CreateGroup.class})
                 @Pattern(
                         regexp = ValidationConstant.PASSWORD_PATTERN,
                         groups = {CreateGroup.class, UpdateGroup.class})

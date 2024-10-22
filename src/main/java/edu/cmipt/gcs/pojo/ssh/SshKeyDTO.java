@@ -15,20 +15,17 @@ import jakarta.validation.constraints.Size;
 public record SshKeyDTO(
         @Schema(description = "SSH Key ID")
                 @Null(groups = CreateGroup.class)
-                @NotNull(
-                        groups = UpdateGroup.class)
+                @NotNull(groups = UpdateGroup.class)
                 String id,
         @Schema(description = "Name", example = "My SSH Key")
-                @NotBlank(
-                        groups = {CreateGroup.class, UpdateGroup.class})
+                @NotBlank(groups = {CreateGroup.class, UpdateGroup.class})
                 @Size(
                         groups = {CreateGroup.class, UpdateGroup.class},
                         min = ValidationConstant.MIN_SSH_KEY_NAME_LENGTH,
                         max = ValidationConstant.MAX_SSH_KEY_NAME_LENGTH)
                 String name,
         @Schema(description = "Public Key")
-                @NotBlank(
-                        groups = CreateGroup.class)
+                @NotBlank(groups = CreateGroup.class)
                 @Size(
                         groups = {CreateGroup.class, UpdateGroup.class},
                         min = ValidationConstant.MIN_SSH_KEY_PUBLICKEY_LENGTH,
