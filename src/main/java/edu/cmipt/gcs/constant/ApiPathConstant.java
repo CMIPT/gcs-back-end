@@ -42,14 +42,8 @@ public class ApiPathConstant {
             REPOSITORY_API_PREFIX + "/repository-name";
     public static final String REPOSITORY_PAGE_COLLABORATOR_API_PATH =
             REPOSITORY_API_PREFIX + "/page/collaborator";
-    public static final String REPOSITORY_ADD_COLLABORATOR_API_PREFIX =
+    public static final String REPOSITORY_ADD_COLLABORATOR_API_PATH =
             REPOSITORY_API_PREFIX + "/add-collaborator";
-    public static final String REPOSITORY_ADD_COLLABORATOR_BY_NAME_API_PATH =
-            REPOSITORY_ADD_COLLABORATOR_API_PREFIX + "/name";
-    public static final String REPOSITORY_ADD_COLLABORATOR_BY_EMAIL_API_PATH =
-            REPOSITORY_ADD_COLLABORATOR_API_PREFIX + "/email";
-    public static final String REPOSITORY_ADD_COLLABORATOR_BY_ID_API_PATH =
-            REPOSITORY_ADD_COLLABORATOR_API_PREFIX + "/id";
     public static final String REPOSITORY_REMOVE_COLLABORATION_API_PATH =
             REPOSITORY_API_PREFIX + "/remove-collaborator";
 

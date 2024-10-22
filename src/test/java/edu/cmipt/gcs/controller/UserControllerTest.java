@@ -44,7 +44,8 @@ public class UserControllerTest {
         mvc.perform(
                         get(ApiPathConstant.USER_GET_USER_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                                .param("username", TestConstant.USERNAME))
+                                .param("user", TestConstant.USERNAME)
+                                .param("userType", "username"))
                 .andExpectAll(
                         status().isOk(),
                         jsonPath("$.username", is(TestConstant.USERNAME)),
@@ -58,7 +59,8 @@ public class UserControllerTest {
         mvc.perform(
                         get(ApiPathConstant.USER_GET_USER_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                                .param("username", invalidUsername))
+                                .param("user", invalidUsername)
+                                .param("userType", "username"))
                 .andExpectAll(
                         status().isNotFound(),
                         content()

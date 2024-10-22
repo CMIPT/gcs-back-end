@@ -57,8 +57,8 @@ public class UserController {
 
     @GetMapping(ApiPathConstant.USER_GET_USER_API_PATH)
     @Operation(
-            summary = "Get user by name",
-            description = "Get user information by user name",
+            summary = "Get a user",
+            description = "Get a user's information",
             tags = {"User", "Get Method"})
     @Parameters({
         @Parameter(
@@ -68,9 +68,16 @@ public class UserController {
                 in = ParameterIn.HEADER,
                 schema = @Schema(implementation = String.class)),
         @Parameter(
-                name = "username",
-                description = "User name",
+                name = "user",
+                description = "User's Information",
                 example = "admin",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = "userType",
+                description = "User's Type. The value can be 'id', 'username' or 'email'",
+                example = "username",
                 required = true,
                 in = ParameterIn.QUERY,
                 schema = @Schema(implementation = String.class))
@@ -82,11 +89,23 @@ public class UserController {
                 description = "User not found",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public UserVO getUser(@RequestParam("username") String username) {
+    public UserVO getUser(
+            @RequestParam("user") String user, @RequestParam("userType") String userType) {
+        if (!userType.equals("id") && !userType.equals("username") && !userType.equals("email")) {
+            throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+        }
         QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
-        wrapper.eq("username", username);
+        if (userType.equals("id")) {
+            try {
+                wrapper.eq(userType, Long.valueOf(user));
+            } catch (Exception e) {
+                throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+            }
+        } else {
+            wrapper.eq(userType, user);
+        }
         if (!userService.exists(wrapper)) {
-            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, username);
+            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user);
         }
         return new UserVO(userService.getOne(wrapper));
     }

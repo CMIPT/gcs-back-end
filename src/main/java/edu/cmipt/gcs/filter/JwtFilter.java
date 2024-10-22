@@ -214,7 +214,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     // this will be checked in controller
                     // because we must query the database to get the user id of the repository
                 } else if (request.getRequestURI()
-                        .startsWith(ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_API_PREFIX)) {
+                        .equals(ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_API_PATH)) {
                     // this will be checked in controller
                     // because we must query the database to get the user id of the repository
                 } else {
