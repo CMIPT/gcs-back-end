@@ -462,6 +462,9 @@ def install_redis():
 
 def deploy_on_ubuntu(config):
     assert(config != None)
+    if os.path.exists(application_config_file_path):
+        res = os.system(f'rm -rf {application_config_file_path}')
+        command_checker(res, f"Failed to remove {application_config_file_path}")
     if config.serviceType != 'systemd':
         essential_packages.remove('systemd')
     apt_install_package(parse_iterable_into_str(essential_packages))

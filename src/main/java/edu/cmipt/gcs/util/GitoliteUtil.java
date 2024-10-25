@@ -30,8 +30,10 @@ public class GitoliteUtil {
                     @%d_ssh_key =
                     repo @%d_private_repo
                         RW+ = @%d_ssh_key
+                    repo @%d_public_repo
+                        RW+ = @%d_ssh_key
                     """
-                            .formatted(userId, userId, userId, userId, userId);
+                            .formatted(userId, userId, userId, userId, userId, userId, userId);
             Files.writeString(userConfPath, content);
             List<String> lines = Files.readAllLines(Paths.get(GitConstant.GITOLITE_CONF_FILE_PATH));
             for (int i = 0; i < lines.size(); i++) {
