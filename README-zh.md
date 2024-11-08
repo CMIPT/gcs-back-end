@@ -118,6 +118,12 @@
 | `staticLocations`            | `list`   | `null`                                 | 静态资源的路径，使用绝对路径，例如 `['/home/gcs/static']`。 |
 | `redisHost`                  | `string` | `"localhost"`                          | `Redis` 主机地址。 |
 | `redisPort`                  | `int`    | `6379`                                 | `Redis` 端口。 |
+| `springMailDefaultEncoding`  | `string` | `"UTF-8"`                              | `Spring` 邮件默认编码。 |
+| `springMailProtocol`         | `string` | `null`                                 | `Spring` 邮件协议。 |
+| `springMailHost`             | `string` | `null`                                 | `Spring` 邮件主机地址。 |
+| `springMailPort`             | `int`    | `null`                                 | `Spring` 邮件端口。 |
+| `springMailUsername`         | `string` | `null`                                 | `Spring` 邮件用户名。 |
+| `springMailPassword`         | `string` | `null`                                 | `Spring` 邮件密码。 |
 
 ## 手动部署
 手动部署可以在任意的 `UNIX-like` 系统上面进行，下面依次介绍你需要手动完成的操作。
@@ -247,6 +253,18 @@ gitolite.admin.repository.path=
 spring.redis.host=
 # redis 端口
 spring.redis.port=
+# 邮件默认编码，通常为 UTF-8
+spring.mail.default-encoding=
+# 邮件协议
+spring.mail.protocol=
+# 邮件主机地址
+spring.mail.host=
+# 邮件端口
+spring.mail.port=
+# 邮件用户名
+spring.mail.username=
+# 邮件密码
+spring.mail.password=
 ```
 
 **注意**：所有的后端接口均是以 `gcs` 开头，所以在静态资源路径下面不应该有名为 `gcs`
@@ -315,6 +333,14 @@ front-end.url=
 spring.mvc.static-path-pattern=
 spring.resources.static-locations=
 gitolite.admin.repository.path=/home/$USER/gitolite-admin
+spring.redis.host=localhost
+spring.redis.port=6379
+spring.mail.default-encoding=UTF-8
+spring.mail.protocol=
+spring.mail.host=
+spring.mail.port=
+spring.mail.username=
+spring.mail.password=
 ```
 
 其中 `$1` 会被替换成执行脚本时传入的第一个参数。脚本的使用方法为
@@ -322,7 +348,8 @@ gitolite.admin.repository.path=/home/$USER/gitolite-admin
 `postgres` 用户 (这里指数据库中的用户而不是 `OS` 中的用户) 的密码，在执行脚本之前确保当前用户可以使用
 `sudo` 进行操作。
 
-在脚本执行成功后，开发者便可以通过 `mvn spring-boot:run` 启动程序，或者通过 `mvn test` 执行单元测试。
+在脚本执行成功后，开发者还需要填入用于测试的邮箱相关配置。
+完成后，开发者便可以通过 `mvn spring-boot:run` 启动程序，或者通过 `mvn test` 执行单元测试。
 
 **注意**：有时在执行 `mvn spring-boot:run` 或者 `mvn test` 时会提示 `target` 目录的权限不够，这往往
 是因为在使用 `bash prepare_dev.sh <db_postgres_password` 之前可能以其他用户的身份执行过 `mvn` 命令，

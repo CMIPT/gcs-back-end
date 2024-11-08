@@ -40,7 +40,7 @@ spring:
         reset-enable: false
         allow: # empty means allow all
   messages:
-    basename: message/exception,message/validation
+    basename: message/exception,message/validation,message/message
     encoding: UTF-8
 
 mybatis-plus:

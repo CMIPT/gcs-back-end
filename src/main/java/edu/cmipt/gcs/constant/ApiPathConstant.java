@@ -12,6 +12,8 @@ public class ApiPathConstant {
             AUTHENTICATION_API_PREFIX + "/signout";
     public static final String AUTHENTICATION_REFRESH_API_PATH =
             AUTHENTICATION_API_PREFIX + "/refresh";
+    public static final String AUTHENTICATION_SEND_EMAIL_VERIFICATION_CODE_API_PATH =
+            AUTHENTICATION_API_PREFIX + "/send-email-verification-code";
 
     public static final String DEVELOPMENT_API_PREFIX = ALL_API_PREFIX + "/developer";
     public static final String DEVELOPMENT_GET_API_MAP_API_PATH = DEVELOPMENT_API_PREFIX + "/api";
@@ -30,6 +32,10 @@ public class ApiPathConstant {
     public static final String USER_DELETE_USER_API_PATH = USER_API_PREFIX + "/delete";
     public static final String USER_PAGE_USER_REPOSITORY_API_PATH =
             USER_API_PREFIX + "/page/repository";
+    public static final String USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH =
+            USER_API_PREFIX + "/update-password-with-old-password";
+    public static final String USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH =
+            USER_API_PREFIX + "/update-password-with-email-verification-code";
 
     public static final String REPOSITORY_API_PREFIX = ALL_API_PREFIX + "/repository";
     public static final String REPOSITORY_CREATE_REPOSITORY_API_PATH =

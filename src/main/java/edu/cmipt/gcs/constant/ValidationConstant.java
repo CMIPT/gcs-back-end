@@ -21,4 +21,7 @@ public class ValidationConstant {
 
     public static final int MIN_SSH_KEY_PUBLICKEY_LENGTH = 1;
     public static final int MAX_SSH_KEY_PUBLICKEY_LENGTH = 4096;
+
+    public static final int EMAIL_VERIFICATION_CODE_LENGTH = 6;
+    public static final String EMAIL_VERIFICATION_CODE_PATTERN = "^[0-9]*$";
 }

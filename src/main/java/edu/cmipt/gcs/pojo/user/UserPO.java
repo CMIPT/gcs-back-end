@@ -22,14 +22,14 @@ public class UserPO {
     private LocalDateTime gmtUpdated;
     @TableLogic private LocalDateTime gmtDeleted;
 
-    public UserPO(UserDTO userDTO) {
-        try {
-            this.id = Long.valueOf(userDTO.id());
-        } catch (NumberFormatException e) {
-            this.id = null;
-        }
-        this.username = userDTO.username();
-        this.email = userDTO.email();
-        this.userPassword = MD5Converter.convertToMD5(userDTO.userPassword());
+    public UserPO(UserSignUpDTO user) {
+        this.username = user.username();
+        this.email = user.email();
+        this.userPassword = MD5Converter.convertToMD5(user.userPassword());
+    }
+
+    public UserPO(UserUpdateDTO user) {
+        this.id = Long.parseLong(user.id());
+        this.username = user.username();
     }
 }

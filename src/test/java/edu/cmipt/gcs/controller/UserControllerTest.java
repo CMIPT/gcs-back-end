@@ -13,6 +13,7 @@ import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+import edu.cmipt.gcs.util.EmailVerificationCodeUtil;
 import edu.cmipt.gcs.util.MessageSourceUtil;
 
 import org.junit.jupiter.api.MethodOrderer;
@@ -144,44 +145,26 @@ public class UserControllerTest {
     @Test
     public void testUpdateUserValid() throws Exception {
         TestConstant.USERNAME += new Date().getTime() + "new";
-        TestConstant.EMAIL = TestConstant.USERNAME + "@cmipt.edu";
-        TestConstant.USER_PASSWORD += "new";
-        var response =
-                mvc.perform(
-                                post(ApiPathConstant.USER_UPDATE_USER_API_PATH)
-                                        .header(
-                                                HeaderParameter.ACCESS_TOKEN,
-                                                TestConstant.ACCESS_TOKEN)
-                                        .header(
-                                                HeaderParameter.REFRESH_TOKEN,
-                                                TestConstant.REFRESH_TOKEN)
-                                        .contentType(MediaType.APPLICATION_JSON)
-                                        .content(
-                                                """
-                                                {
-                                                    "id": "%s",
-                                                    "username": "%s",
-                                                    "email": "%s",
-                                                    "userPassword": "%s"
-                                                }
-                                                """
-                                                        .formatted(
-                                                                TestConstant.ID,
-                                                                TestConstant.USERNAME,
-                                                                TestConstant.EMAIL,
-                                                                TestConstant.USER_PASSWORD)))
-                        .andExpectAll(
-                                status().isOk(),
-                                header().exists(HeaderParameter.ACCESS_TOKEN),
-                                header().exists(HeaderParameter.REFRESH_TOKEN),
-                                jsonPath("$.username", is(TestConstant.USERNAME)),
-                                jsonPath("$.email", is(TestConstant.EMAIL)),
-                                jsonPath("$.id").isString())
-                        .andReturn()
-                        .getResponse();
-        // make sure the new information is updated
-        TestConstant.ACCESS_TOKEN = response.getHeader(HeaderParameter.ACCESS_TOKEN);
-        TestConstant.REFRESH_TOKEN = response.getHeader(HeaderParameter.REFRESH_TOKEN);
+        mvc.perform(
+                        post(ApiPathConstant.USER_UPDATE_USER_API_PATH)
+                                .header(
+                                        HeaderParameter.ACCESS_TOKEN,
+                                        TestConstant.ACCESS_TOKEN)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {
+                                            "id": "%s",
+                                            "username": "%s"
+                                        }
+                                        """
+                                                .formatted(
+                                                        TestConstant.ID,
+                                                        TestConstant.USERNAME)))
+                .andExpectAll(
+                        status().isOk(),
+                        jsonPath("$.username", is(TestConstant.USERNAME)),
+                        jsonPath("$.id").isString());
     }
 
     @Test
@@ -190,22 +173,17 @@ public class UserControllerTest {
         mvc.perform(
                         post(ApiPathConstant.USER_UPDATE_USER_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                                .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(
                                         """
                                         {
                                             "id": "%s",
-                                            "username": "%s",
-                                            "email": "%s",
-                                            "userPassword": "%s"
+                                            "username": "%s"
                                         }
                                         """
                                                 .formatted(
                                                         otherID,
-                                                        TestConstant.USERNAME,
-                                                        TestConstant.EMAIL,
-                                                        TestConstant.USER_PASSWORD)))
+                                                        TestConstant.USERNAME)))
                 .andExpectAll(
                         status().isForbidden(),
                         content()
@@ -220,6 +198,108 @@ public class UserControllerTest {
                                                         ErrorCodeEnum.ACCESS_DENIED.ordinal(),
                                                         MessageSourceUtil.getMessage(
                                                                 ErrorCodeEnum.ACCESS_DENIED))));
+    }
+
+    @Test
+    public void testUpdateUserPasswordWithOldPasswordValid() throws Exception {
+        mvc.perform(
+                    post(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH)
+                            .param("id", TestConstant.ID)
+                            .param("oldPassword", TestConstant.USER_PASSWORD)
+                            .param("newPassword", TestConstant.USER_PASSWORD + "new"))
+            .andExpectAll(status().isOk());
+        TestConstant.USER_PASSWORD += "new";
+        String userSignInDTO =
+            """
+            {
+                "username": "%s",
+                "userPassword": "%s"
+            }
+            """
+                    .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD);
+        // get the new tokens
+        var response =
+                mvc.perform(
+                                post(ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(userSignInDTO))
+                        .andReturn()
+                        .getResponse();
+        TestConstant.ACCESS_TOKEN = response.getHeader(HeaderParameter.ACCESS_TOKEN);
+        TestConstant.REFRESH_TOKEN = response.getHeader(HeaderParameter.REFRESH_TOKEN);
+    }
+
+    @Test
+    public void testUpdateUserPasswordWithOldPasswordInvalid() throws Exception {
+        mvc.perform(
+                        post(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH)
+                                .param("id", TestConstant.ID)
+                                .param("oldPassword", TestConstant.USER_PASSWORD + "wrong")
+                                .param("newPassword", TestConstant.USER_PASSWORD + "new"))
+                .andExpectAll(status().isBadRequest(),
+            content()
+                    .json(
+                            """
+                            {
+                                "code": %d,
+                                "message": "%s"
+                            }
+                            """
+                                    .formatted(
+                                            ErrorCodeEnum.WRONG_UPDATE_PASSWORD_INFORMATION.ordinal(),
+                                            MessageSourceUtil.getMessage(
+                                                    ErrorCodeEnum.WRONG_UPDATE_PASSWORD_INFORMATION))));
+    }
+
+    @Test
+    public void testUpdateUserPasswordWithEmailVerificationCodeValid() throws Exception {
+        mvc.perform(
+                        post(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH)
+                                .param("email", TestConstant.EMAIL)
+                                .param("emailVerificationCode", EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL))
+                                .param("newPassword", TestConstant.USER_PASSWORD + "new"))
+                .andExpectAll(status().isOk());
+        TestConstant.USER_PASSWORD += "new";
+        String userSignInDTO =
+            """
+            {
+                "username": "%s",
+                "userPassword": "%s"
+            }
+            """
+                    .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD);
+        // get the new tokens
+        var response =
+                mvc.perform(
+                                post(ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(userSignInDTO))
+                        .andReturn()
+                        .getResponse();
+        TestConstant.ACCESS_TOKEN = response.getHeader(HeaderParameter.ACCESS_TOKEN);
+        TestConstant.REFRESH_TOKEN = response.getHeader(HeaderParameter.REFRESH_TOKEN);
+    }
+
+    @Test
+    public void testUpdateUserPasswordWithEmailVerificationCodeInvalid() throws Exception {
+        mvc.perform(
+                        post(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH)
+                                .param("email", TestConstant.EMAIL)
+                                .param("emailVerificationCode", "123456")
+                                .param("newPassword", TestConstant.USER_PASSWORD + "new"))
+                .andExpectAll(status().isBadRequest(),
+            content()
+                    .json(
+                            """
+                            {
+                                "code": %d,
+                                "message": "%s"
+                            }
+                            """
+                                    .formatted(
+                                            ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE.ordinal(),
+                                            MessageSourceUtil.getMessage(
+                                                    ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE, "123456"))));
     }
 
     @Test

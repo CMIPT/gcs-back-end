@@ -12,6 +12,7 @@ import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+import edu.cmipt.gcs.util.EmailVerificationCodeUtil;
 import edu.cmipt.gcs.util.MessageSourceUtil;
 
 import org.junit.jupiter.api.MethodOrderer;
@@ -37,62 +38,6 @@ import org.springframework.test.web.servlet.MockMvc;
 public class AuthenticationControllerTest {
     @Autowired private MockMvc mvc;
 
-    private static String userDTO =
-            """
-            {
-                "username": "%s",
-                "email": "%s",
-                "userPassword": "%s"
-            }
-            """
-                    .formatted(
-                            TestConstant.USERNAME, TestConstant.EMAIL, TestConstant.USER_PASSWORD);
-    private static String otherUserDTO =
-            """
-            {
-                "username": "%s",
-                "email": "%s",
-                "userPassword": "%s"
-            }
-            """
-                    .formatted(
-                            TestConstant.OTHER_USERNAME,
-                            TestConstant.OTHER_EMAIL,
-                            TestConstant.OTHER_USER_PASSWORD);
-    private static String userSignInDTO =
-            """
-            {
-                "username": "%s",
-                "userPassword": "%s"
-            }
-            """
-                    .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD);
-    public static String otherUserSignInDTO =
-            """
-            {
-                "username": "%s",
-                "userPassword": "%s"
-            }
-            """
-                    .formatted(TestConstant.OTHER_USERNAME, TestConstant.OTHER_USER_PASSWORD);
-
-    private static String invalidUserDTO =
-            """
-            {
-                "username": "test",
-                "email": "invalid email address",
-                "userPassword": "123456"
-            }
-            """;
-    private static String invalidUserSignInDTO =
-            """
-            {
-                "username": "%s",
-                "userPassword": "%s"
-            }
-            """
-                    .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD + "wrong");
-
     /**
      * Test sign in with invalid user information
      *
@@ -103,15 +48,41 @@ public class AuthenticationControllerTest {
     @Test
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public void testSignUpValid() throws Exception {
+        String userSignUpDTO =
+            """
+            {
+                "username": "%s",
+                "email": "%s",
+                "userPassword": "%s",
+                "emailVerificationCode": "%s"
+            }
+            """
+                    .formatted(
+                            TestConstant.USERNAME, TestConstant.EMAIL, TestConstant.USER_PASSWORD, 
+                            EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL));
+        String otherUserSignUpDTO =
+            """
+            {
+                "username": "%s",
+                "email": "%s",
+                "userPassword": "%s",
+                "emailVerificationCode": "%s"
+            }
+            """
+                    .formatted(
+                            TestConstant.OTHER_USERNAME,
+                            TestConstant.OTHER_EMAIL,
+                            TestConstant.OTHER_USER_PASSWORD,
+                            EmailVerificationCodeUtil.generateVerificationCode(TestConstant.OTHER_EMAIL));
         mvc.perform(
                         post(ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(userDTO))
+                                .content(userSignUpDTO))
                 .andExpect(status().isOk());
         mvc.perform(
                         post(ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(otherUserDTO))
+                                .content(otherUserSignUpDTO))
                 .andExpect(status().isOk());
     }
 
@@ -126,6 +97,23 @@ public class AuthenticationControllerTest {
     @Test
     @Order(Ordered.HIGHEST_PRECEDENCE + 1)
     public void testSignInValid() throws Exception {
+        String userSignInDTO =
+            """
+            {
+                "username": "%s",
+                "userPassword": "%s"
+            }
+            """
+                    .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD);
+        String otherUserSignInDTO =
+            """
+            {
+                "username": "%s",
+                "userPassword": "%s"
+            }
+            """
+                    .formatted(TestConstant.OTHER_USERNAME, TestConstant.OTHER_USER_PASSWORD);
+
         var response =
                 mvc.perform(
                                 post(ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH)
@@ -182,13 +170,21 @@ public class AuthenticationControllerTest {
     public void testRefreshValid() throws Exception {
         mvc.perform(
                         get(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)
-                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                                 .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN))
                 .andExpectAll(status().isOk(), header().exists(HeaderParameter.ACCESS_TOKEN));
     }
 
     @Test
     public void testSignInInvalid() throws Exception {
+        String invalidUserSignInDTO =
+            """
+            {
+                "username": "%s",
+                "userPassword": "%s"
+            }
+            """
+                    .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD + "wrong");
+
         mvc.perform(
                         post(ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -213,10 +209,18 @@ public class AuthenticationControllerTest {
 
     @Test
     public void testSignUpInvalid() throws Exception {
+        String invalidUserSignUpDTO =
+            """
+            {
+                "username": "test",
+                "email": "invalid email address",
+                "userPassword": "123456"
+            }
+            """;
         mvc.perform(
                         post(ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(invalidUserDTO))
+                                .content(invalidUserSignUpDTO))
                 .andExpectAll(
                         status().isBadRequest(),
                         jsonPath("$.code", is(ErrorCodeEnum.VALIDATION_ERROR.ordinal())));
@@ -227,7 +231,6 @@ public class AuthenticationControllerTest {
         String invalidToken = "This is an invalid token";
         mvc.perform(
                         get(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)
-                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                                 .header(HeaderParameter.REFRESH_TOKEN, invalidToken))
                 .andExpectAll(
                         status().isUnauthorized(),

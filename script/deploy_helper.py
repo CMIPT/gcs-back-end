@@ -82,12 +82,13 @@ def parse_iterable_into_str(iterable, sep=" "):
     return sep.join(iterable).strip()
 
 
-def write_content_to_file(content, file_path, mode = 'w'):
+def write_content_to_file(content, file_path, mode='w'):
     try:
         with open(file_path, mode) as f:
             f.write(content)
     except Exception as e:
         command_checker(1, f"Error: {e}")
+
 
 def create_systemd_service(config):
     assert(config != None)
@@ -134,7 +135,8 @@ LOGFILE={config.serviceLogFile}
 '''
     service_content = header + service_content
     log_debug(f"service_content:\n {service_content}")
-    write_content_to_file(service_content, f'{config.serviceSysVInitDirectory}/{config.serviceName}')
+    write_content_to_file(
+        service_content, f'{config.serviceSysVInitDirectory}/{config.serviceName}')
     res = os.system(f'chmod +x {config.serviceSysVInitDirectory}/{config.serviceName}')
     command_checker(
         res, f"Failed to chmod +x {config.serviceSysVInitDirectory}/{config.serviceName}")
@@ -295,7 +297,7 @@ def init_database(config):
     config_datasource(config)
 
 
-def create_or_update_user(username, password, homeDirectory = None):
+def create_or_update_user(username, password, homeDirectory=None):
     if username == None or username == "":
         return
     if os.system(f"cat /etc/passwd | grep -w -E '^{username}'") != 0:
@@ -307,7 +309,7 @@ def create_or_update_user(username, password, homeDirectory = None):
         res = os.system(command)
         message = message_tmp.format(command, res)
         command_checker(res, message)
-    elif homeDirectory is not None: # update the home directory
+    elif homeDirectory is not None:  # update the home directory
         command = f'usermod -d {homeDirectory} {username}'
         res = os.system(command)
         message = message_tmp.format(command, res)
@@ -339,6 +341,12 @@ def write_other_config(config):
         "staticLocations": "spring.web.resources.static-locations",
         "redisHost": "spring.redis.host",
         "redisPort": "spring.redis.port",
+        "springMailHost": "spring.mail.host",
+        "springMailPort": "spring.mail.port",
+        "springMailUsername": "spring.mail.username",
+        "springMailPassword": "spring.mail.password",
+        "springMailProtocol": "spring.mail.protocol",
+        "springMailDefaultEncoding": "spring.mail.default-encoding",
     }
     if config.frontEndUrl is None:
         config.frontEndUrl = ""
@@ -411,9 +419,10 @@ def init_gitolite(config):
     log_debug(f"Create usr directory command: {command}")
     command_checker(os.system(command), f"Failed to create usr directory in gitolite-admin/conf")
     command = (f"su -c 'mkdir -p {config.serviceUserHomeDirectory}/gitolite-admin/conf/gitolite.d/repository' "
-                f"{config.serviceUser}")
+               f"{config.serviceUser}")
     log_debug(f"Create repository directory command: {command}")
-    command_checker(os.system(command), f"Failed to create repository directory in gitolite-admin/conf")
+    command_checker(os.system(command),
+                    f"Failed to create repository directory in gitolite-admin/conf")
     content = f'''
 repo gitolite-admin
     RW+ = {config.serviceUser}
@@ -425,15 +434,16 @@ include "gitolite.d/repository/*.conf"
 repo @all_public_repo
     R = @all
 '''
-    write_content_to_file(content, f'{config.serviceUserHomeDirectory}/gitolite-admin/conf/gitolite.conf')
+    write_content_to_file(
+        content, f'{config.serviceUserHomeDirectory}/gitolite-admin/conf/gitolite.conf')
     # create the usr directory in gitolite-admin/conf
     # configure the username and email for gitolite-admin
     command = (f"su -c 'git -C {config.serviceUserHomeDirectory}/gitolite-admin "
-                f"config user.name \"{config.adminName}\"' {config.serviceUser}")
+               f"config user.name \"{config.adminName}\"' {config.serviceUser}")
     log_debug(f"Config username command: {command}")
     command_checker(os.system(command), f"Failed to config username")
     command = (f"su -c 'git -C {config.serviceUserHomeDirectory}/gitolite-admin "
-                f"config user.email \"{config.adminEmail}\"' {config.serviceUser}")
+               f"config user.email \"{config.adminEmail}\"' {config.serviceUser}")
     log_debug(f"Config email command: {command}")
     command_checker(os.system(command), f"Failed to config email")
     command = (f"su -c \"git -C {config.serviceUserHomeDirectory}/gitolite-admin "
@@ -444,6 +454,7 @@ repo @all_public_repo
                f" {config.serviceUser}")
     log_debug(f"Push command: {command}")
     command_checker(os.system(command), f"Failed to push the change")
+
 
 def install_redis():
     # check if redis has been installed
@@ -486,12 +497,14 @@ def deploy_on_ubuntu(config):
     if os.path.exists(f'{config.serviceUserHomeDirectory}/.ssh'):
         res = os.system(f'rm -rf {config.serviceUserHomeDirectory}/.ssh')
         command_checker(res, f"Failed to remove {config.serviceUserHomeDirectory}/.ssh")
-    res = os.system(f"su -c \"ssh-keygen -f {config.serviceUserHomeDirectory}/.ssh/id_rsa -N ''\" {config.serviceUser}")
+    res = os.system(
+        f"su -c \"ssh-keygen -f {config.serviceUserHomeDirectory}/.ssh/id_rsa -N ''\" {config.serviceUser}")
     command_checker(res, f"Failed to generate ssh key for {config.serviceUser}")
     init_gitolite(config)
     # let the service user can use git, rm and tee commands as the git user without password
     sudoers_entry = f"{config.serviceUser} ALL=({config.gitUserName}) NOPASSWD: /usr/bin/rm"
-    res = subprocess.run(f"echo '{sudoers_entry}' | tee /etc/sudoers.d/{config.serviceUser}", shell=True);
+    res = subprocess.run(
+        f"echo '{sudoers_entry}' | tee /etc/sudoers.d/{config.serviceUser}", shell=True)
     command_checker(res.returncode, f"Failed to create /etc/sudoers.d/{config.serviceUser}")
     res = subprocess.run(f"chmod 440 /etc/sudoers.d/{config.serviceUser}", shell=True)
     command_checker(res.returncode, f"Failed to chmod 440 /etc/sudoers.d/{config.serviceUser}")
@@ -531,6 +544,7 @@ def delete_user(username):
         res = os.system(command)
         message = message_tmp.format(command, res)
         command_checker(res, message)
+
 
 def clean(config):
     if config.deployWithDocker:
@@ -601,15 +615,17 @@ def get_cli_args():
     deploy_helper.py [OPTION]... [--config-path PATH] [--distro DISTRO]
 or: deploy_helper.py [OPTION]... --clean
 or: deploy_helper.py [OPTION]... [--log-level LEVEL] [--in-docker]"""
-        )
+    )
     parser.add_argument('--config-path', nargs='?', default='../config.json',
                         type=str, help="Default to '../config.json'. Path to config JSON file.")
     parser.add_argument('--distro', nargs='?', default='ubuntu',
                         type=str, help="Default to 'ubuntu'. Set linux distribution.")
     parser.add_argument('--default-config-path', nargs='?', default='../config_default.json',
                         type=str, help="Default to '../config_default.json'. Path to default config JSON file.")
-    parser.add_argument('--clean', action='store_true', help="Default to false. Clean up the project.")
-    parser.add_argument('--in-docker', action='store_true', help="Default to false. Whether or not deploy in docker.")
+    parser.add_argument('--clean', action='store_true',
+                        help="Default to false. Clean up the project.")
+    parser.add_argument('--in-docker', action='store_true',
+                        help="Default to false. Whether or not deploy in docker.")
     parser.add_argument('--log-level', nargs='?', default='INFO',
                         type=str, help=("""\
 Default to 'INFO'.
@@ -625,8 +641,7 @@ Set the logging level. Available levels are:
   from working. The application is still running but encountered a failure.
 - CRITICAL: A severe error occurred, causing the application to
   stop or severely impact functionality. Immediate attention is required.
-"""
-    ))
+"""))
     return parser.parse_args()
 
 
@@ -650,6 +665,15 @@ def deploy_with_docker(config):
     return
 
 
+def check_args(config):
+    # TODO: add more checks
+    required_fields = ['springMailHost', 'springMailPort',
+                       'springMailUsername', 'springMailPassword']
+    for field in required_fields:
+        if not hasattr(config, field):
+            raise ValueError(f"Missing required field: {field}")
+
+
 def main():
     args = get_cli_args()
     if args.log_level.upper() not in logging._nameToLevel:
@@ -661,7 +685,7 @@ def main():
     setattr(config, 'configPath', args.config_path)
     setattr(config, 'defaultConfigPath', args.default_config_path)
     setattr(config, 'distro', args.distro)
-    # TODO: add args check
+    check_args(config)
     if args.clean:
         clean(config)
     elif not args.in_docker and config.deployWithDocker:

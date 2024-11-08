@@ -1,6 +1,7 @@
 package edu.cmipt.gcs.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import edu.cmipt.gcs.constant.ApiPathConstant;
@@ -11,13 +12,14 @@ import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
-import edu.cmipt.gcs.pojo.user.UserDTO;
 import edu.cmipt.gcs.pojo.user.UserPO;
+import edu.cmipt.gcs.pojo.user.UserUpdateDTO;
 import edu.cmipt.gcs.pojo.user.UserVO;
 import edu.cmipt.gcs.service.RepositoryService;
 import edu.cmipt.gcs.service.UserService;
+import edu.cmipt.gcs.util.EmailVerificationCodeUtil;
 import edu.cmipt.gcs.util.JwtUtil;
-import edu.cmipt.gcs.validation.group.UpdateGroup;
+import edu.cmipt.gcs.util.MD5Converter;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -35,7 +37,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -137,14 +138,9 @@ public class UserController {
                 schema = @Schema(implementation = String.class))
     })
     public ResponseEntity<UserVO> updateUser(
-            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
-            @RequestHeader(HeaderParameter.REFRESH_TOKEN) String refreshToken,
-            @Validated(UpdateGroup.class) @RequestBody UserDTO user) {
+            @Validated @RequestBody UserUpdateDTO user) {
         if (user.username() != null) {
             checkUsernameValidity(user.username());
-        }
-        if (user.email() != null) {
-            checkEmailValidity(user.email());
         }
         // for the null fields, mybatis-plus will ignore by default
         assert user.id() != null;
@@ -152,12 +148,109 @@ public class UserController {
             throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user);
         }
         UserVO userVO = new UserVO(userService.getById(Long.valueOf(user.id())));
-        HttpHeaders headers = null;
-        if (user.userPassword() != null) {
-            JwtUtil.blacklistToken(accessToken, refreshToken);
-            headers = JwtUtil.generateHeaders(userVO.id());
+        return ResponseEntity.ok().body(userVO);
+    }
+
+    @PostMapping(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH)
+    @Operation(
+            summary = "Update user password",
+            description = "Update user password",
+            tags = {"User", "Post Method"})
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "User password updated successfully"),
+        @ApiResponse(
+                responseCode = "400",
+                description = "User password update failed",
+                content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    })
+    @Parameters({
+        @Parameter(
+                name = "id",
+                description = "User ID",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = "oldPassword",
+                description = "Old password",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = "newPassword",
+                description = "New password",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class))
+    })
+    public void updateUserPasswordWithOldPassword(
+            @RequestParam("id") Long id,
+            @RequestParam("oldPassword") String oldPassword,
+            @RequestParam("newPassword") String newPassword) {
+        UpdateWrapper<UserPO> wrapper = new UpdateWrapper<UserPO>();
+        wrapper.eq("id", id);
+        wrapper.eq("user_password", MD5Converter.convertToMD5(oldPassword));
+        if (!userService.exists(wrapper)) {
+            throw new GenericException(ErrorCodeEnum.WRONG_UPDATE_PASSWORD_INFORMATION);
         }
-        return ResponseEntity.ok().headers(headers).body(userVO);
+        checkPasswordValidity(newPassword);
+        wrapper.set("user_password", MD5Converter.convertToMD5(newPassword));
+        if (!userService.update(wrapper)) {
+            throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, newPassword);
+        }
+        JwtUtil.blacklistToken(id);
+    }
+
+    @PostMapping(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH)
+    @Operation(
+            summary = "Update user password with email verification code",
+            description = "Update user password with email verification code",
+            tags = {"User", "Post Method"})
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "User password updated successfully"),
+        @ApiResponse(
+                responseCode = "400",
+                description = "User password update failed",
+                content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    })
+    @Parameters({
+        @Parameter(
+                name = "email",
+                description = "Email",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = "emailVerificationCode",
+                description = "Email verification code",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = "newPassword",
+                description = "New password",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class))
+    })
+    public void updateUserPasswordWithEmailVerificationCode(
+        @RequestParam("email") String email,
+        @RequestParam("emailVerificationCode") String emailVerificationCode,
+        @RequestParam("newPassword") String newPassword) {
+        if (!EmailVerificationCodeUtil.verifyVerificationCode(email, emailVerificationCode)) {
+            throw new GenericException(ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE, emailVerificationCode);
+        }
+        UpdateWrapper<UserPO> wrapper = new UpdateWrapper<UserPO>();
+        wrapper.eq("email", email);
+        if (!userService.exists(wrapper)) {
+            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, email);
+        }
+        checkPasswordValidity(newPassword);
+        wrapper.set("user_password", MD5Converter.convertToMD5(newPassword));
+        if (!userService.update(wrapper)) {
+            throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, email);
+        }
+        JwtUtil.blacklistToken(userService.getOne(wrapper).getId());
     }
 
     @DeleteMapping(ApiPathConstant.USER_DELETE_USER_API_PATH)
@@ -193,8 +286,6 @@ public class UserController {
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
     public void deleteUser(
-            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
-            @RequestHeader(HeaderParameter.REFRESH_TOKEN) String refreshToken,
             @RequestParam("id") Long id) {
         if (userService.getById(id) == null) {
             throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, id);
@@ -202,7 +293,7 @@ public class UserController {
         if (!userService.removeById(id)) {
             throw new GenericException(ErrorCodeEnum.USER_DELETE_FAILED, id);
         }
-        JwtUtil.blacklistToken(accessToken, refreshToken);
+        JwtUtil.blacklistToken(id);
     }
 
     @GetMapping(ApiPathConstant.USER_PAGE_USER_REPOSITORY_API_PATH)
