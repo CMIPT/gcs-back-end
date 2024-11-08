@@ -27,7 +27,7 @@ public class JwtUtil {
     /**
      * Generate a token
      *
-     * @param id        The id of the user
+     * @param id The id of the user
      * @param tokenType The type of the token
      * @return The generated access token
      */
@@ -129,11 +129,12 @@ public class JwtUtil {
 
     private static String generateRedisKey(String token) {
         try {
-            var payload = Jwts.parser()
-                    .verifyWith(SECRET_KEY)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+            var payload =
+                    Jwts.parser()
+                            .verifyWith(SECRET_KEY)
+                            .build()
+                            .parseSignedClaims(token)
+                            .getPayload();
             Long id = payload.get(ID_CLAIM, Long.class);
             String tokenType = payload.get(TOKEN_TYPE_CLAIM, String.class);
             return "id:tokenType#" + id + ":" + tokenType;

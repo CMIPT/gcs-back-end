@@ -49,31 +49,35 @@ public class AuthenticationControllerTest {
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public void testSignUpValid() throws Exception {
         String userSignUpDTO =
-            """
-            {
-                "username": "%s",
-                "email": "%s",
-                "userPassword": "%s",
-                "emailVerificationCode": "%s"
-            }
-            """
-                    .formatted(
-                            TestConstant.USERNAME, TestConstant.EMAIL, TestConstant.USER_PASSWORD, 
-                            EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL));
+                """
+                {
+                    "username": "%s",
+                    "email": "%s",
+                    "userPassword": "%s",
+                    "emailVerificationCode": "%s"
+                }
+                """
+                        .formatted(
+                                TestConstant.USERNAME,
+                                TestConstant.EMAIL,
+                                TestConstant.USER_PASSWORD,
+                                EmailVerificationCodeUtil.generateVerificationCode(
+                                        TestConstant.EMAIL));
         String otherUserSignUpDTO =
-            """
-            {
-                "username": "%s",
-                "email": "%s",
-                "userPassword": "%s",
-                "emailVerificationCode": "%s"
-            }
-            """
-                    .formatted(
-                            TestConstant.OTHER_USERNAME,
-                            TestConstant.OTHER_EMAIL,
-                            TestConstant.OTHER_USER_PASSWORD,
-                            EmailVerificationCodeUtil.generateVerificationCode(TestConstant.OTHER_EMAIL));
+                """
+                {
+                    "username": "%s",
+                    "email": "%s",
+                    "userPassword": "%s",
+                    "emailVerificationCode": "%s"
+                }
+                """
+                        .formatted(
+                                TestConstant.OTHER_USERNAME,
+                                TestConstant.OTHER_EMAIL,
+                                TestConstant.OTHER_USER_PASSWORD,
+                                EmailVerificationCodeUtil.generateVerificationCode(
+                                        TestConstant.OTHER_EMAIL));
         mvc.perform(
                         post(ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -98,21 +102,21 @@ public class AuthenticationControllerTest {
     @Order(Ordered.HIGHEST_PRECEDENCE + 1)
     public void testSignInValid() throws Exception {
         String userSignInDTO =
-            """
-            {
-                "username": "%s",
-                "userPassword": "%s"
-            }
-            """
-                    .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD);
+                """
+                {
+                    "username": "%s",
+                    "userPassword": "%s"
+                }
+                """
+                        .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD);
         String otherUserSignInDTO =
-            """
-            {
-                "username": "%s",
-                "userPassword": "%s"
-            }
-            """
-                    .formatted(TestConstant.OTHER_USERNAME, TestConstant.OTHER_USER_PASSWORD);
+                """
+                {
+                    "username": "%s",
+                    "userPassword": "%s"
+                }
+                """
+                        .formatted(TestConstant.OTHER_USERNAME, TestConstant.OTHER_USER_PASSWORD);
 
         var response =
                 mvc.perform(
@@ -177,13 +181,13 @@ public class AuthenticationControllerTest {
     @Test
     public void testSignInInvalid() throws Exception {
         String invalidUserSignInDTO =
-            """
-            {
-                "username": "%s",
-                "userPassword": "%s"
-            }
-            """
-                    .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD + "wrong");
+                """
+                {
+                    "username": "%s",
+                    "userPassword": "%s"
+                }
+                """
+                        .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD + "wrong");
 
         mvc.perform(
                         post(ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH)
@@ -210,13 +214,13 @@ public class AuthenticationControllerTest {
     @Test
     public void testSignUpInvalid() throws Exception {
         String invalidUserSignUpDTO =
-            """
-            {
-                "username": "test",
-                "email": "invalid email address",
-                "userPassword": "123456"
-            }
-            """;
+                """
+                {
+                    "username": "test",
+                    "email": "invalid email address",
+                    "userPassword": "123456"
+                }
+                """;
         mvc.perform(
                         post(ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)

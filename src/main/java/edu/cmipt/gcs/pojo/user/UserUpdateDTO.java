@@ -16,8 +16,7 @@ import jakarta.validation.constraints.Size;
  */
 @Schema(description = "User Update Data Transfer Object")
 public record UserUpdateDTO(
-        @Schema(description = "User ID")
-                @NotNull
+        @Schema(description = "User ID") @NotNull
                 // The Long can not be expressed correctly in json, so use String instead
                 String id,
         @Schema(
@@ -28,7 +27,5 @@ public record UserUpdateDTO(
                         min = ValidationConstant.MIN_USERNAME_LENGTH,
                         max = ValidationConstant.MAX_USERNAME_LENGTH)
                 @NotBlank
-                @Pattern(
-                        regexp = ValidationConstant.USERNAME_PATTERN
-                        )
+                @Pattern(regexp = ValidationConstant.USERNAME_PATTERN)
                 String username) {}

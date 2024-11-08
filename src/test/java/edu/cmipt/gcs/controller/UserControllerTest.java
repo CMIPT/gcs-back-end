@@ -5,7 +5,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -147,9 +146,7 @@ public class UserControllerTest {
         TestConstant.USERNAME += new Date().getTime() + "new";
         mvc.perform(
                         post(ApiPathConstant.USER_UPDATE_USER_API_PATH)
-                                .header(
-                                        HeaderParameter.ACCESS_TOKEN,
-                                        TestConstant.ACCESS_TOKEN)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(
                                         """
@@ -158,9 +155,7 @@ public class UserControllerTest {
                                             "username": "%s"
                                         }
                                         """
-                                                .formatted(
-                                                        TestConstant.ID,
-                                                        TestConstant.USERNAME)))
+                                                .formatted(TestConstant.ID, TestConstant.USERNAME)))
                 .andExpectAll(
                         status().isOk(),
                         jsonPath("$.username", is(TestConstant.USERNAME)),
@@ -181,9 +176,7 @@ public class UserControllerTest {
                                             "username": "%s"
                                         }
                                         """
-                                                .formatted(
-                                                        otherID,
-                                                        TestConstant.USERNAME)))
+                                                .formatted(otherID, TestConstant.USERNAME)))
                 .andExpectAll(
                         status().isForbidden(),
                         content()
@@ -203,20 +196,20 @@ public class UserControllerTest {
     @Test
     public void testUpdateUserPasswordWithOldPasswordValid() throws Exception {
         mvc.perform(
-                    post(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH)
-                            .param("id", TestConstant.ID)
-                            .param("oldPassword", TestConstant.USER_PASSWORD)
-                            .param("newPassword", TestConstant.USER_PASSWORD + "new"))
-            .andExpectAll(status().isOk());
+                        post(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH)
+                                .param("id", TestConstant.ID)
+                                .param("oldPassword", TestConstant.USER_PASSWORD)
+                                .param("newPassword", TestConstant.USER_PASSWORD + "new"))
+                .andExpectAll(status().isOk());
         TestConstant.USER_PASSWORD += "new";
         String userSignInDTO =
-            """
-            {
-                "username": "%s",
-                "userPassword": "%s"
-            }
-            """
-                    .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD);
+                """
+                {
+                    "username": "%s",
+                    "userPassword": "%s"
+                }
+                """
+                        .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD);
         // get the new tokens
         var response =
                 mvc.perform(
@@ -236,38 +229,46 @@ public class UserControllerTest {
                                 .param("id", TestConstant.ID)
                                 .param("oldPassword", TestConstant.USER_PASSWORD + "wrong")
                                 .param("newPassword", TestConstant.USER_PASSWORD + "new"))
-                .andExpectAll(status().isBadRequest(),
-            content()
-                    .json(
-                            """
-                            {
-                                "code": %d,
-                                "message": "%s"
-                            }
-                            """
-                                    .formatted(
-                                            ErrorCodeEnum.WRONG_UPDATE_PASSWORD_INFORMATION.ordinal(),
-                                            MessageSourceUtil.getMessage(
-                                                    ErrorCodeEnum.WRONG_UPDATE_PASSWORD_INFORMATION))));
+                .andExpectAll(
+                        status().isBadRequest(),
+                        content()
+                                .json(
+                                        """
+                                        {
+                                            "code": %d,
+                                            "message": "%s"
+                                        }
+                                        """
+                                                .formatted(
+                                                        ErrorCodeEnum
+                                                                .WRONG_UPDATE_PASSWORD_INFORMATION
+                                                                .ordinal(),
+                                                        MessageSourceUtil.getMessage(
+                                                                ErrorCodeEnum
+                                                                        .WRONG_UPDATE_PASSWORD_INFORMATION))));
     }
 
     @Test
     public void testUpdateUserPasswordWithEmailVerificationCodeValid() throws Exception {
         mvc.perform(
-                        post(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH)
+                        post(ApiPathConstant
+                                        .USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH)
                                 .param("email", TestConstant.EMAIL)
-                                .param("emailVerificationCode", EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL))
+                                .param(
+                                        "emailVerificationCode",
+                                        EmailVerificationCodeUtil.generateVerificationCode(
+                                                TestConstant.EMAIL))
                                 .param("newPassword", TestConstant.USER_PASSWORD + "new"))
                 .andExpectAll(status().isOk());
         TestConstant.USER_PASSWORD += "new";
         String userSignInDTO =
-            """
-            {
-                "username": "%s",
-                "userPassword": "%s"
-            }
-            """
-                    .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD);
+                """
+                {
+                    "username": "%s",
+                    "userPassword": "%s"
+                }
+                """
+                        .formatted(TestConstant.USERNAME, TestConstant.USER_PASSWORD);
         // get the new tokens
         var response =
                 mvc.perform(
@@ -283,23 +284,29 @@ public class UserControllerTest {
     @Test
     public void testUpdateUserPasswordWithEmailVerificationCodeInvalid() throws Exception {
         mvc.perform(
-                        post(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH)
+                        post(ApiPathConstant
+                                        .USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH)
                                 .param("email", TestConstant.EMAIL)
                                 .param("emailVerificationCode", "123456")
                                 .param("newPassword", TestConstant.USER_PASSWORD + "new"))
-                .andExpectAll(status().isBadRequest(),
-            content()
-                    .json(
-                            """
-                            {
-                                "code": %d,
-                                "message": "%s"
-                            }
-                            """
-                                    .formatted(
-                                            ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE.ordinal(),
-                                            MessageSourceUtil.getMessage(
-                                                    ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE, "123456"))));
+                .andExpectAll(
+                        status().isBadRequest(),
+                        content()
+                                .json(
+                                        """
+                                        {
+                                            "code": %d,
+                                            "message": "%s"
+                                        }
+                                        """
+                                                .formatted(
+                                                        ErrorCodeEnum
+                                                                .INVALID_EMAIL_VERIFICATION_CODE
+                                                                .ordinal(),
+                                                        MessageSourceUtil.getMessage(
+                                                                ErrorCodeEnum
+                                                                        .INVALID_EMAIL_VERIFICATION_CODE,
+                                                                "123456"))));
     }
 
     @Test

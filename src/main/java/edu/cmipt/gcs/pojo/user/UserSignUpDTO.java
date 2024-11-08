@@ -19,8 +19,7 @@ public record UserSignUpDTO(
                         min = ValidationConstant.MIN_USERNAME_LENGTH,
                         max = ValidationConstant.MAX_USERNAME_LENGTH)
                 @NotBlank
-                @Pattern(
-                        regexp = ValidationConstant.USERNAME_PATTERN)
+                @Pattern(regexp = ValidationConstant.USERNAME_PATTERN)
                 String username,
         @Schema(
                         description = "Email",
@@ -37,8 +36,7 @@ public record UserSignUpDTO(
                         min = ValidationConstant.MIN_PASSWORD_LENGTH,
                         max = ValidationConstant.MAX_PASSWORD_LENGTH)
                 @NotBlank
-                @Pattern(
-                        regexp = ValidationConstant.PASSWORD_PATTERN)
+                @Pattern(regexp = ValidationConstant.PASSWORD_PATTERN)
                 String userPassword,
         @Schema(
                         description = "Email Verification Code",
@@ -47,7 +45,5 @@ public record UserSignUpDTO(
                 @Size(
                         min = ValidationConstant.EMAIL_VERIFICATION_CODE_LENGTH,
                         max = ValidationConstant.EMAIL_VERIFICATION_CODE_LENGTH)
-                @Pattern(
-                        regexp = ValidationConstant.EMAIL_VERIFICATION_CODE_PATTERN)
-                String emailVerificationCode
-) {}
+                @Pattern(regexp = ValidationConstant.EMAIL_VERIFICATION_CODE_PATTERN)
+                String emailVerificationCode) {}

@@ -17,6 +17,7 @@ import edu.cmipt.gcs.util.EmailVerificationCodeUtil;
 import edu.cmipt.gcs.util.JwtUtil;
 import edu.cmipt.gcs.util.MD5Converter;
 import edu.cmipt.gcs.util.MessageSourceUtil;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -26,11 +27,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.mail.internet.MimeMessage;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -43,7 +46,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.beans.factory.annotation.Value;
 
 /**
  * AuthenticationController
@@ -55,7 +57,9 @@ import org.springframework.beans.factory.annotation.Value;
 @RestController
 @Tag(name = "Authentication", description = "Authentication APIs")
 public class AuthenticationController {
-    @Value("${spring.mail.username}") private String fromEmail;
+    @Value("${spring.mail.username}")
+    private String fromEmail;
+
     @Autowired private JavaMailSender javaMailSender;
     @Autowired private UserService userService;
 
@@ -83,8 +87,10 @@ public class AuthenticationController {
         if (userService.exists(wrapper)) {
             throw new GenericException(ErrorCodeEnum.EMAIL_ALREADY_EXISTS, user.email());
         }
-        if (!EmailVerificationCodeUtil.verifyVerificationCode(user.email(), user.emailVerificationCode())) {
-            throw new GenericException(ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE, user.emailVerificationCode());
+        if (!EmailVerificationCodeUtil.verifyVerificationCode(
+                user.email(), user.emailVerificationCode())) {
+            throw new GenericException(
+                    ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE, user.emailVerificationCode());
         }
         boolean res = userService.save(new UserPO(user));
         if (!res) {
@@ -107,10 +113,14 @@ public class AuthenticationController {
     })
     @ApiResponse(responseCode = "200", description = "Email verification code sent successfully")
     public void sendEmailVerificationCode(
-        @RequestParam("email")
-        @Email(message = "{Email.authenticationController#sendEmailVerificationCode.email}")
-        @NotBlank(message = "{NotBlank.authenticationController#sendEmailVerificationCode.email}")
-        String email) {
+            @RequestParam("email")
+                    @Email(
+                            message =
+                                    "{Email.authenticationController#sendEmailVerificationCode.email}")
+                    @NotBlank(
+                            message =
+                                    "{NotBlank.authenticationController#sendEmailVerificationCode.email}")
+                    String email) {
         String code = EmailVerificationCodeUtil.generateVerificationCode(email);
         MimeMessage message = javaMailSender.createMimeMessage();
         try {
@@ -118,7 +128,11 @@ public class AuthenticationController {
             helper.setFrom(fromEmail);
             helper.setTo(email);
             helper.setSubject(MessageSourceUtil.getMessage("EMAIL_VERIFICATION_CODE_SUBJECT"));
-            helper.setText(MessageSourceUtil.getMessage("EMAIL_VERIFICATION_CODE_CONTENT", code, ApplicationConstant.EMAIL_VERIFICATION_CODE_EXPIRATION / 60000));
+            helper.setText(
+                    MessageSourceUtil.getMessage(
+                            "EMAIL_VERIFICATION_CODE_CONTENT",
+                            code,
+                            ApplicationConstant.EMAIL_VERIFICATION_CODE_EXPIRATION / 60000));
         } catch (Exception e) {
             throw new GenericException(ErrorCodeEnum.SERVER_ERROR, e);
         }

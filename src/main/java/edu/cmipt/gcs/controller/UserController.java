@@ -137,8 +137,7 @@ public class UserController {
                 in = ParameterIn.HEADER,
                 schema = @Schema(implementation = String.class))
     })
-    public ResponseEntity<UserVO> updateUser(
-            @Validated @RequestBody UserUpdateDTO user) {
+    public ResponseEntity<UserVO> updateUser(@Validated @RequestBody UserUpdateDTO user) {
         if (user.username() != null) {
             checkUsernameValidity(user.username());
         }
@@ -234,11 +233,12 @@ public class UserController {
                 schema = @Schema(implementation = String.class))
     })
     public void updateUserPasswordWithEmailVerificationCode(
-        @RequestParam("email") String email,
-        @RequestParam("emailVerificationCode") String emailVerificationCode,
-        @RequestParam("newPassword") String newPassword) {
+            @RequestParam("email") String email,
+            @RequestParam("emailVerificationCode") String emailVerificationCode,
+            @RequestParam("newPassword") String newPassword) {
         if (!EmailVerificationCodeUtil.verifyVerificationCode(email, emailVerificationCode)) {
-            throw new GenericException(ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE, emailVerificationCode);
+            throw new GenericException(
+                    ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE, emailVerificationCode);
         }
         UpdateWrapper<UserPO> wrapper = new UpdateWrapper<UserPO>();
         wrapper.eq("email", email);
@@ -285,8 +285,7 @@ public class UserController {
                 description = "User not found",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public void deleteUser(
-            @RequestParam("id") Long id) {
+    public void deleteUser(@RequestParam("id") Long id) {
         if (userService.getById(id) == null) {
             throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, id);
         }
