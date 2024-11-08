@@ -66,4 +66,10 @@ spring.resources.static-locations=
 gitolite.admin.repository.path=/home/$USER/gitolite-admin
 spring.redis.host=localhost
 spring.redis.port=6379
+spring.mail.default-encoding=UTF-8
+spring.mail.protocol=
+spring.mail.host=
+spring.mail.port=
+spring.mail.username=
+spring.mail.password=
 " > src/main/resources/application.properties

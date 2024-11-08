@@ -60,5 +60,11 @@
     "staticPathPattern": null,
     "staticLocations": null,
     "redisHost": "localhost",
-    "redisPort": 6379
+    "redisPort": 6379,
+    "springMailDefaultEncoding": "UTF-8",
+    "springMailProtocol": null,
+    "springMailHost": null,
+    "springMailPort": null,
+    "springMailUsername": null,
+    "springMailPassword": null
 }

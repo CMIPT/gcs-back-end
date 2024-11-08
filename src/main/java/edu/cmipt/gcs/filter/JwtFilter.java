@@ -113,7 +113,11 @@ public class JwtFilter extends OncePerRequestFilter {
                     ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH,
                     ApiPathConstant.USER_CHECK_USERNAME_VALIDITY_API_PATH,
                     ApiPathConstant.USER_CHECK_USER_PASSWORD_VALIDITY_API_PATH,
-                    ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH);
+                    ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH,
+                    ApiPathConstant.AUTHENTICATION_SEND_EMAIL_VERIFICATION_CODE_API_PATH,
+                    ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH,
+                    ApiPathConstant
+                            .USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH);
 
     @Override
     protected void doFilterInternal(
@@ -183,10 +187,6 @@ public class JwtFilter extends OncePerRequestFilter {
                     throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
                 }
                 if (request.getRequestURI().equals(ApiPathConstant.USER_UPDATE_USER_API_PATH)) {
-                    // for update user information, both access token and refresh token are needed
-                    if (refreshToken == null) {
-                        throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
-                    }
                     // User can not update other user's information
                     String idInToken = JwtUtil.getId(accessToken);
                     String idInBody = getFromRequestBody(request, "id");

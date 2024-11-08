@@ -11,7 +11,6 @@ import io.jsonwebtoken.Jwts;
 import org.springframework.http.HttpHeaders;
 
 import java.util.Date;
-import java.util.List;
 
 import javax.crypto.SecretKey;
 
@@ -48,10 +47,9 @@ public class JwtUtil {
                         .claim(TOKEN_TYPE_CLAIM, tokenType.name())
                         .signWith(SECRET_KEY)
                         .compact();
-        // we just need to store the token in redis, the value is not important
         RedisUtil.set(
+                generateRedisKey(id, tokenType),
                 token,
-                "",
                 (tokenType == TokenTypeEnum.ACCESS_TOKEN
                         ? ApplicationConstant.ACCESS_TOKEN_EXPIRATION
                         : ApplicationConstant.REFRESH_TOKEN_EXPIRATION));
@@ -63,7 +61,7 @@ public class JwtUtil {
     }
 
     public static String getId(String token) {
-        if (!RedisUtil.hasKey(token)) {
+        if (!RedisUtil.hasKey(generateRedisKey(token))) {
             throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
         }
         try {
@@ -80,7 +78,7 @@ public class JwtUtil {
     }
 
     public static TokenTypeEnum getTokenType(String token) {
-        if (!RedisUtil.hasKey(token)) {
+        if (!RedisUtil.hasKey(generateRedisKey(token))) {
             throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
         }
         try {
@@ -111,16 +109,37 @@ public class JwtUtil {
     }
 
     /**
-     * Add token to blacklist
+     * Add tokens of a user to blacklist
      *
      * @author Kaiser
      * @param tokens
      */
-    public static void blacklistToken(String... tokens) {
-        RedisUtil.del(tokens);
+    public static void blacklistToken(Long id) {
+        RedisUtil.del(generateRedisKey(id, TokenTypeEnum.ACCESS_TOKEN));
+        RedisUtil.del(generateRedisKey(id, TokenTypeEnum.REFRESH_TOKEN));
     }
 
-    public static void blacklistToken(List<String> tokenList) {
-        blacklistToken(tokenList.toArray(new String[0]));
+    public static void blacklistToken(String id) {
+        blacklistToken(Long.valueOf(id));
+    }
+
+    private static String generateRedisKey(Long id, TokenTypeEnum tokenType) {
+        return "id:tokenType#" + id + ":" + tokenType.name();
+    }
+
+    private static String generateRedisKey(String token) {
+        try {
+            var payload =
+                    Jwts.parser()
+                            .verifyWith(SECRET_KEY)
+                            .build()
+                            .parseSignedClaims(token)
+                            .getPayload();
+            Long id = payload.get(ID_CLAIM, Long.class);
+            String tokenType = payload.get(TOKEN_TYPE_CLAIM, String.class);
+            return "id:tokenType#" + id + ":" + tokenType;
+        } catch (Exception e) {
+            throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
+        }
     }
 }
