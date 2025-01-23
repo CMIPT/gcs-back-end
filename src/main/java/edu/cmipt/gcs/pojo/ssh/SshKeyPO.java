@@ -18,10 +18,13 @@ public class SshKeyPO {
     private Long userId;
     private String name;
     private String publicKey;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime gmtCreated;
+
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime gmtUpdated;
+
     @TableLogic private LocalDateTime gmtDeleted;
 
     public SshKeyPO(SshKeyDTO sshKeyDTO, String userId) {

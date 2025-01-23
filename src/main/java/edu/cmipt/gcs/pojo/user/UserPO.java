@@ -20,12 +20,14 @@ public class UserPO {
     private String username;
     private String email;
     private String userPassword;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime gmtCreated;
+
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime gmtUpdated;
-    @TableLogic
-    private LocalDateTime gmtDeleted;
+
+    @TableLogic private LocalDateTime gmtDeleted;
 
     public UserPO(UserSignUpDTO user) {
         this.username = user.username();

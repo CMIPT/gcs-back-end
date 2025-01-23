@@ -27,10 +27,13 @@ public class RepositoryPO {
     private Integer watcher;
     private String httpsUrl;
     private String sshUrl;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime gmtCreated;
+
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime gmtUpdated;
+
     @TableLogic private LocalDateTime gmtDeleted;
 
     public RepositoryPO(RepositoryDTO repositoryDTO, String userId, boolean generateUrl) {
