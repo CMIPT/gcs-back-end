@@ -7,8 +7,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
+      - gcs-postgres-data:/var/lib/postgresql/data
       - ${DATABASE_INIT_SCRIPT_PATH}:/docker-entrypoint-initdb.d
-      - ${POSTGRES_MAPPING_PATH}:/var/lib/postgresql/data
   gcs-redis:
     image: redis:6
     restart: always
@@ -31,7 +31,7 @@ services:
         GITOLITE_PATH: ${GITOLITE_PATH}
         TARGET_JAR_PATH: ${TARGET_JAR_PATH}
     volumes:
-      - ${GITOLITE_USER_REPOSITORIES_MAPPING_PATH}:${GITOLITE_USER_REPOSITORIES}
+      - gcs-user-repositories:${GITOLITE_USER_REPOSITORIES}
     ports:
       - ${GCS_SPRING_MAPPING_PORT}:8080
       - ${GCS_SSH_MAPPING_PORT}:22
@@ -63,3 +63,6 @@ services:
       GIT_SERVER_ADMIN_REPOSITORY: ${GIT_SERVER_ADMIN_REPOSITORY}
       FRONT_END_URL: ${FRONT_END_URL}
       MD5_SALT: ${MD5_SALT}
+volumes:
+  gcs-postgres-data:
+  gcs-user-repositories:

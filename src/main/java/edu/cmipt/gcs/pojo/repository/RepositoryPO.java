@@ -1,5 +1,7 @@
 package edu.cmipt.gcs.pojo.repository;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 
@@ -25,7 +27,9 @@ public class RepositoryPO {
     private Integer watcher;
     private String httpsUrl;
     private String sshUrl;
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime gmtCreated;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime gmtUpdated;
     @TableLogic private LocalDateTime gmtDeleted;
 

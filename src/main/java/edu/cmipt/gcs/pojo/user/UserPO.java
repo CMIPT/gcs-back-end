@@ -1,5 +1,7 @@
 package edu.cmipt.gcs.pojo.user;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 
@@ -18,9 +20,12 @@ public class UserPO {
     private String username;
     private String email;
     private String userPassword;
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime gmtCreated;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime gmtUpdated;
-    @TableLogic private LocalDateTime gmtDeleted;
+    @TableLogic
+    private LocalDateTime gmtDeleted;
 
     public UserPO(UserSignUpDTO user) {
         this.username = user.username();

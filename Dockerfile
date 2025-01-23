@@ -34,7 +34,7 @@ RUN service ssh restart && \
     mkdir -p "$GITOLITE_ADMIN_REPOSITORY/conf/gitolite.d/repository" && \
     echo "\
 repo gitolite-admin\n\
-    RW+ = git\n\
+    RW+ = root\n\
 repo testing\n\
     R = @all\n\
 include \"gitolite.d/user/*.conf\"\n\
@@ -47,11 +47,13 @@ repo @all_public_repo\n\
     git -C "$GITOLITE_ADMIN_REPOSITORY" commit -am "Init the gitolite-admin" && \
     git -C "$GITOLITE_ADMIN_REPOSITORY" push
 
-WORKDIR "$JAVA_WORKING_DIRECTORY"
-
-COPY "$TARGET_JAR_PATH" "$JAVA_WORKING_DIRECTORY/gcs.jar"
-
 EXPOSE 22 8080
 
-ENTRYPOINT ["java", "-jar", "gcs.jar"]
+WORKDIR "$JAVA_WORKING_DIRECTORY"
+
+COPY "$TARGET_JAR_PATH" "gcs.jar"
+
+RUN echo "service ssh restart && java -jar gcs.jar" > "start.sh"
+
+ENTRYPOINT ["bash", "start.sh"]
 
