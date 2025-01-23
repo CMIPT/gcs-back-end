@@ -244,7 +244,7 @@ public class GitoliteUtil {
                     }
                     String repositorySavePath =
                             Paths.get(
-                                            GitConstant.GIT_HOME_DIRECTORY,
+                                            GitConstant.GIT_SERVER_HOME,
                                             "repositories",
                                             userId.toString(),
                                             repositoryName + ".git")
@@ -253,7 +253,7 @@ public class GitoliteUtil {
                             new ProcessBuilder(
                                     "sudo",
                                     "-u",
-                                    GitConstant.GIT_USER_NAME,
+                                    GitConstant.GIT_SERVER_USERNAME,
                                     "rm",
                                     "-rf",
                                     repositorySavePath);
@@ -365,7 +365,7 @@ public class GitoliteUtil {
             List<String> command = new LinkedList<>();
             command.add("git");
             command.add("-C");
-            command.add(GitConstant.GITOLITE_ADMIN_REPOSITORY_PATH);
+            command.add(GitConstant.GIT_SERVER_ADMIN_REPOSITORY);
             command.add("add");
             command.addAll(List.of(files).stream().map(Path::toString).toList());
             ProcessBuilder add = new ProcessBuilder(command);
@@ -378,7 +378,7 @@ public class GitoliteUtil {
                     new ProcessBuilder(
                             "git",
                             "-C",
-                            GitConstant.GITOLITE_ADMIN_REPOSITORY_PATH,
+                            GitConstant.GIT_SERVER_ADMIN_REPOSITORY,
                             "commit",
                             "-m",
                             message);
@@ -389,7 +389,7 @@ public class GitoliteUtil {
             }
             ProcessBuilder push =
                     new ProcessBuilder(
-                            "git", "-C", GitConstant.GITOLITE_ADMIN_REPOSITORY_PATH, "push");
+                            "git", "-C", GitConstant.GIT_SERVER_ADMIN_REPOSITORY, "push");
             process = push.start();
             if (process.waitFor() != 0) {
                 logger.error("Failed to push changes");

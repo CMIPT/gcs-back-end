@@ -54,7 +54,7 @@ public class RepositoryPO {
             this.httpsUrl = "";
             this.sshUrl =
                     new StringBuilder("ssh://")
-                            .append(GitConstant.GIT_USER_NAME)
+                            .append(GitConstant.GIT_SERVER_USERNAME)
                             .append("@")
                             .append(GitConstant.GIT_SERVER_DOMAIN)
                             .append(":")
