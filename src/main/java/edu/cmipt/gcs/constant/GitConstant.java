@@ -7,15 +7,15 @@ import java.nio.file.Paths;
 
 @Component
 public class GitConstant {
-    public static String GIT_USER_NAME;
+    public static String GIT_SERVER_USERNAME;
 
-    public static String GIT_HOME_DIRECTORY;
+    public static String GIT_SERVER_HOME;
 
     public static String GIT_SERVER_DOMAIN;
 
     public static String GIT_SERVER_PORT;
 
-    public static String GITOLITE_ADMIN_REPOSITORY_PATH;
+    public static String GIT_SERVER_ADMIN_REPOSITORY;
 
     public static String GITOLITE_CONF_DIR_PATH;
 
@@ -27,14 +27,14 @@ public class GitConstant {
 
     public static String GITOLITE_KEY_DIR_PATH;
 
-    @Value("${git.user.name}")
-    public void setGIT_USER_NAME(String gitUserName) {
-        GitConstant.GIT_USER_NAME = gitUserName;
+    @Value("${git.server.username}")
+    public void setGIT_SERVER_USERNAME(String gitServerUserName) {
+        GitConstant.GIT_SERVER_USERNAME = gitServerUserName;
     }
 
-    @Value("${git.home.directory}")
-    public void setGIT_HOME_DIRECTORY(String gitHomeDirectory) {
-        GitConstant.GIT_HOME_DIRECTORY = gitHomeDirectory;
+    @Value("${git.server.home}")
+    public void setGIT_SERVER_HOME(String gitServerHome) {
+        GitConstant.GIT_SERVER_HOME = gitServerHome;
     }
 
     @Value("${git.server.domain}")
@@ -47,9 +47,9 @@ public class GitConstant {
         GitConstant.GIT_SERVER_PORT = gitServerPort;
     }
 
-    @Value("${gitolite.admin.repository.path}")
-    public void setGITOLITE_ADMIN_REPOSITORY_PATH(String gitoliteAdminRepositoryPath) {
-        GitConstant.GITOLITE_ADMIN_REPOSITORY_PATH = gitoliteAdminRepositoryPath;
+    @Value("${git.server.admin.repository}")
+    public void setGIT_SERVER_ADMIN_REPOSITORY(String gitoliteAdminRepositoryPath) {
+        GitConstant.GIT_SERVER_ADMIN_REPOSITORY = gitoliteAdminRepositoryPath;
         GitConstant.GITOLITE_CONF_DIR_PATH =
                 Paths.get(gitoliteAdminRepositoryPath, "conf").toString();
         GitConstant.GITOLITE_CONF_FILE_PATH =
