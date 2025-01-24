@@ -21,8 +21,7 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
         implements RepositoryService {
     private static final Logger logger = LoggerFactory.getLogger(RepositoryServiceImpl.class);
 
-    @Autowired
-    private UserService userService;
+    @Autowired private UserService userService;
 
     /**
      * Save a repository and initialize a git repository in the file system.

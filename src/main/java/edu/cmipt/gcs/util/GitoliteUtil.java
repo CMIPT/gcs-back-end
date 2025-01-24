@@ -169,7 +169,11 @@ public class GitoliteUtil {
     }
 
     public static synchronized boolean createRepository(
-            Long repositoryId, String repositoryName, Long userId, String userName, boolean isPrivate) {
+            Long repositoryId,
+            String repositoryName,
+            Long userId,
+            String userName,
+            boolean isPrivate) {
         var userFileName = new StringBuilder().append(userId).append(".conf").toString();
         var repositoryFileName =
                 new StringBuilder().append(repositoryId).append(".conf").toString();
