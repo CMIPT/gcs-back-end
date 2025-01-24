@@ -9,12 +9,14 @@ import edu.cmipt.gcs.util.MD5Converter;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @TableName("t_user")
+@NoArgsConstructor
 public class UserPO {
     private Long id;
     private String username;
