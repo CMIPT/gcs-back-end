@@ -7,12 +7,14 @@ import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @TableName("t_user_collaborate_repository")
+@NoArgsConstructor
 public class UserCollaborateRepositoryPO {
     private Long id;
     private Long collaboratorId;

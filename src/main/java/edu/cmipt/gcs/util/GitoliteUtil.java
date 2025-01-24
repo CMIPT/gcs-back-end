@@ -25,7 +25,7 @@ public class GitoliteUtil {
             Files.createFile(userConfPath);
             String content =
                     """
-                    @%d_public_repo = testing
+                    @%d_public_repo =
                     @%d_private_repo =
                     @%d_ssh_key =
                     repo @%d_private_repo
@@ -169,7 +169,7 @@ public class GitoliteUtil {
     }
 
     public static synchronized boolean createRepository(
-            Long repositoryId, String repositoryName, Long userId, boolean isPrivate) {
+            Long repositoryId, String repositoryName, Long userId, String userName, boolean isPrivate) {
         var userFileName = new StringBuilder().append(userId).append(".conf").toString();
         var repositoryFileName =
                 new StringBuilder().append(repositoryId).append(".conf").toString();
@@ -184,10 +184,10 @@ public class GitoliteUtil {
             String content =
                     """
                     @%d_repo_collaborator =
-                    repo %d/%s
+                    repo %s/%s
                         RW+ = @%d_repo_collaborator
                     """
-                            .formatted(repositoryId, userId, repositoryName, repositoryId);
+                            .formatted(repositoryId, userName, repositoryName, repositoryId);
             Files.writeString(repositoryConfPath, content);
             List<String> lines =
                     Files.readAllLines(
@@ -196,11 +196,11 @@ public class GitoliteUtil {
                 String line = lines.get(i);
                 if (line.startsWith(
                         "@%d_%s_repo".formatted(userId, isPrivate ? "private" : "public"))) {
-                    lines.set(i, line + ' ' + userId + '/' + repositoryName);
+                    lines.set(i, line + ' ' + userName + '/' + repositoryName);
                     Files.write(
                             Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userFileName),
                             lines);
-                    String message = "Add repository " + userId + '/' + repositoryName;
+                    String message = "Add repository " + userName + '/' + repositoryName;
                     Path[] files = {
                         Paths.get("conf", "gitolite.d", "user", userFileName),
                         Paths.get("conf", "gitolite.d", "repository", repositoryFileName)
@@ -223,7 +223,7 @@ public class GitoliteUtil {
     }
 
     public static synchronized boolean removeRepository(
-            String repositoryName, Long userId, boolean isPrivate) {
+            String repositoryName, Long userId, String userName, boolean isPrivate) {
         var userFileName = new StringBuilder().append(userId).append(".conf").toString();
         try {
             List<String> lines =
@@ -233,11 +233,11 @@ public class GitoliteUtil {
                 String line = lines.get(i);
                 if (line.startsWith(
                         "@%d_%s_repo".formatted(userId, isPrivate ? "private" : "public"))) {
-                    lines.set(i, line.replace(" " + userId + '/' + repositoryName, ""));
+                    lines.set(i, line.replace(" " + userName + '/' + repositoryName, ""));
                     Files.write(
                             Paths.get(GitConstant.GITOLITE_USER_CONF_DIR_PATH, userFileName),
                             lines);
-                    String message = "Remove repository " + userId + '/' + repositoryName;
+                    String message = "Remove repository " + userName + '/' + repositoryName;
                     Path[] files = {Paths.get("conf", "gitolite.d", "repository", userFileName)};
                     if (!GitoliteUtil.commitAndPush(message, files)) {
                         logger.error("Failed to commit and push");
@@ -246,7 +246,7 @@ public class GitoliteUtil {
                             Paths.get(
                                             GitConstant.GIT_SERVER_HOME,
                                             "repositories",
-                                            userId.toString(),
+                                            userName,
                                             repositoryName + ".git")
                                     .toString();
                     ProcessBuilder dirRemover =

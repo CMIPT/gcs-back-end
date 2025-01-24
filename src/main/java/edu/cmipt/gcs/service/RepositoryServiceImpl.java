@@ -10,6 +10,7 @@ import edu.cmipt.gcs.util.GitoliteUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,9 @@ import java.io.Serializable;
 public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, RepositoryPO>
         implements RepositoryService {
     private static final Logger logger = LoggerFactory.getLogger(RepositoryServiceImpl.class);
+
+    @Autowired
+    private UserService userService;
 
     /**
      * Save a repository and initialize a git repository in the file system.
@@ -37,6 +41,7 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
                 repositoryPO.getId(),
                 repositoryPO.getRepositoryName(),
                 repositoryPO.getUserId(),
+                userService.getById(repositoryPO.getUserId()).getUsername(),
                 repositoryPO.getIsPrivate())) {
             logger.error("Failed to create repository in gitolite");
             throw new GenericException(ErrorCodeEnum.REPOSITORY_CREATE_FAILED, repositoryPO);
@@ -56,6 +61,7 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
         if (!GitoliteUtil.removeRepository(
                 repositoryPO.getRepositoryName(),
                 repositoryPO.getUserId(),
+                userService.getById(repositoryPO.getUserId()).getUsername(),
                 repositoryPO.getIsPrivate())) {
             logger.error("Failed to remove repository from gitolite");
             throw new GenericException(ErrorCodeEnum.REPOSITORY_DELETE_FAILED, repositoryPO);

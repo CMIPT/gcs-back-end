@@ -9,6 +9,7 @@ import edu.cmipt.gcs.constant.GitConstant;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @TableName("t_repository")
+@NoArgsConstructor
 public class RepositoryPO {
     private Long id;
     private String repositoryName;
