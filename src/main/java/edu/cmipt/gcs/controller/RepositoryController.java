@@ -165,8 +165,8 @@ public class RepositoryController {
         if (repositoryPO == null) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, id);
         }
-        String userId = JwtUtil.getId(accessToken);
-        if (!userId.equals(repositoryPO.getUserId().toString())) {
+        Long userId = repositoryPO.getUserId();
+        if (!JwtUtil.getId(accessToken).equals(userId.toString())) {
             logger.info(
                     "User[{}] tried to update repository of user[{}]",
                     userId,
@@ -182,7 +182,8 @@ public class RepositoryController {
         if (!repositoryService.updateById(new RepositoryPO(repository))) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_UPDATE_FAILED, repository);
         }
-        return ResponseEntity.ok().body(new RepositoryVO(repositoryService.getById(id)));
+        return ResponseEntity.ok().body(new RepositoryVO(repositoryService.getById(id),
+            userService.getById(userId).getUsername()));
     }
 
     @GetMapping(ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH)
