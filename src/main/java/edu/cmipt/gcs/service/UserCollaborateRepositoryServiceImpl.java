@@ -1,6 +1,7 @@
 package edu.cmipt.gcs.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
@@ -68,7 +69,7 @@ public class UserCollaborateRepositoryServiceImpl
     }
 
     @Override
-    public List<UserPO> listCollaboratorsByRepositoryId(Long repositoryId, Page<UserPO> page) {
+    public IPage<UserPO> pageCollaboratorsByRepositoryId(Long repositoryId, Page<UserPO> page) {
         QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
         List<Long> collaboratorIds =
                 super.listObjs(
@@ -76,9 +77,9 @@ public class UserCollaborateRepositoryServiceImpl
                                 .eq("repository_id", repositoryId)
                                 .select("collaborator_id"));
         if (collaboratorIds == null || collaboratorIds.isEmpty()) {
-            return List.of();
+            return new Page<>();
         }
         queryWrapper.in("id", collaboratorIds);
-        return userService.list(page, queryWrapper);
+        return userService.page(page, queryWrapper);
     }
 }

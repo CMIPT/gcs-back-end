@@ -1,29 +1,31 @@
 package edu.cmipt.gcs.controller;
 
+import static org.hamcrest.Matchers.greaterThan;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
+import edu.cmipt.gcs.pojo.other.PageVO;
+import edu.cmipt.gcs.pojo.repository.RepositoryVO;
 
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.json.JsonParserFactory;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.Ordered;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Tests for RepositoryController
@@ -34,6 +36,7 @@ import java.util.regex.Pattern;
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class RepositoryControllerTest {
+    @Autowired private ObjectMapper objectMapper;
     @Autowired private MockMvc mvc;
 
     @Test
@@ -69,18 +72,15 @@ public class RepositoryControllerTest {
                                         .param("size", TestConstant.REPOSITORY_SIZE.toString()))
                         .andExpectAll(
                                 status().isOk(),
-                                jsonPath("$").isArray(),
-                                jsonPath("$.length()").value(TestConstant.REPOSITORY_SIZE))
+                                jsonPath("$.pages").value(greaterThan(0)),
+                                jsonPath("$.records").isArray(),
+                                jsonPath("$.records.length()").value(TestConstant.REPOSITORY_SIZE))
                         .andReturn()
                         .getResponse()
                         .getContentAsString();
-        content = JsonParserFactory.getJsonParser().parseList(content).get(0).toString();
-        Matcher matcher = Pattern.compile("id=(\\d+),").matcher(content);
-        matcher.find();
-        TestConstant.REPOSITORY_ID = matcher.group(1);
-        matcher = Pattern.compile("repositoryName=(.+?),").matcher(content);
-        matcher.find();
-        TestConstant.REPOSITORY_NAME = matcher.group(1);
+        var pageVO = objectMapper.readValue(content, new TypeReference<PageVO<RepositoryVO>>() {});
+        TestConstant.REPOSITORY_ID = pageVO.records().get(0).id();
+        TestConstant.REPOSITORY_NAME = pageVO.records().get(0).repositoryName();
     }
 
     @Test
@@ -135,11 +135,12 @@ public class RepositoryControllerTest {
                                 .param("size", "10"))
                 .andExpectAll(
                         status().isOk(),
-                        jsonPath("$").isArray(),
-                        jsonPath("$.length()").value(1),
-                        jsonPath("$[0].id").value(TestConstant.OTHER_ID),
-                        jsonPath("$[0].username").value(TestConstant.OTHER_USERNAME),
-                        jsonPath("$[0].email").value(TestConstant.OTHER_EMAIL));
+                        jsonPath("$.pages").value(greaterThan(0)),
+                        jsonPath("$.records").isArray(),
+                        jsonPath("$.records.length()").value(1),
+                        jsonPath("$.records[0].id").value(TestConstant.OTHER_ID),
+                        jsonPath("$.records[0].username").value(TestConstant.OTHER_USERNAME),
+                        jsonPath("$.records[0].email").value(TestConstant.OTHER_EMAIL));
     }
 
     @Test

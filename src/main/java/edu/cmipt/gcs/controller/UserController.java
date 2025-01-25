@@ -10,6 +10,7 @@ import edu.cmipt.gcs.constant.ValidationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
+import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
 import edu.cmipt.gcs.pojo.user.UserPO;
@@ -46,8 +47,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @Validated
 @RestController
@@ -331,7 +330,7 @@ public class UserController {
                 schema = @Schema(implementation = Integer.class))
     })
     @ApiResponse(responseCode = "200", description = "User repositories paged successfully")
-    public List<RepositoryVO> pageUserRepository(
+    public PageVO<RepositoryVO> pageUserRepository(
             @RequestParam("id") Long userId,
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size,
@@ -348,11 +347,14 @@ public class UserController {
             wrapper.eq("is_private", false);
         }
         wrapper.eq("user_id", userId);
-        return repositoryService.list(new Page<>(page, size), wrapper).stream()
-                .map(
-                        (RepositoryPO repositoryPO) ->
-                                new RepositoryVO(repositoryPO, userPO.getUsername()))
-                .toList();
+        var iPage = repositoryService.page(new Page<>(page, size), wrapper);
+        return new PageVO<>(
+                iPage.getPages(),
+                iPage.getRecords().stream()
+                        .map(
+                                (RepositoryPO repositoryPO) ->
+                                        new RepositoryVO(repositoryPO, userPO.getUsername()))
+                        .toList());
     }
 
     @GetMapping(ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH)
