@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
@@ -26,8 +28,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.Ordered;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Tests for AuthenticationController
@@ -152,7 +152,8 @@ public class AuthenticationControllerTest {
                                 header().exists(HeaderParameter.REFRESH_TOKEN))
                         .andReturn()
                         .getResponse();
-        TestConstant.OTHER_ID = objectMapper.readValue(otherResponse.getContentAsString(), UserVO.class).id();
+        TestConstant.OTHER_ID =
+                objectMapper.readValue(otherResponse.getContentAsString(), UserVO.class).id();
         TestConstant.OTHER_ACCESS_TOKEN = otherResponse.getHeader(HeaderParameter.ACCESS_TOKEN);
         TestConstant.OTHER_REFRESH_TOKEN = otherResponse.getHeader(HeaderParameter.REFRESH_TOKEN);
     }

@@ -1,5 +1,7 @@
 package edu.cmipt.gcs.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
@@ -25,8 +27,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -45,6 +45,7 @@ import java.util.Set;
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class JwtFilter extends OncePerRequestFilter {
     @Autowired ObjectMapper objectMapper;
+
     /**
      * CachedBodyHttpServletRequest
      *

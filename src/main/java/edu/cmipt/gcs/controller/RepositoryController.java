@@ -48,8 +48,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @Validated
 @RestController
 @Tag(name = "Repository", description = "Repository Related APIs")
@@ -469,6 +467,7 @@ public class RepositoryController {
                     userId);
             throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
         }
-        return new PageVO<>(iPage.getPages(), iPage.getRecords().stream().map(UserVO::new).toList());
+        return new PageVO<>(
+                iPage.getPages(), iPage.getRecords().stream().map(UserVO::new).toList());
     }
 }

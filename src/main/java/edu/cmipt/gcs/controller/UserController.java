@@ -329,9 +329,7 @@ public class UserController {
                 in = ParameterIn.QUERY,
                 schema = @Schema(implementation = Integer.class))
     })
-    @ApiResponse(
-        responseCode = "200",
-        description = "User repositories paged successfully")
+    @ApiResponse(responseCode = "200", description = "User repositories paged successfully")
     public PageVO<RepositoryVO> pageUserRepository(
             @RequestParam("id") Long userId,
             @RequestParam("page") Integer page,
@@ -350,11 +348,13 @@ public class UserController {
         }
         wrapper.eq("user_id", userId);
         var iPage = repositoryService.page(new Page<>(page, size), wrapper);
-        return new PageVO<>(iPage.getPages(), iPage.getRecords().stream()
-                .map(
-                        (RepositoryPO repositoryPO) ->
-                                new RepositoryVO(repositoryPO, userPO.getUsername()))
-                .toList());
+        return new PageVO<>(
+                iPage.getPages(),
+                iPage.getRecords().stream()
+                        .map(
+                                (RepositoryPO repositoryPO) ->
+                                        new RepositoryVO(repositoryPO, userPO.getUsername()))
+                        .toList());
     }
 
     @GetMapping(ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH)
