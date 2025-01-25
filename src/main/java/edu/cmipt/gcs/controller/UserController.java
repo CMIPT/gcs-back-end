@@ -336,6 +336,10 @@ public class UserController {
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+        var userPO = userService.getById(userId);
+        if (userPO == null) {
+            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, userId);
+        }
         QueryWrapper<RepositoryPO> wrapper = new QueryWrapper<RepositoryPO>();
         String idInToken = JwtUtil.getId(accessToken);
         assert idInToken != null;
@@ -345,7 +349,9 @@ public class UserController {
         }
         wrapper.eq("user_id", userId);
         return repositoryService.list(new Page<>(page, size), wrapper).stream()
-                .map(RepositoryVO::new)
+                .map(
+                        (RepositoryPO repositoryPO) ->
+                                new RepositoryVO(repositoryPO, userPO.getUsername()))
                 .toList();
     }
 
