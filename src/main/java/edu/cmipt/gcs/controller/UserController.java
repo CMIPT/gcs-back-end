@@ -349,8 +349,9 @@ public class UserController {
         }
         wrapper.eq("user_id", userId);
         return repositoryService.list(new Page<>(page, size), wrapper).stream()
-                .map((RepositoryPO repositoryPO) -> new RepositoryVO(repositoryPO,
-                    userPO.getUsername()))
+                .map(
+                        (RepositoryPO repositoryPO) ->
+                                new RepositoryVO(repositoryPO, userPO.getUsername()))
                 .toList();
     }
 

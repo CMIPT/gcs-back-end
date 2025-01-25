@@ -182,8 +182,11 @@ public class RepositoryController {
         if (!repositoryService.updateById(new RepositoryPO(repository))) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_UPDATE_FAILED, repository);
         }
-        return ResponseEntity.ok().body(new RepositoryVO(repositoryService.getById(id),
-            userService.getById(userId).getUsername()));
+        return ResponseEntity.ok()
+                .body(
+                        new RepositoryVO(
+                                repositoryService.getById(id),
+                                userService.getById(userId).getUsername()));
     }
 
     @GetMapping(ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH)
