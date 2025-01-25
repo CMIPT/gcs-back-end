@@ -8,6 +8,7 @@ import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
+import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.ssh.SshKeyDTO;
 import edu.cmipt.gcs.pojo.ssh.SshKeyPO;
 import edu.cmipt.gcs.pojo.ssh.SshKeyVO;
@@ -38,8 +39,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @Tag(name = "SSH", description = "SSH APIs")
@@ -200,14 +199,13 @@ public class SshKeyController {
                 schema = @Schema(implementation = Integer.class))
     })
     @ApiResponse(responseCode = "200", description = "SSH key paged successfully")
-    public List<SshKeyVO> pageSshKey(
+    public PageVO<SshKeyVO> pageSshKey(
             @RequestParam("id") Long userId,
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size) {
         QueryWrapper<SshKeyPO> wrapper = new QueryWrapper<>();
         wrapper.eq("user_id", userId);
-        return sshKeyService.list(new Page<>(page, size), wrapper).stream()
-                .map(SshKeyVO::new)
-                .toList();
+        var iPage = sshKeyService.page(new Page<>(page, size), wrapper);
+        return new PageVO<>(iPage.getPages(), iPage.getRecords().stream().map(SshKeyVO::new).toList());
     }
 }

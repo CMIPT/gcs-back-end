@@ -12,6 +12,7 @@ import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+import edu.cmipt.gcs.pojo.user.UserVO;
 import edu.cmipt.gcs.util.EmailVerificationCodeUtil;
 import edu.cmipt.gcs.util.MessageSourceUtil;
 
@@ -20,12 +21,13 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.json.JsonParserFactory;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.Ordered;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Tests for AuthenticationController
@@ -37,6 +39,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AuthenticationControllerTest {
     @Autowired private MockMvc mvc;
+    @Autowired private ObjectMapper objectMapper;
 
     /**
      * Test sign in with invalid user information
@@ -134,11 +137,7 @@ public class AuthenticationControllerTest {
                         .getResponse();
         TestConstant.ACCESS_TOKEN = response.getHeader(HeaderParameter.ACCESS_TOKEN);
         TestConstant.REFRESH_TOKEN = response.getHeader(HeaderParameter.REFRESH_TOKEN);
-        TestConstant.ID =
-                JsonParserFactory.getJsonParser()
-                        .parseMap(response.getContentAsString())
-                        .get("id")
-                        .toString();
+        TestConstant.ID = objectMapper.readValue(response.getContentAsString(), UserVO.class).id();
         var otherResponse =
                 mvc.perform(
                                 post(ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH)
@@ -153,11 +152,7 @@ public class AuthenticationControllerTest {
                                 header().exists(HeaderParameter.REFRESH_TOKEN))
                         .andReturn()
                         .getResponse();
-        TestConstant.OTHER_ID =
-                JsonParserFactory.getJsonParser()
-                        .parseMap(otherResponse.getContentAsString())
-                        .get("id")
-                        .toString();
+        TestConstant.OTHER_ID = objectMapper.readValue(otherResponse.getContentAsString(), UserVO.class).id();
         TestConstant.OTHER_ACCESS_TOKEN = otherResponse.getHeader(HeaderParameter.ACCESS_TOKEN);
         TestConstant.OTHER_REFRESH_TOKEN = otherResponse.getHeader(HeaderParameter.REFRESH_TOKEN);
     }

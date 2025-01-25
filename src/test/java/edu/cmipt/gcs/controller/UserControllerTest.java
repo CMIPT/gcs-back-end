@@ -1,5 +1,6 @@
 package edu.cmipt.gcs.controller;
 
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -354,8 +355,9 @@ public class UserControllerTest {
                                 .param("size", TestConstant.REPOSITORY_SIZE.toString()))
                 .andExpectAll(
                         status().isOk(),
-                        jsonPath("$").isArray(),
-                        jsonPath("$.length()").value(TestConstant.REPOSITORY_SIZE));
+                        jsonPath("$.pages").value(greaterThan(0)),
+                        jsonPath("$.records").isArray(),
+                        jsonPath("$.records.length()").value(TestConstant.REPOSITORY_SIZE));
     }
 
     @Test
@@ -370,7 +372,8 @@ public class UserControllerTest {
                                 .param("size", TestConstant.REPOSITORY_SIZE.toString()))
                 .andExpectAll(
                         status().isOk(),
-                        jsonPath("$").isArray(),
-                        jsonPath("$.length()").value(TestConstant.REPOSITORY_SIZE / 2));
+                        jsonPath("$.pages").value(greaterThan(0)),
+                        jsonPath("$.records").isArray(),
+                        jsonPath("$.records.length()").value(TestConstant.REPOSITORY_SIZE / 2));
     }
 }

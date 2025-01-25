@@ -1,5 +1,6 @@
 package edu.cmipt.gcs.controller;
 
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -10,27 +11,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
+import edu.cmipt.gcs.pojo.other.PageVO;
+import edu.cmipt.gcs.pojo.ssh.SshKeyVO;
 
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.json.JsonParserFactory;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.Ordered;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class SshKeyControllerTest {
     @Autowired MockMvc mockMvc;
+    @Autowired ObjectMapper objectMapper;
 
     @Test
     @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -69,20 +72,14 @@ public class SshKeyControllerTest {
                                         .param("size", TestConstant.SSH_KEY_SIZE.toString()))
                         .andExpectAll(
                                 status().isOk(),
-                                jsonPath("$").isArray(),
-                                jsonPath("$.length()").value(TestConstant.SSH_KEY_SIZE))
+                                jsonPath("$.pages").value(greaterThan(0)),
+                                jsonPath("$.records").isArray(),
+                                jsonPath("$.records.length()").value(TestConstant.SSH_KEY_SIZE))
                         .andReturn()
                         .getResponse()
                         .getContentAsString();
-        Matcher matcher =
-                Pattern.compile("id=(\\d+),")
-                        .matcher(
-                                JsonParserFactory.getJsonParser()
-                                        .parseList(content)
-                                        .get(0)
-                                        .toString());
-        matcher.find();
-        TestConstant.SSH_KEY_ID = matcher.group(1);
+        var pageVO = objectMapper.readValue(content, new TypeReference<PageVO<SshKeyVO>>() {});
+        TestConstant.SSH_KEY_ID = pageVO.records().get(0).id();
     }
 
     @Test

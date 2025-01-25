@@ -5,6 +5,7 @@ import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.enumeration.TokenTypeEnum;
 import edu.cmipt.gcs.exception.GenericException;
+import edu.cmipt.gcs.pojo.user.UserUpdateDTO;
 import edu.cmipt.gcs.util.JwtUtil;
 
 import jakarta.servlet.FilterChain;
@@ -17,12 +18,14 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.json.JsonParserFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -41,6 +44,7 @@ import java.util.Set;
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class JwtFilter extends OncePerRequestFilter {
+    @Autowired ObjectMapper objectMapper;
     /**
      * CachedBodyHttpServletRequest
      *
@@ -189,7 +193,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 if (request.getRequestURI().equals(ApiPathConstant.USER_UPDATE_USER_API_PATH)) {
                     // User can not update other user's information
                     String idInToken = JwtUtil.getId(accessToken);
-                    String idInBody = getFromRequestBody(request, "id");
+                    String idInBody = getIdFromRequestBody(request);
                     if (!idInToken.equals(idInBody)) {
                         logger.info("User[{}] tried to update user[{}]", idInToken, idInBody);
                         throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
@@ -258,7 +262,7 @@ public class JwtFilter extends OncePerRequestFilter {
         }
     }
 
-    private String getFromRequestBody(HttpServletRequest request, String key) {
+    private String getIdFromRequestBody(HttpServletRequest request) {
         try {
             BufferedReader reader = request.getReader();
             StringBuilder builder = new StringBuilder();
@@ -268,8 +272,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 line = reader.readLine();
             }
             reader.close();
-            var json = JsonParserFactory.getJsonParser().parseMap(builder.toString());
-            return json.get(key).toString();
+            return objectMapper.readValue(builder.toString(), UserUpdateDTO.class).id();
         } catch (Exception e) {
             // unlikely to happen
             throw new RuntimeException(e);

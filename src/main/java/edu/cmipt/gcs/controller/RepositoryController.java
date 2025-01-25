@@ -9,6 +9,7 @@ import edu.cmipt.gcs.constant.ValidationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
+import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryDTO;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
@@ -442,7 +443,7 @@ public class RepositoryController {
         @ApiResponse(responseCode = "200", description = "Collaborators paged successfully"),
         @ApiResponse(responseCode = "404", description = "Repository not found")
     })
-    public List<UserVO> pageCollaborator(
+    public PageVO<UserVO> pageCollaborator(
             @RequestParam("repositoryId") Long repositoryId,
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size,
@@ -453,14 +454,14 @@ public class RepositoryController {
         }
         Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
         Long userId = repository.getUserId();
-        List<UserPO> collaboratorList =
-                userCollaborateRepositoryService.listCollaboratorsByRepositoryId(
+        var iPage =
+                userCollaborateRepositoryService.pageCollaboratorsByRepositoryId(
                         repositoryId, new Page<>(page, size));
         // only the creator and collaborators of the repository can page collaborators of a private
         // repository
         if (repository.getIsPrivate()
                 && !idInToken.equals(userId)
-                && collaboratorList.stream().noneMatch(user -> user.getId().equals(idInToken))) {
+                && iPage.getRecords().stream().noneMatch(user -> user.getId().equals(idInToken))) {
             logger.error(
                     "User[{}] tried to page collaborators of repository[{}] whose creator is [{}]",
                     idInToken,
@@ -468,6 +469,6 @@ public class RepositoryController {
                     userId);
             throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
         }
-        return collaboratorList.stream().map(UserVO::new).toList();
+        return new PageVO<>(iPage.getPages(), iPage.getRecords().stream().map(UserVO::new).toList());
     }
 }
