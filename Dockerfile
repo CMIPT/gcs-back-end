@@ -48,6 +48,8 @@ repo @all_public_repo\n\
     git -C "$GITOLITE_ADMIN_REPOSITORY" commit -am "Init the gitolite-admin" && \
     git -C "$GITOLITE_ADMIN_REPOSITORY" push
 
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
 EXPOSE 22 8080
 
 WORKDIR "$JAVA_WORKING_DIRECTORY"
