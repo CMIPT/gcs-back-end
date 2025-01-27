@@ -25,9 +25,9 @@ public class GitoliteUtil {
             Files.createFile(userConfPath);
             String content =
                     """
-                    @%d_public_repo =
-                    @%d_private_repo =
-                    @%d_ssh_key =
+                    @%d_public_repo = testing
+                    @%d_private_repo = testing
+                    @%d_ssh_key = @admin
                     repo @%d_private_repo
                         RW+ = @%d_ssh_key
                     repo @%d_public_repo
@@ -187,7 +187,7 @@ public class GitoliteUtil {
             Files.createFile(repositoryConfPath);
             String content =
                     """
-                    @%d_repo_collaborator =
+                    @%d_repo_collaborator = @admin
                     repo %s/%s
                         RW+ = @%d_repo_collaborator
                     """

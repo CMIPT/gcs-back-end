@@ -33,13 +33,14 @@ RUN service ssh restart && \
     mkdir -p "$GITOLITE_ADMIN_REPOSITORY/conf/gitolite.d/user" && \
     mkdir -p "$GITOLITE_ADMIN_REPOSITORY/conf/gitolite.d/repository" && \
     echo "\
+@admin = root\n\
 repo gitolite-admin\n\
-    RW+ = root\n\
+    RW+ = @admin\n\
 repo testing\n\
-    R = @all\n\
+    RW+ = @admin\n\
 include \"gitolite.d/user/*.conf\"\n\
 include \"gitolite.d/repository/*.conf\"\n\
-@all_public_repo =\n\
+@all_public_repo = testing\n\
 repo @all_public_repo\n\
     R = @all" > "$GITOLITE_ADMIN_REPOSITORY/conf/gitolite.conf" && \
     git -C "$GITOLITE_ADMIN_REPOSITORY" config user.name "$GITOLITE_ADMIN_REPOSITORY_USER_NAME" && \
