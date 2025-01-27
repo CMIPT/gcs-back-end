@@ -54,7 +54,15 @@ WORKDIR "$JAVA_WORKING_DIRECTORY"
 
 COPY "$TARGET_JAR_PATH" "gcs.jar"
 
-RUN echo "service ssh restart && java -jar gcs.jar" > "start.sh"
+ENV GITOLITE_ADMIN_REPOSITORY="$GITOLITE_ADMIN_REPOSITORY"
+
+RUN echo "\
+    service ssh restart && \
+    git -C $GITOLITE_ADMIN_REPOSITORY fetch && \
+    git -C $GITOLITE_ADMIN_REPOSITORY reset --hard origin/master && \
+    java -jar gcs.jar" \
+    > \
+    "start.sh"
 
 ENTRYPOINT ["bash", "start.sh"]
 
