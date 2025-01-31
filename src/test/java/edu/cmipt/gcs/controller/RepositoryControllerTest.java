@@ -136,6 +136,7 @@ public class RepositoryControllerTest {
                 .andExpectAll(
                         status().isOk(),
                         jsonPath("$.pages").value(greaterThan(0)),
+                        jsonPath("$.total").value(greaterThan(0)),
                         jsonPath("$.records").isArray(),
                         jsonPath("$.records.length()").value(1),
                         jsonPath("$.records[0].id").value(TestConstant.OTHER_ID),

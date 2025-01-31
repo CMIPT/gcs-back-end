@@ -350,6 +350,7 @@ public class UserController {
         var iPage = repositoryService.page(new Page<>(page, size), wrapper);
         return new PageVO<>(
                 iPage.getPages(),
+                iPage.getTotal(),
                 iPage.getRecords().stream()
                         .map(
                                 (RepositoryPO repositoryPO) ->
