@@ -207,6 +207,8 @@ public class SshKeyController {
         wrapper.eq("user_id", userId);
         var iPage = sshKeyService.page(new Page<>(page, size), wrapper);
         return new PageVO<>(
-                iPage.getPages(), iPage.getTotal(), iPage.getRecords().stream().map(SshKeyVO::new).toList());
+                iPage.getPages(),
+                iPage.getTotal(),
+                iPage.getRecords().stream().map(SshKeyVO::new).toList());
     }
 }

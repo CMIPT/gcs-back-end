@@ -468,6 +468,8 @@ public class RepositoryController {
             throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
         }
         return new PageVO<>(
-                iPage.getPages(), iPage.getTotal(), iPage.getRecords().stream().map(UserVO::new).toList());
+                iPage.getPages(),
+                iPage.getTotal(),
+                iPage.getRecords().stream().map(UserVO::new).toList());
     }
 }
