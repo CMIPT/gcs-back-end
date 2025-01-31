@@ -73,6 +73,7 @@ public class SshKeyControllerTest {
                         .andExpectAll(
                                 status().isOk(),
                                 jsonPath("$.pages").value(greaterThan(0)),
+                                jsonPath("$.total").value(greaterThan(0)),
                                 jsonPath("$.records").isArray(),
                                 jsonPath("$.records.length()").value(TestConstant.SSH_KEY_SIZE))
                         .andReturn()
