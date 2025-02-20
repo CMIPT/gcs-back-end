@@ -131,6 +131,79 @@ public class RepositoryController {
         }
     }
 
+    @GetMapping(ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH)
+    @Operation(
+            summary = "Get a repository",
+            description = "Get a repository with the given id or username and repository name",
+            tags = {"Repository", "Get Method"})
+    @Parameters({
+        @Parameter(
+                name = HeaderParameter.ACCESS_TOKEN,
+                description = "Access token",
+                required = true,
+                in = ParameterIn.HEADER,
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = "id",
+                description = "Repository Id",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = "username",
+                description = "Username",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = "repositoryName",
+                description = "Repository Name",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class))
+    })
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Repository got successfully"),
+        @ApiResponse(responseCode = "404", description = "Repository not found")
+    })
+    public RepositoryVO getRepository(
+        @RequestParam(value = "id", required =  false) Long id,
+        @RequestParam(value = "username", required = false) String username,
+        @RequestParam(value = "repositoryName", required = false) String repositoryName,
+        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+        RepositoryPO repository;
+        if (id == null) {
+            if (username == null || repositoryName == null) {
+                throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+            }
+            QueryWrapper<RepositoryPO> queryWrapper = new QueryWrapper<>();
+            QueryWrapper<UserPO> userQueryWrapper = new QueryWrapper<>();
+            userQueryWrapper.eq("username", username);
+            var user = userService.getOne(userQueryWrapper);
+            if (user == null) {
+                throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, username);
+            }
+            queryWrapper.eq("user_id", user.getId());
+            queryWrapper.eq("repository_name", repositoryName);
+            repository = repositoryService.getOne(queryWrapper);
+        } else{
+            repository = repositoryService.getById(id);
+        }
+        if (repository == null) {
+            throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, id);
+        }
+        String idInToken = JwtUtil.getId(accessToken);
+        if (repository.getIsPrivate()
+                && !idInToken.equals(repository.getUserId().toString())) {
+            logger.info(
+                    "User[{}] tried to get repository of user[{}]",
+                    idInToken,
+                    repository.getUserId());
+            throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+        }
+        return new RepositoryVO(repository, userService.getById(repository.getUserId()).getUsername());
+    }
+
     @PostMapping(ApiPathConstant.REPOSITORY_UPDATE_REPOSITORY_API_PATH)
     @Operation(
             summary = "Update a repository",
