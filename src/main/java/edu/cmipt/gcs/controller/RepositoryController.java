@@ -168,10 +168,10 @@ public class RepositoryController {
         @ApiResponse(responseCode = "404", description = "Repository not found")
     })
     public RepositoryVO getRepository(
-        @RequestParam(value = "id", required =  false) Long id,
-        @RequestParam(value = "username", required = false) String username,
-        @RequestParam(value = "repositoryName", required = false) String repositoryName,
-        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+            @RequestParam(value = "id", required = false) Long id,
+            @RequestParam(value = "username", required = false) String username,
+            @RequestParam(value = "repositoryName", required = false) String repositoryName,
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         RepositoryPO repository;
         if (id == null) {
             if (username == null || repositoryName == null) {
@@ -187,22 +187,22 @@ public class RepositoryController {
             queryWrapper.eq("user_id", user.getId());
             queryWrapper.eq("repository_name", repositoryName);
             repository = repositoryService.getOne(queryWrapper);
-        } else{
+        } else {
             repository = repositoryService.getById(id);
         }
         if (repository == null) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, id);
         }
         String idInToken = JwtUtil.getId(accessToken);
-        if (repository.getIsPrivate()
-                && !idInToken.equals(repository.getUserId().toString())) {
+        if (repository.getIsPrivate() && !idInToken.equals(repository.getUserId().toString())) {
             logger.info(
                     "User[{}] tried to get repository of user[{}]",
                     idInToken,
                     repository.getUserId());
             throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
         }
-        return new RepositoryVO(repository, userService.getById(repository.getUserId()).getUsername());
+        return new RepositoryVO(
+                repository, userService.getById(repository.getUserId()).getUsername());
     }
 
     @PostMapping(ApiPathConstant.REPOSITORY_UPDATE_REPOSITORY_API_PATH)

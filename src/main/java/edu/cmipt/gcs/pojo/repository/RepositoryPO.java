@@ -38,7 +38,8 @@ public class RepositoryPO {
 
     @TableLogic private LocalDateTime gmtDeleted;
 
-    public RepositoryPO(RepositoryDTO repositoryDTO, String userId, String username, boolean generateUrl) {
+    public RepositoryPO(
+            RepositoryDTO repositoryDTO, String userId, String username, boolean generateUrl) {
         try {
             this.id = Long.valueOf(repositoryDTO.id());
         } catch (NumberFormatException e) {

@@ -170,7 +170,8 @@ public class JwtFilter extends OncePerRequestFilter {
                     // pass
                 } else if (request.getRequestURI().equals(ApiPathConstant.USER_GET_USER_API_PATH)) {
                     // pass
-                } else if (request.getRequestURI().equals(ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH)) {
+                } else if (request.getRequestURI()
+                        .equals(ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH)) {
                     // pass
                 } else if (request.getRequestURI()
                         .equals(ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH)) {
