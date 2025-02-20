@@ -63,7 +63,7 @@ public class RepositoryControllerTest {
         }
         var content =
                 mvc.perform(
-                                get(ApiPathConstant.USER_PAGE_USER_REPOSITORY_API_PATH)
+                                get(ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH)
                                         .header(
                                                 HeaderParameter.ACCESS_TOKEN,
                                                 TestConstant.ACCESS_TOKEN)
@@ -166,5 +166,41 @@ public class RepositoryControllerTest {
         TestConstant.REPOSITORY_ID = null;
         TestConstant.REPOSITORY_NAME = null;
         TestConstant.REPOSITORY_SIZE--;
+    }
+
+    @Test
+    @Order(Ordered.HIGHEST_PRECEDENCE + 6)
+    public void testPageUserRepositoryValid() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("id", TestConstant.ID)
+                                .param("page", "1")
+                                .param("size", TestConstant.REPOSITORY_SIZE.toString()))
+                .andExpectAll(
+                        status().isOk(),
+                        jsonPath("$.pages").value(greaterThan(0)),
+                        jsonPath("$.total").value(greaterThan(0)),
+                        jsonPath("$.records").isArray(),
+                        jsonPath("$.records.length()").value(TestConstant.REPOSITORY_SIZE));
+    }
+
+    @Test
+    @Order(Ordered.HIGHEST_PRECEDENCE + 7)
+    public void testPageOtherUserRepositoryValid() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH)
+                                .header(
+                                        HeaderParameter.ACCESS_TOKEN,
+                                        TestConstant.OTHER_ACCESS_TOKEN)
+                                .param("id", TestConstant.ID)
+                                .param("page", "1")
+                                .param("size", TestConstant.REPOSITORY_SIZE.toString()))
+                .andExpectAll(
+                        status().isOk(),
+                        jsonPath("$.pages").value(greaterThan(0)),
+                        jsonPath("$.total").value(greaterThan(0)),
+                        jsonPath("$.records").isArray(),
+                        jsonPath("$.records.length()").value(TestConstant.REPOSITORY_SIZE / 2));
     }
 }

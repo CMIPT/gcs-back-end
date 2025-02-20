@@ -30,8 +30,6 @@ public class ApiPathConstant {
     public static final String USER_CHECK_USER_PASSWORD_VALIDITY_API_PATH =
             USER_API_PREFIX + "/user-password";
     public static final String USER_DELETE_USER_API_PATH = USER_API_PREFIX + "/delete";
-    public static final String USER_PAGE_USER_REPOSITORY_API_PATH =
-            USER_API_PREFIX + "/page/repository";
     public static final String USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH =
             USER_API_PREFIX + "/update-password-with-old-password";
     public static final String USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH =
@@ -46,6 +44,8 @@ public class ApiPathConstant {
             REPOSITORY_API_PREFIX + "/delete";
     public static final String REPOSITORY_UPDATE_REPOSITORY_API_PATH =
             REPOSITORY_API_PREFIX + "/update";
+    public static final String REPOSITORY_PAGE_REPOSITORY_API_PATH =
+            REPOSITORY_API_PREFIX + "/page";
     public static final String REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH =
             REPOSITORY_API_PREFIX + "/repository-name";
     public static final String REPOSITORY_PAGE_COLLABORATOR_API_PATH =

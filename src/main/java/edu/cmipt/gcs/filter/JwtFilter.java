@@ -166,7 +166,7 @@ public class JwtFilter extends OncePerRequestFilter {
                         .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)) {
                     // pass
                 } else if (request.getRequestURI()
-                        .equals(ApiPathConstant.USER_PAGE_USER_REPOSITORY_API_PATH)) {
+                        .equals(ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH)) {
                     // pass
                 } else if (request.getRequestURI().equals(ApiPathConstant.USER_GET_USER_API_PATH)) {
                     // pass
