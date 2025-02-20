@@ -18,7 +18,7 @@ public record SshKeyDTO(
                 @NotNull(groups = UpdateGroup.class)
                 String id,
         @Schema(description = "Name", example = "My SSH Key")
-                @NotBlank(groups = {CreateGroup.class, UpdateGroup.class})
+                @NotBlank(groups = {CreateGroup.class})
                 @Size(
                         groups = {CreateGroup.class, UpdateGroup.class},
                         min = ValidationConstant.MIN_SSH_KEY_NAME_LENGTH,

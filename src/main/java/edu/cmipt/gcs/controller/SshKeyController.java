@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
+import edu.cmipt.gcs.constant.ValidationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
@@ -26,6 +27,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -210,5 +213,51 @@ public class SshKeyController {
                 iPage.getPages(),
                 iPage.getTotal(),
                 iPage.getRecords().stream().map(SshKeyVO::new).toList());
+    }
+
+    @GetMapping(ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_NAME_VALIDITY_API_PATH)
+    @Operation(
+            summary = "Check SSH key name validity",
+            description = "Check SSH key name validity with the given information",
+            tags = {"SSH", "Get Method"})
+    @Parameters({
+        @Parameter(
+                name = "sshKeyName",
+                description = "SSH key name",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class))
+    })
+    @ApiResponse(responseCode = "200", description = "SSH key name is valid")
+    public void checkSshKeyNameValidity(@RequestParam("sshKeyName")
+        @Size(
+                min = ValidationConstant.MIN_SSH_KEY_NAME_LENGTH,
+                max = ValidationConstant.MAX_SSH_KEY_NAME_LENGTH,
+                message = "{Size.userController#checkSshKeyNameValidity.sslKeyName}")
+        @NotBlank(message = "{NotBlank.userController#checkSshKeyNameValidity.sslKeyName}")
+        String sshKeyName) {
+    }
+
+    @GetMapping(ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_PUBLICKEY_VALIDITY_API_PATH)
+    @Operation(
+            summary = "Check SSH key public key validity",
+            description = "Check SSH key public key validity with the given information",
+            tags = {"SSH", "Get Method"})
+    @Parameters({
+        @Parameter(
+                name = "sshKeyPublicKey",
+                description = "SSH key public key",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class))
+    })
+    @ApiResponse(responseCode = "200", description = "SSH key public key is valid")
+    public void checkSshKeyPublicKeyValidity(@RequestParam("sshKeyPublicKey")
+        @Size(
+                min = ValidationConstant.MIN_SSH_KEY_PUBLICKEY_LENGTH,
+                max = ValidationConstant.MAX_SSH_KEY_PUBLICKEY_LENGTH,
+                message = "{Size.userController#checkSshKeyPublicKeyValidity.sslKeyPublicKey}")
+        @NotBlank(message = "{NotBlank.userController#checkSshKeyPublicKeyValidity.sslKeyPublicKey}")
+        String sshKeyPublicKey) {
     }
 }

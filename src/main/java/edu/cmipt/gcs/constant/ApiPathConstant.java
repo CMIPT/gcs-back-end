@@ -60,4 +60,8 @@ public class ApiPathConstant {
     public static final String SSH_KEY_UPDATE_SSH_KEY_API_PATH = SSH_KEY_API_PREFIX + "/update";
     public static final String SSH_KEY_DELETE_SSH_KEY_API_PATH = SSH_KEY_API_PREFIX + "/delete";
     public static final String SSH_KEY_PAGE_SSH_KEY_API_PATH = SSH_KEY_API_PREFIX + "/page";
+    public static final String SSH_KEY_CHECK_SSH_KEY_NAME_VALIDITY_API_PATH =
+            SSH_KEY_API_PREFIX + "/ssh-key-name";
+    public static final String SSH_KEY_CHECK_SSH_KEY_PUBLICKEY_VALIDITY_API_PATH =
+            SSH_KEY_API_PREFIX + "/ssh-key-publickey";
 }
