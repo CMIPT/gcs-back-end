@@ -44,6 +44,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Validated
 @RestController
 @Tag(name = "SSH", description = "SSH APIs")
 public class SshKeyController {
@@ -221,24 +222,28 @@ public class SshKeyController {
             summary = "Check SSH key name validity",
             description = "Check SSH key name validity with the given information",
             tags = {"SSH", "Get Method"})
-    @Parameters({
-        @Parameter(
-                name = "name",
-                description = "SSH key name",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = String.class))
+    @Parameter(
+            name = "name",
+            description = "SSH key name",
+            required = true,
+            in = ParameterIn.QUERY,
+            schema = @Schema(implementation = String.class))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "SSH key name is valid"),
+        @ApiResponse(
+                responseCode = "400",
+                description = "SSH key name is invalid",
+                content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    @ApiResponse(responseCode = "200", description = "SSH key name is valid")
     public void checkSshKeyNameValidity(
             @RequestParam("name")
                     @Size(
                             min = ValidationConstant.MIN_SSH_KEY_NAME_LENGTH,
                             max = ValidationConstant.MAX_SSH_KEY_NAME_LENGTH,
-                            message = "{Size.userController#checkSshKeyNameValidity.sslKeyName}")
+                            message = "{Size.sshKeyController#checkSshKeyNameValidity.name}")
                     @NotBlank(
                             message =
-                                    "{NotBlank.userController#checkSshKeyNameValidity.sslKeyName}")
+                                    "{NotBlank.sshKeyController#checkSshKeyNameValidity.name}")
                     String name) {}
 
     @GetMapping(ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_PUBLICKEY_VALIDITY_API_PATH)
@@ -246,24 +251,28 @@ public class SshKeyController {
             summary = "Check SSH key public key validity",
             description = "Check SSH key public key validity with the given information",
             tags = {"SSH", "Get Method"})
-    @Parameters({
-        @Parameter(
-                name = "publicKey",
-                description = "SSH key public key",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = String.class))
+    @Parameter(
+            name = "publicKey",
+            description = "SSH key public key",
+            required = true,
+            in = ParameterIn.QUERY,
+            schema = @Schema(implementation = String.class))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "SSH key public key is valid"),
+        @ApiResponse(
+                responseCode = "400",
+                description = "SSH key public key is invalid",
+                content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    @ApiResponse(responseCode = "200", description = "SSH key public key is valid")
     public void checkSshKeyPublicKeyValidity(
             @RequestParam("publicKey")
                     @Size(
                             min = ValidationConstant.MIN_SSH_KEY_PUBLICKEY_LENGTH,
                             max = ValidationConstant.MAX_SSH_KEY_PUBLICKEY_LENGTH,
                             message =
-                                    "{Size.userController#checkSshKeyPublicKeyValidity.sslKeyPublicKey}")
+                                    "{Size.sshKeyController#checkSshKeyPublicKeyValidity.publicKey}")
                     @NotBlank(
                             message =
-                                    "{NotBlank.userController#checkSshKeyPublicKeyValidity.sslKeyPublicKey}")
-                    String sshKeyPublicKey) {}
+                                    "{NotBlank.sshKeyController#checkSshKeyPublicKeyValidity.publicKey}")
+                    String publicKey) {}
 }
