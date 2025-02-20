@@ -38,7 +38,7 @@ public class RepositoryPO {
 
     @TableLogic private LocalDateTime gmtDeleted;
 
-    public RepositoryPO(RepositoryDTO repositoryDTO, String userId, boolean generateUrl) {
+    public RepositoryPO(RepositoryDTO repositoryDTO, String userId, String username, boolean generateUrl) {
         try {
             this.id = Long.valueOf(repositoryDTO.id());
         } catch (NumberFormatException e) {
@@ -68,16 +68,16 @@ public class RepositoryPO {
                             .append(GitConstant.GIT_SERVER_DOMAIN)
                             .append(":")
                             .append(GitConstant.GIT_SERVER_PORT)
-                            .append(Paths.get("/", userId.toString(), repositoryName).toString())
+                            .append(Paths.get("/", username, repositoryName).toString())
                             .toString();
         }
     }
 
-    public RepositoryPO(RepositoryDTO repositoryDTO, String userId) {
-        this(repositoryDTO, userId, false);
+    public RepositoryPO(RepositoryDTO repositoryDTO, String userId, String username) {
+        this(repositoryDTO, userId, username, false);
     }
 
     public RepositoryPO(RepositoryDTO repositoryDTO) {
-        this(repositoryDTO, null, false);
+        this(repositoryDTO, null, null, false);
     }
 }

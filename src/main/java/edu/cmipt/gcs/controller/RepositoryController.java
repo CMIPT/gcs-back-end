@@ -75,7 +75,8 @@ public class RepositoryController {
             @Validated(CreateGroup.class) @RequestBody RepositoryDTO repository,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         String userId = JwtUtil.getId(accessToken);
-        RepositoryPO repositoryPO = new RepositoryPO(repository, userId, true);
+        String username = userService.getById(Long.valueOf(userId)).getUsername();
+        RepositoryPO repositoryPO = new RepositoryPO(repository, userId, username, true);
         QueryWrapper<RepositoryPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", repositoryPO.getUserId());
         queryWrapper.eq("repository_name", repositoryPO.getRepositoryName());
