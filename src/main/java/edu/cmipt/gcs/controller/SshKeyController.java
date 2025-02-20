@@ -223,7 +223,7 @@ public class SshKeyController {
             tags = {"SSH", "Get Method"})
     @Parameters({
         @Parameter(
-                name = "sshKeyName",
+                name = "name",
                 description = "SSH key name",
                 required = true,
                 in = ParameterIn.QUERY,
@@ -231,7 +231,7 @@ public class SshKeyController {
     })
     @ApiResponse(responseCode = "200", description = "SSH key name is valid")
     public void checkSshKeyNameValidity(
-            @RequestParam("sshKeyName")
+            @RequestParam("name")
                     @Size(
                             min = ValidationConstant.MIN_SSH_KEY_NAME_LENGTH,
                             max = ValidationConstant.MAX_SSH_KEY_NAME_LENGTH,
@@ -239,7 +239,7 @@ public class SshKeyController {
                     @NotBlank(
                             message =
                                     "{NotBlank.userController#checkSshKeyNameValidity.sslKeyName}")
-                    String sshKeyName) {}
+                    String name) {}
 
     @GetMapping(ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_PUBLICKEY_VALIDITY_API_PATH)
     @Operation(
@@ -248,7 +248,7 @@ public class SshKeyController {
             tags = {"SSH", "Get Method"})
     @Parameters({
         @Parameter(
-                name = "sshKeyPublicKey",
+                name = "publicKey",
                 description = "SSH key public key",
                 required = true,
                 in = ParameterIn.QUERY,
@@ -256,7 +256,7 @@ public class SshKeyController {
     })
     @ApiResponse(responseCode = "200", description = "SSH key public key is valid")
     public void checkSshKeyPublicKeyValidity(
-            @RequestParam("sshKeyPublicKey")
+            @RequestParam("publicKey")
                     @Size(
                             min = ValidationConstant.MIN_SSH_KEY_PUBLICKEY_LENGTH,
                             max = ValidationConstant.MAX_SSH_KEY_PUBLICKEY_LENGTH,
