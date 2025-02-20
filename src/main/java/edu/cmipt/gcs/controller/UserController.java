@@ -12,7 +12,6 @@ import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.pojo.user.UserUpdateDTO;
 import edu.cmipt.gcs.pojo.user.UserVO;
-import edu.cmipt.gcs.service.RepositoryService;
 import edu.cmipt.gcs.service.UserService;
 import edu.cmipt.gcs.util.EmailVerificationCodeUtil;
 import edu.cmipt.gcs.util.JwtUtil;
@@ -48,7 +47,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "User", description = "User Related APIs")
 public class UserController {
     @Autowired private UserService userService;
-    @Autowired private RepositoryService repositoryService;
 
     @GetMapping(ApiPathConstant.USER_GET_USER_API_PATH)
     @Operation(
