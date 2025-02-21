@@ -167,6 +167,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 } else if (request.getRequestURI()
                         .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)) {
                     // pass
+                    JwtUtil.refreshToken(refreshToken);
+                    return;
                 } else if (request.getRequestURI()
                         .equals(ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH)) {
                     // pass
@@ -261,6 +263,7 @@ public class JwtFilter extends OncePerRequestFilter {
             default:
                 throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
         }
+        JwtUtil.refreshToken(accessToken);
     }
 
     private String getIdFromRequestBody(HttpServletRequest request) {

@@ -35,24 +35,11 @@ public class JwtUtil {
         String token =
                 Jwts.builder()
                         .issuedAt(new Date())
-                        .expiration(
-                                new Date(
-                                        System.currentTimeMillis()
-                                                + (tokenType == TokenTypeEnum.ACCESS_TOKEN
-                                                        ? ApplicationConstant
-                                                                .ACCESS_TOKEN_EXPIRATION
-                                                        : ApplicationConstant
-                                                                .REFRESH_TOKEN_EXPIRATION)))
                         .claim(ID_CLAIM, id)
                         .claim(TOKEN_TYPE_CLAIM, tokenType.name())
                         .signWith(SECRET_KEY)
                         .compact();
-        RedisUtil.set(
-                generateRedisKey(id, tokenType),
-                token,
-                (tokenType == TokenTypeEnum.ACCESS_TOKEN
-                        ? ApplicationConstant.ACCESS_TOKEN_EXPIRATION
-                        : ApplicationConstant.REFRESH_TOKEN_EXPIRATION));
+        setTokenInRedis(token, tokenType);
         return token;
     }
 
@@ -127,6 +114,19 @@ public class JwtUtil {
         return "id:tokenType#" + id + ":" + tokenType.name();
     }
 
+    public static void refreshToken(String token){
+        setTokenInRedis(token, getTokenType(token));
+    }
+
+    private static void setTokenInRedis(String token, TokenTypeEnum tokenType) {
+        RedisUtil.set(
+                generateRedisKey(token),
+                token,
+                (tokenType == TokenTypeEnum.ACCESS_TOKEN
+                        ? ApplicationConstant.ACCESS_TOKEN_EXPIRATION
+                        : ApplicationConstant.REFRESH_TOKEN_EXPIRATION));
+    }
+
     private static String generateRedisKey(String token) {
         try {
             var payload =
@@ -137,7 +137,7 @@ public class JwtUtil {
                             .getPayload();
             Long id = payload.get(ID_CLAIM, Long.class);
             String tokenType = payload.get(TOKEN_TYPE_CLAIM, String.class);
-            return "id:tokenType#" + id + ":" + tokenType;
+            return generateRedisKey(id, TokenTypeEnum.valueOf(tokenType));
         } catch (Exception e) {
             throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
         }
