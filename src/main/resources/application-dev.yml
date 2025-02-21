@@ -3,3 +3,7 @@ spring:
     druid:
       test-on-borrow: true
       test-on-return: true
+logging:
+  level:
+    # DEBUG, ERROR, FATAL, INFO, OFF, TRACE, WARN
+    gcs: "DEBUG"
