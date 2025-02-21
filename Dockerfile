@@ -22,10 +22,7 @@ COPY "$GITOLITE_PATH" "$GITOLITE_REPOSITORY"
 RUN chown -R "$GIT_USER_NAME:$GIT_USER_MAIN_GROUP" "$GITOLITE_REPOSITORY" && \
     sudo -u "$GIT_USER_NAME" mkdir -p "$GITOLITE_INSTALLATION_DIR" && \
     sudo -u "$GIT_USER_NAME" "$GITOLITE_REPOSITORY/install" -to "$GITOLITE_INSTALLATION_DIR" && \
-    ssh-keygen -t rsa -b 4096 -f /root/.ssh/id_rsa -N "" && \
-    cp /root/.ssh/id_rsa.pub "$GIT_USER_HOME/root.pub" && \
-    chown "$GIT_USER_NAME:$GIT_USER_MAIN_GROUP" "$GIT_USER_HOME/root.pub" && \
-    sudo -u "$GIT_USER_NAME" "$GITOLITE_INSTALLATION_DIR/gitolite" setup -pk "$GIT_USER_HOME/root.pub"
+    ssh-keygen -t rsa -b 4096 -f /root/.ssh/id_rsa -N ""
 
 RUN service ssh restart && \
     ssh-keyscan -p 22 localhost >> /root/.ssh/known_hosts && \
@@ -59,6 +56,9 @@ COPY "$TARGET_JAR_PATH" "gcs.jar"
 ENV GITOLITE_ADMIN_REPOSITORY="$GITOLITE_ADMIN_REPOSITORY"
 
 RUN echo "\
+    cp /root/.ssh/id_rsa.pub "$GIT_USER_HOME/root.pub" && \
+    chown "$GIT_USER_NAME:$GIT_USER_MAIN_GROUP" "$GIT_USER_HOME/root.pub" && \
+    sudo -u "$GIT_USER_NAME" "$GITOLITE_INSTALLATION_DIR/gitolite" setup -pk "$GIT_USER_HOME/root.pub" && \
     service ssh restart && \
     git -C $GITOLITE_ADMIN_REPOSITORY fetch && \
     git -C $GITOLITE_ADMIN_REPOSITORY reset --hard origin/master && \
