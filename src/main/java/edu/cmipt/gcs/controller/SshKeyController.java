@@ -31,6 +31,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,6 +79,8 @@ public class SshKeyController {
     public void uploadSshKey(
             @Validated(CreateGroup.class) @RequestBody SshKeyDTO sshKeyDTO,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+        checkSshKeyNameValidity(sshKeyDTO.name());
+        checkSshKeyPublicKeyValidity(sshKeyDTO.publicKey());
         if (!sshKeyService.save(new SshKeyPO(sshKeyDTO, JwtUtil.getId(accessToken)))) {
             throw new GenericException(ErrorCodeEnum.SSH_KEY_UPLOAD_FAILED, sshKeyDTO);
         }
@@ -246,7 +251,7 @@ public class SshKeyController {
                                     "{NotBlank.sshKeyController#checkSshKeyNameValidity.name}")
                     String name) {}
 
-    @GetMapping(ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_PUBLICKEY_VALIDITY_API_PATH)
+    @GetMapping(ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_PUBLIC_KEY_VALIDITY_API_PATH)
     @Operation(
             summary = "Check SSH key public key validity",
             description = "Check SSH key public key validity with the given information",
@@ -267,12 +272,32 @@ public class SshKeyController {
     public void checkSshKeyPublicKeyValidity(
             @RequestParam("publicKey")
                     @Size(
-                            min = ValidationConstant.MIN_SSH_KEY_PUBLICKEY_LENGTH,
-                            max = ValidationConstant.MAX_SSH_KEY_PUBLICKEY_LENGTH,
+                            min = ValidationConstant.MIN_SSH_KEY_PUBLIC_KEY_LENGTH,
+                            max = ValidationConstant.MAX_SSH_KEY_PUBLIC_KEY_LENGTH,
                             message =
                                     "{Size.sshKeyController#checkSshKeyPublicKeyValidity.publicKey}")
                     @NotBlank(
                             message =
                                     "{NotBlank.sshKeyController#checkSshKeyPublicKeyValidity.publicKey}")
-                    String publicKey) {}
+                    String publicKey) {
+        boolean ok = true;
+        try{
+            // Use try source to create a temporary file
+            Path tempFile = Files.createTempFile(String.valueOf(System.currentTimeMillis()), ".pub");
+            Files.writeString(tempFile, publicKey);
+            ProcessBuilder processBuilder =
+                    new ProcessBuilder("ssh-keygen", "-lf", tempFile.toString());
+            Process process = processBuilder.start();
+            if (process.waitFor() != 0) {
+                ok = false;
+            }
+            tempFile.toFile().delete();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            throw new GenericException(ErrorCodeEnum.SERVER_ERROR);
+        }
+        if (!ok) {
+            throw new GenericException(ErrorCodeEnum.SSH_KEY_PUBLIC_KEY_INVALID, publicKey);
+        }
+    }
 }
