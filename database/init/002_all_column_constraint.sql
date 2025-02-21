@@ -27,7 +27,8 @@ ALTER TABLE ONLY public.t_ssh_key
 ADD CONSTRAINT pk_ssh_key PRIMARY KEY (id);
 ALTER TABLE ONLY public.t_ssh_key
 ADD CONSTRAINT unique_t_ssh_key_user_id_name_key
-UNIQUE (user_id, name, public_key, gmt_deleted);
+UNIQUE (user_id, public_key, gmt_deleted);
+UNIQUE (user_id, name, gmt_deleted);
 
 -- The constraint of t_user_collaborate_repository is added to the table.
 ALTER TABLE ONLY public.t_user_collaborate_repository

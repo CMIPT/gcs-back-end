@@ -79,8 +79,8 @@ public class SshKeyController {
     public void uploadSshKey(
             @Validated(CreateGroup.class) @RequestBody SshKeyDTO sshKeyDTO,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        checkSshKeyNameValidity(sshKeyDTO.name());
-        checkSshKeyPublicKeyValidity(sshKeyDTO.publicKey());
+        checkSshKeyNameValidity(sshKeyDTO.name(), accessToken);
+        checkSshKeyPublicKeyValidity(sshKeyDTO.publicKey(), accessToken);
         if (!sshKeyService.save(new SshKeyPO(sshKeyDTO, JwtUtil.getId(accessToken)))) {
             throw new GenericException(ErrorCodeEnum.SSH_KEY_UPLOAD_FAILED, sshKeyDTO);
         }
@@ -227,12 +227,20 @@ public class SshKeyController {
             summary = "Check SSH key name validity",
             description = "Check SSH key name validity with the given information",
             tags = {"SSH", "Get Method"})
-    @Parameter(
-            name = "name",
-            description = "SSH key name",
-            required = true,
-            in = ParameterIn.QUERY,
-            schema = @Schema(implementation = String.class))
+    @Parameters({
+        @Parameter(
+                name = "name",
+                description = "SSH key name",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = HeaderParameter.ACCESS_TOKEN,
+                description = "Access token",
+                required = true,
+                in = ParameterIn.HEADER,
+                schema = @Schema(implementation = String.class)),
+    })
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "SSH key name is valid"),
         @ApiResponse(
@@ -249,19 +257,37 @@ public class SshKeyController {
                     @NotBlank(
                             message =
                                     "{NotBlank.sshKeyController#checkSshKeyNameValidity.name}")
-                    String name) {}
+                    String name,
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+        Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+        QueryWrapper<SshKeyPO> wrapper = new QueryWrapper<>();
+        wrapper.eq("user_id", idInToken);
+        wrapper.eq("name", name);
+        if (sshKeyService.exists(wrapper)) {
+            throw new GenericException(ErrorCodeEnum.SSH_KEY_NAME_ALREADY_EXISTS, name);
+        }
+
+    }
 
     @GetMapping(ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_PUBLIC_KEY_VALIDITY_API_PATH)
     @Operation(
             summary = "Check SSH key public key validity",
             description = "Check SSH key public key validity with the given information",
             tags = {"SSH", "Get Method"})
-    @Parameter(
-            name = "publicKey",
-            description = "SSH key public key",
-            required = true,
-            in = ParameterIn.QUERY,
-            schema = @Schema(implementation = String.class))
+    @Parameters({
+        @Parameter(
+                name = "publicKey",
+                description = "SSH key public key",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = HeaderParameter.ACCESS_TOKEN,
+                description = "Access token",
+                required = true,
+                in = ParameterIn.HEADER,
+                schema = @Schema(implementation = String.class)),
+    })
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "SSH key public key is valid"),
         @ApiResponse(
@@ -279,7 +305,8 @@ public class SshKeyController {
                     @NotBlank(
                             message =
                                     "{NotBlank.sshKeyController#checkSshKeyPublicKeyValidity.publicKey}")
-                    String publicKey) {
+                    String publicKey,
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         boolean ok = true;
         try{
             // Use try source to create a temporary file
@@ -298,6 +325,13 @@ public class SshKeyController {
         }
         if (!ok) {
             throw new GenericException(ErrorCodeEnum.SSH_KEY_PUBLIC_KEY_INVALID, publicKey);
+        }
+        Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+        QueryWrapper<SshKeyPO> wrapper = new QueryWrapper<>();
+        wrapper.eq("user_id", idInToken);
+        wrapper.eq("public_key", publicKey);
+        if (sshKeyService.exists(wrapper)) {
+            throw new GenericException(ErrorCodeEnum.SSH_KEY_PUBLIC_KEY_ALREADY_EXISTS, publicKey);
         }
     }
 }
