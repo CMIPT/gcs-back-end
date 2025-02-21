@@ -6,12 +6,14 @@ import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.annotation.PostConstruct;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,14 +31,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * DevelopmentController
  *
- * <p>
- * Controller for development APIs
+ * <p>Controller for development APIs
  *
  * @author Kaiser
  */
@@ -88,8 +86,12 @@ public class DevelopmentController {
             tsDefinitions.append(" = {\n");
             for (Field field : voClass.getDeclaredFields()) {
                 if (!Modifier.isStatic(field.getModifiers())) {
-                    tsDefinitions.append("  ").append(field.getName()).append(": ")
-                            .append(mapJavaTypeToTypeScript(field)).append(";\n");
+                    tsDefinitions
+                            .append("  ")
+                            .append(field.getName())
+                            .append(": ")
+                            .append(mapJavaTypeToTypeScript(field))
+                            .append(";\n");
                 }
             }
             tsDefinitions.append("}");
@@ -98,25 +100,36 @@ public class DevelopmentController {
     }
 
     @GetMapping(ApiPathConstant.DEVELOPMENT_GET_API_MAP_API_PATH)
-    @Operation(summary = "Get all API paths", description = "Get all API paths in the application", tags = {
-            "Development", "Get Method" })
+    @Operation(
+            summary = "Get all API paths",
+            description = "Get all API paths in the application",
+            tags = {"Development", "Get Method"})
     @ApiResponse(responseCode = "200", description = "API paths retrieved successfully")
     public Map<String, String> getApiMap() {
         return apiPathConstant;
     }
 
     @GetMapping(ApiPathConstant.DEVELOPMENT_GET_ERROR_MESSAGE_API_PATH)
-    @Operation(summary = "Get all error messages", description = "Get all error messages in the application", tags = {
-            "Development", "Get Method" })
+    @Operation(
+            summary = "Get all error messages",
+            description = "Get all error messages in the application",
+            tags = {"Development", "Get Method"})
     @ApiResponse(responseCode = "200", description = "Error messages retrieved successfully")
     public Map<Integer, String> getErrorMessage() {
         return errorCodeConstant;
     }
 
     @GetMapping(ApiPathConstant.DEVELOPMENT_GET_VO_AS_TS_API_PATH)
-    @Operation(summary = "Get VO as TypeScript", description = "Get VO as TypeScript in the application", tags = {
-            "Development", "Get Method" })
-    @Parameter(name = "voName", description = "Value Object Name, when not provided, all VOs will be returned", required = false, example = "PageVO", schema = @Schema(implementation = String.class))
+    @Operation(
+            summary = "Get VO as TypeScript",
+            description = "Get VO as TypeScript in the application",
+            tags = {"Development", "Get Method"})
+    @Parameter(
+            name = "voName",
+            description = "Value Object Name, when not provided, all VOs will be returned",
+            required = false,
+            example = "PageVO",
+            schema = @Schema(implementation = String.class))
     @ApiResponse(responseCode = "200", description = "VO as TypeScript retrieved successfully")
     public String getVOAsTS(@RequestParam(required = false) String voName) {
         if (voName == null) {
@@ -133,26 +146,38 @@ public class DevelopmentController {
     private List<Class<?>> findVOClasses() {
         List<Class<?>> classes = new ArrayList<>();
         try {
-            Files.walk(Paths.get(getClass().getClassLoader().getResource("edu/cmipt/gcs/pojo").toURI()))
+            Files.walk(
+                            Paths.get(
+                                    getClass()
+                                            .getClassLoader()
+                                            .getResource("edu/cmipt/gcs/pojo")
+                                            .toURI()))
                     .filter(Files::isRegularFile)
-                    .forEach(file -> {
-                        String fileName = file.getFileName().toString();
-                        if (fileName.endsWith("VO.class")) {
-                            String className = file.toString()
-                                    .replace(getClass().getClassLoader().getResource("").getPath(), "")
-                                    .replace("/", ".")
-                                    .replace(".class", "");
-                            if (className.startsWith(".")) {
-                                className = className.substring(1);
-                            }
-                            logger.debug("Find VO class: {}", className);
-                            try {
-                                classes.add(Class.forName(className));
-                            } catch (ClassNotFoundException e) {
-                                logger.debug("Class not found: {}", className);
-                            }
-                        }
-                    });
+                    .forEach(
+                            file -> {
+                                String fileName = file.getFileName().toString();
+                                if (fileName.endsWith("VO.class")) {
+                                    String className =
+                                            file.toString()
+                                                    .replace(
+                                                            getClass()
+                                                                    .getClassLoader()
+                                                                    .getResource("")
+                                                                    .getPath(),
+                                                            "")
+                                                    .replace("/", ".")
+                                                    .replace(".class", "");
+                                    if (className.startsWith(".")) {
+                                        className = className.substring(1);
+                                    }
+                                    logger.debug("Find VO class: {}", className);
+                                    try {
+                                        classes.add(Class.forName(className));
+                                    } catch (ClassNotFoundException e) {
+                                        logger.debug("Class not found: {}", className);
+                                    }
+                                }
+                            });
         } catch (Exception e) {
             logger.debug("Error while finding VO classes: {}", e.getMessage());
         }
@@ -178,10 +203,14 @@ public class DevelopmentController {
     private String mapJavaTypeToTypeScript(Type javaType) {
         if (javaType.equals(String.class)) {
             return "string";
-        } else if (javaType.equals(int.class) || javaType.equals(Integer.class) ||
-                javaType.equals(long.class) || javaType.equals(Long.class) ||
-                javaType.equals(double.class) || javaType.equals(Double.class) ||
-                javaType.equals(float.class) || javaType.equals(Float.class)) {
+        } else if (javaType.equals(int.class)
+                || javaType.equals(Integer.class)
+                || javaType.equals(long.class)
+                || javaType.equals(Long.class)
+                || javaType.equals(double.class)
+                || javaType.equals(Double.class)
+                || javaType.equals(float.class)
+                || javaType.equals(Float.class)) {
             return "number";
         } else if (javaType.equals(boolean.class) || javaType.equals(Boolean.class)) {
             return "boolean";
