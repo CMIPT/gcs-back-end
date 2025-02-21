@@ -309,7 +309,6 @@ public class SshKeyController {
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         boolean ok = true;
         try{
-            // Use try source to create a temporary file
             Path tempFile = Files.createTempFile(String.valueOf(System.currentTimeMillis()), ".pub");
             Files.writeString(tempFile, publicKey);
             ProcessBuilder processBuilder =
