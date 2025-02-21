@@ -400,6 +400,24 @@ public class GitoliteUtil {
                 throw new RuntimeException(process.errorReader().lines().toList().toString());
             }
         } catch (Exception e) {
+            // reset the state of the repository
+            try {
+                ProcessBuilder reset =
+                        new ProcessBuilder(
+                                "git",
+                                "-C",
+                                GitConstant.GIT_SERVER_ADMIN_REPOSITORY,
+                                "reset",
+                                "--hard",
+                                "HEAD^");
+                Process process = reset.start();
+                if (process.waitFor() != 0) {
+                    logger.error("Failed to reset repository");
+                    throw new RuntimeException(process.errorReader().lines().toList().toString());
+                }
+            } catch (Exception ex) {
+                logger.error(ex.getMessage());
+            }
             logger.error(e.getMessage());
             return false;
         }
