@@ -32,8 +32,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-import java.util.Set;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -44,15 +42,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Set;
+
 @Validated
 @RestController
 @Tag(name = "User", description = "User Related APIs")
 public class UserController {
     @Autowired private UserService userService;
 
-    private Set<String> reservedUsernames = Set.of(
-        "new", "settings", "login", "logout"
-    );
+    private Set<String> reservedUsernames = Set.of("new", "settings", "login", "logout");
 
     @GetMapping(ApiPathConstant.USER_GET_USER_API_PATH)
     @Operation(
