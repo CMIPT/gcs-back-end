@@ -117,6 +117,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     ApiPathConstant.AUTHENTICATION_SIGN_OUT_API_PATH,
                     ApiPathConstant.DEVELOPMENT_GET_API_MAP_API_PATH,
                     ApiPathConstant.DEVELOPMENT_GET_ERROR_MESSAGE_API_PATH,
+                    ApiPathConstant.DEVELOPMENT_GET_VO_AS_TS_API_PATH,
                     ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH,
                     ApiPathConstant.USER_CHECK_USERNAME_VALIDITY_API_PATH,
                     ApiPathConstant.USER_CHECK_USER_PASSWORD_VALIDITY_API_PATH,
