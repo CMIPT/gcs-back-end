@@ -32,6 +32,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -108,6 +109,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtFilter.class);
 
+    // Paths that do not need token
     private Set<String> ignorePath =
             Set.of(
                     ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH,
@@ -123,6 +125,31 @@ public class JwtFilter extends OncePerRequestFilter {
                     ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH,
                     ApiPathConstant
                             .USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH);
+
+    // Paths that do not need authorization in filter
+    private Map<String, Set<String>> passPath = Map.of(
+        "GET", Set.of(
+            ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH,
+            ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_PUBLIC_KEY_VALIDITY_API_PATH,
+            ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_NAME_VALIDITY_API_PATH,
+            ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH,
+            ApiPathConstant.USER_GET_USER_API_PATH,
+            ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH,
+            ApiPathConstant.REPOSITORY_PAGE_COLLABORATOR_API_PATH
+        ),
+        "POST", Set.of(
+            ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH,
+            ApiPathConstant.REPOSITORY_UPDATE_REPOSITORY_API_PATH,
+            ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_API_PATH,
+            ApiPathConstant.SSH_KEY_UPLOAD_SSH_KEY_API_PATH,
+            ApiPathConstant.SSH_KEY_UPDATE_SSH_KEY_API_PATH
+        ),
+        "DELETE", Set.of(
+            ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH,
+            ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH,
+            ApiPathConstant.SSH_KEY_DELETE_SSH_KEY_API_PATH
+        )
+    );
 
     @Override
     protected void doFilterInternal(
@@ -143,7 +170,6 @@ public class JwtFilter extends OncePerRequestFilter {
         filterChain.doFilter(cachedRequest, response);
     }
 
-    // TODO: move all the pass paths to a set, and use the set to check
     private void authorize(HttpServletRequest request, String accessToken, String refreshToken) {
         if (accessToken != null
                 && JwtUtil.getTokenType(accessToken) != TokenTypeEnum.ACCESS_TOKEN) {
@@ -153,34 +179,26 @@ public class JwtFilter extends OncePerRequestFilter {
                 && JwtUtil.getTokenType(refreshToken) != TokenTypeEnum.REFRESH_TOKEN) {
             throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, refreshToken);
         }
-        switch (request.getMethod()) {
+        var requestURI = request.getRequestURI();
+        var requestMethod = request.getMethod();
+        var passSet = passPath.get(requestMethod);
+        if (passSet != null && passSet.contains(requestURI)) {
+            if (requestURI.equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)) {
+                JwtUtil.refreshToken(refreshToken);
+            }
+            JwtUtil.refreshToken(accessToken);
+            return;
+        }
+        switch (requestMethod) {
             case "GET":
                 if ((accessToken == null
-                                && !request.getRequestURI()
+                                && !requestURI
                                         .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH))
                         || (refreshToken == null
-                                && request.getRequestURI()
+                                && requestURI
                                         .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH))) {
                     throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
-                } else if (request.getRequestURI()
-                        .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)) {
-                    // pass
-                    JwtUtil.refreshToken(refreshToken);
-                    return;
-                } else if (request.getRequestURI()
-                        .equals(ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_PUBLIC_KEY_VALIDITY_API_PATH)||
-                        request.getRequestURI()
-                                .equals(ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_NAME_VALIDITY_API_PATH)) {
-                    // pass
-                } else if (request.getRequestURI()
-                        .equals(ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH)) {
-                    // pass
-                } else if (request.getRequestURI().equals(ApiPathConstant.USER_GET_USER_API_PATH)) {
-                    // pass
-                } else if (request.getRequestURI()
-                        .equals(ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH)) {
-                    // pass
-                } else if (request.getRequestURI()
+                } else if (requestURI
                         .equals(ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH)) {
                     String idInToken = JwtUtil.getId(accessToken);
                     String idInParam = request.getParameter("id");
@@ -189,10 +207,6 @@ public class JwtFilter extends OncePerRequestFilter {
                                 "User[{}] tried to get SSH key of user[{}]", idInToken, idInParam);
                         throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                     }
-                } else if (request.getRequestURI()
-                        .equals(ApiPathConstant.REPOSITORY_PAGE_COLLABORATOR_API_PATH)) {
-                    // this will be checked in controller
-                    // because we must query the database to get the user id of the repository
                 } else {
                     throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                 }
@@ -201,7 +215,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 if (accessToken == null) {
                     throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
                 }
-                if (request.getRequestURI().equals(ApiPathConstant.USER_UPDATE_USER_API_PATH)) {
+                if (requestURI.equals(ApiPathConstant.USER_UPDATE_USER_API_PATH)) {
                     // User can not update other user's information
                     String idInToken = JwtUtil.getId(accessToken);
                     String idInBody = getIdFromRequestBody(request);
@@ -209,24 +223,6 @@ public class JwtFilter extends OncePerRequestFilter {
                         logger.info("User[{}] tried to update user[{}]", idInToken, idInBody);
                         throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                     }
-                } else if (request.getRequestURI()
-                        .equals(ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH)) {
-                    // pass
-                } else if (request.getRequestURI()
-                        .equals(ApiPathConstant.SSH_KEY_UPLOAD_SSH_KEY_API_PATH)) {
-                    // pass
-                } else if (request.getRequestURI()
-                        .equals(ApiPathConstant.SSH_KEY_UPDATE_SSH_KEY_API_PATH)) {
-                    // this will be checked in controller
-                    // because we must query the database to get the user id of the ssh key
-                } else if (request.getRequestURI()
-                        .equals(ApiPathConstant.REPOSITORY_UPDATE_REPOSITORY_API_PATH)) {
-                    // this will be checked in controller
-                    // because we must query the database to get the user id of the repository
-                } else if (request.getRequestURI()
-                        .equals(ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_API_PATH)) {
-                    // this will be checked in controller
-                    // because we must query the database to get the user id of the repository
                 } else {
                     throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                 }
@@ -235,7 +231,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 if (accessToken == null) {
                     throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
                 }
-                if (request.getRequestURI().equals(ApiPathConstant.USER_DELETE_USER_API_PATH)) {
+                if (requestURI.equals(ApiPathConstant.USER_DELETE_USER_API_PATH)) {
                     // for delete user, both access token and refresh token are needed
                     if (refreshToken == null) {
                         throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
@@ -247,18 +243,6 @@ public class JwtFilter extends OncePerRequestFilter {
                         logger.info("User[{}] tried to delete user[{}]", idInToken, idInParam);
                         throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                     }
-                } else if (request.getRequestURI()
-                        .equals(ApiPathConstant.SSH_KEY_DELETE_SSH_KEY_API_PATH)) {
-                    // this will be checked in controller
-                    // because we must query the database to get the user id of the ssh key
-                } else if (request.getRequestURI()
-                        .equals(ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH)) {
-                    // this will be checked in controller
-                    // because we must query the database to get the user id of the repository
-                } else if (request.getRequestURI()
-                        .startsWith(ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH)) {
-                    // this will be checked in controller
-                    // because we must query the database to get the user id of the repository
                 } else {
                     throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                 }
