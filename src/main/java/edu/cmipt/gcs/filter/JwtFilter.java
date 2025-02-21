@@ -205,11 +205,6 @@ public class JwtFilter extends OncePerRequestFilter {
                         throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
                     }
                 } else if (request.getRequestURI()
-                                .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)
-                        && refreshToken == null) {
-                    // for refresh token, both access token and refresh token are needed
-                    throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
-                } else if (request.getRequestURI()
                         .equals(ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH)) {
                     // pass
                 } else if (request.getRequestURI()
