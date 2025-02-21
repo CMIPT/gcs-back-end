@@ -114,7 +114,7 @@ public class JwtUtil {
         return "id:tokenType#" + id + ":" + tokenType.name();
     }
 
-    public static void refreshToken(String token){
+    public static void refreshToken(String token) {
         setTokenInRedis(token, getTokenType(token));
     }
 

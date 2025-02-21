@@ -31,9 +31,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +43,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Validated
 @RestController
@@ -254,9 +254,7 @@ public class SshKeyController {
                             min = ValidationConstant.MIN_SSH_KEY_NAME_LENGTH,
                             max = ValidationConstant.MAX_SSH_KEY_NAME_LENGTH,
                             message = "{Size.sshKeyController#checkSshKeyNameValidity.name}")
-                    @NotBlank(
-                            message =
-                                    "{NotBlank.sshKeyController#checkSshKeyNameValidity.name}")
+                    @NotBlank(message = "{NotBlank.sshKeyController#checkSshKeyNameValidity.name}")
                     String name,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
@@ -266,7 +264,6 @@ public class SshKeyController {
         if (sshKeyService.exists(wrapper)) {
             throw new GenericException(ErrorCodeEnum.SSH_KEY_NAME_ALREADY_EXISTS, name);
         }
-
     }
 
     @GetMapping(ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_PUBLIC_KEY_VALIDITY_API_PATH)
@@ -308,8 +305,9 @@ public class SshKeyController {
                     String publicKey,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         boolean ok = true;
-        try{
-            Path tempFile = Files.createTempFile(String.valueOf(System.currentTimeMillis()), ".pub");
+        try {
+            Path tempFile =
+                    Files.createTempFile(String.valueOf(System.currentTimeMillis()), ".pub");
             Files.writeString(tempFile, publicKey);
             ProcessBuilder processBuilder =
                     new ProcessBuilder("ssh-keygen", "-lf", tempFile.toString());

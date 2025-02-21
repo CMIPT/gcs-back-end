@@ -127,29 +127,30 @@ public class JwtFilter extends OncePerRequestFilter {
                             .USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH);
 
     // Paths that do not need authorization in filter
-    private Map<String, Set<String>> passPath = Map.of(
-        "GET", Set.of(
-            ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH,
-            ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_PUBLIC_KEY_VALIDITY_API_PATH,
-            ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_NAME_VALIDITY_API_PATH,
-            ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH,
-            ApiPathConstant.USER_GET_USER_API_PATH,
-            ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH,
-            ApiPathConstant.REPOSITORY_PAGE_COLLABORATOR_API_PATH
-        ),
-        "POST", Set.of(
-            ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH,
-            ApiPathConstant.REPOSITORY_UPDATE_REPOSITORY_API_PATH,
-            ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_API_PATH,
-            ApiPathConstant.SSH_KEY_UPLOAD_SSH_KEY_API_PATH,
-            ApiPathConstant.SSH_KEY_UPDATE_SSH_KEY_API_PATH
-        ),
-        "DELETE", Set.of(
-            ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH,
-            ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH,
-            ApiPathConstant.SSH_KEY_DELETE_SSH_KEY_API_PATH
-        )
-    );
+    private Map<String, Set<String>> passPath =
+            Map.of(
+                    "GET",
+                            Set.of(
+                                    ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH,
+                                    ApiPathConstant
+                                            .SSH_KEY_CHECK_SSH_KEY_PUBLIC_KEY_VALIDITY_API_PATH,
+                                    ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_NAME_VALIDITY_API_PATH,
+                                    ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH,
+                                    ApiPathConstant.USER_GET_USER_API_PATH,
+                                    ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH,
+                                    ApiPathConstant.REPOSITORY_PAGE_COLLABORATOR_API_PATH),
+                    "POST",
+                            Set.of(
+                                    ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH,
+                                    ApiPathConstant.REPOSITORY_UPDATE_REPOSITORY_API_PATH,
+                                    ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_API_PATH,
+                                    ApiPathConstant.SSH_KEY_UPLOAD_SSH_KEY_API_PATH,
+                                    ApiPathConstant.SSH_KEY_UPDATE_SSH_KEY_API_PATH),
+                    "DELETE",
+                            Set.of(
+                                    ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH,
+                                    ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH,
+                                    ApiPathConstant.SSH_KEY_DELETE_SSH_KEY_API_PATH));
 
     @Override
     protected void doFilterInternal(
@@ -192,14 +193,13 @@ public class JwtFilter extends OncePerRequestFilter {
         switch (requestMethod) {
             case "GET":
                 if ((accessToken == null
-                                && !requestURI
-                                        .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH))
+                                && !requestURI.equals(
+                                        ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH))
                         || (refreshToken == null
-                                && requestURI
-                                        .equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH))) {
+                                && requestURI.equals(
+                                        ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH))) {
                     throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
-                } else if (requestURI
-                        .equals(ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH)) {
+                } else if (requestURI.equals(ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH)) {
                     String idInToken = JwtUtil.getId(accessToken);
                     String idInParam = request.getParameter("id");
                     if (!idInToken.equals(idInParam)) {
