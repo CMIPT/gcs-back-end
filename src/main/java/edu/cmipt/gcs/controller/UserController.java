@@ -32,6 +32,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -47,6 +49,10 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "User", description = "User Related APIs")
 public class UserController {
     @Autowired private UserService userService;
+
+    private Set<String> reservedUsernames = Set.of(
+        "new", "settings", "login", "logout"
+    );
 
     @GetMapping(ApiPathConstant.USER_GET_USER_API_PATH)
     @Operation(
@@ -348,6 +354,9 @@ public class UserController {
                             regexp = ValidationConstant.USERNAME_PATTERN,
                             message = "{Pattern.userController#checkUsernameValidity.username}")
                     String username) {
+        if (reservedUsernames.contains(username)) {
+            throw new GenericException(ErrorCodeEnum.USERNAME_RESERVED, username);
+        }
         QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
         wrapper.eq("username", username);
         if (userService.exists(wrapper)) {
