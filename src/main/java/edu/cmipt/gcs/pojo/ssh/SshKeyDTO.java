@@ -28,6 +28,6 @@ public record SshKeyDTO(
                 @NotBlank(groups = CreateGroup.class)
                 @Size(
                         groups = {CreateGroup.class, UpdateGroup.class},
-                        min = ValidationConstant.MIN_SSH_KEY_PUBLICKEY_LENGTH,
-                        max = ValidationConstant.MAX_SSH_KEY_PUBLICKEY_LENGTH)
+                        min = ValidationConstant.MIN_SSH_KEY_PUBLIC_KEY_LENGTH,
+                        max = ValidationConstant.MAX_SSH_KEY_PUBLIC_KEY_LENGTH)
                 String publicKey) {}
