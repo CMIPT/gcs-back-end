@@ -1,7 +1,7 @@
 package edu.cmipt.gcs.constant;
 
 public class ApiPathConstant {
-    public static final String ALL_API_PREFIX = "/gcs";
+    public static final String ALL_API_PREFIX = "/api";
 
     public static final String AUTHENTICATION_API_PREFIX = ALL_API_PREFIX + "/auth";
     public static final String AUTHENTICATION_SIGN_IN_API_PATH =
