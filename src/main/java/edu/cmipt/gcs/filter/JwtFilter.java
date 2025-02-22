@@ -173,34 +173,33 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private void authorize(HttpServletRequest request, String accessToken, String refreshToken) {
-        if (accessToken != null
-                && JwtUtil.getTokenType(accessToken) != TokenTypeEnum.ACCESS_TOKEN) {
+        if (accessToken != null && JwtUtil.getTokenType(accessToken) != TokenTypeEnum.ACCESS_TOKEN ||
+        refreshToken != null && JwtUtil.getTokenType(refreshToken) != TokenTypeEnum.REFRESH_TOKEN) {
             throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, accessToken);
-        }
-        if (refreshToken != null
-                && JwtUtil.getTokenType(refreshToken) != TokenTypeEnum.REFRESH_TOKEN) {
-            throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, refreshToken);
         }
         var requestURI = request.getRequestURI();
         var requestMethod = request.getMethod();
         var passSet = passPath.get(requestMethod);
         if (passSet != null && passSet.contains(requestURI)) {
             if (requestURI.equals(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)) {
+                if (refreshToken == null) {
+                    throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
+                }
                 JwtUtil.refreshToken(refreshToken);
+            } else{
+                if (accessToken == null) {
+                    throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
+                }
+                JwtUtil.refreshToken(accessToken);
             }
-            JwtUtil.refreshToken(accessToken);
             return;
+        }
+        if (accessToken == null) {
+            throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
         }
         switch (requestMethod) {
             case "GET":
-                if ((accessToken == null
-                                && !requestURI.equals(
-                                        ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH))
-                        || (refreshToken == null
-                                && requestURI.equals(
-                                        ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH))) {
-                    throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
-                } else if (requestURI.equals(ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH)) {
+                if (requestURI.equals(ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH)) {
                     String idInToken = JwtUtil.getId(accessToken);
                     String idInParam = request.getParameter("id");
                     if (!idInToken.equals(idInParam)) {
@@ -213,9 +212,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
                 break;
             case "POST":
-                if (accessToken == null) {
-                    throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
-                }
                 if (requestURI.equals(ApiPathConstant.USER_UPDATE_USER_API_PATH)) {
                     // User can not update other user's information
                     String idInToken = JwtUtil.getId(accessToken);
@@ -229,14 +225,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
                 break;
             case "DELETE":
-                if (accessToken == null) {
-                    throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
-                }
                 if (requestURI.equals(ApiPathConstant.USER_DELETE_USER_API_PATH)) {
-                    // for delete user, both access token and refresh token are needed
-                    if (refreshToken == null) {
-                        throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
-                    }
                     // User can not delete other user
                     String idInToken = JwtUtil.getId(accessToken);
                     String idInParam = request.getParameter("id");
