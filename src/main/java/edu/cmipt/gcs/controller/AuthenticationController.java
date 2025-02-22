@@ -192,12 +192,6 @@ public class AuthenticationController {
             tags = {"Authentication", "Get Method"})
     @Parameters({
         @Parameter(
-                name = HeaderParameter.ACCESS_TOKEN,
-                description = "Access token",
-                required = true,
-                in = ParameterIn.HEADER,
-                schema = @Schema(implementation = String.class)),
-        @Parameter(
                 name = HeaderParameter.REFRESH_TOKEN,
                 description = "Refresh token",
                 required = true,
