@@ -289,13 +289,15 @@ public class UserController {
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
     public void deleteUser(@RequestParam("id") Long id) {
-        if (userService.getById(id) == null) {
-            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, id);
-        }
-        if (!userService.removeById(id)) {
-            throw new GenericException(ErrorCodeEnum.USER_DELETE_FAILED, id);
-        }
-        JwtUtil.blacklistToken(id);
+        // do not support delete user by now
+        throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
+        // if (userService.getById(id) == null) {
+        //     throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, id);
+        // }
+        // if (!userService.removeById(id)) {
+        //     throw new GenericException(ErrorCodeEnum.USER_DELETE_FAILED, id);
+        // }
+        // JwtUtil.blacklistToken(id);
     }
 
     @GetMapping(ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH)
