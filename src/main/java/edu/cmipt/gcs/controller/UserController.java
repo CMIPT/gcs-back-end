@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -68,12 +69,12 @@ public class UserController {
                 name = "user",
                 description = "User's Information",
                 example = "admin",
-                required = true,
+                required = false,
                 in = ParameterIn.QUERY,
                 schema = @Schema(implementation = String.class)),
         @Parameter(
                 name = "userType",
-                description = "User's Type. The value can be 'id', 'username' or 'email'",
+                description = "User's Type. The value can be 'id', 'username' or 'email', 'token'",
                 example = "username",
                 required = true,
                 in = ParameterIn.QUERY,
@@ -87,17 +88,29 @@ public class UserController {
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
     public UserVO getUser(
-            @RequestParam("user") String user, @RequestParam("userType") String userType) {
-        if (!userType.equals("id") && !userType.equals("username") && !userType.equals("email")) {
+            @RequestParam(name = "user", required = false) String user,
+            @RequestParam("userType") String userType,
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+        // TODO:
+        // Use a cutomized type to replace the String type
+        if (!userType.equals("id") && !userType.equals("username") && !userType.equals("email")
+        && !userType.equals("token")) {
             throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
         }
         QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
         if (userType.equals("id")) {
+            if (user == null) {
+                throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+            }
             try {
-                wrapper.eq(userType, Long.valueOf(user));
+                Long id = Long.valueOf(user);
+                wrapper.eq("id", id);
             } catch (Exception e) {
                 throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
             }
+        } else if (userType.equals("token")) {
+            Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+            wrapper.eq("id", idInToken);
         } else {
             wrapper.eq(userType, user);
         }
@@ -258,12 +271,6 @@ public class UserController {
         @Parameter(
                 name = HeaderParameter.ACCESS_TOKEN,
                 description = "Access token",
-                required = true,
-                in = ParameterIn.HEADER,
-                schema = @Schema(implementation = String.class)),
-        @Parameter(
-                name = HeaderParameter.REFRESH_TOKEN,
-                description = "Refresh token",
                 required = true,
                 in = ParameterIn.HEADER,
                 schema = @Schema(implementation = String.class)),
