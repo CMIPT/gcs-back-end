@@ -569,9 +569,14 @@ public class RepositoryController {
         @Parameter(
                 name = "id",
                 description = "User id",
-                required = true,
+                required = false,
                 in = ParameterIn.QUERY,
                 schema = @Schema(implementation = Long.class)),
+        @Parameter(
+            name = "username",
+            description = "Username",
+            required = false,
+            schema = @Schema(implementation = Long.class)),
         @Parameter(
                 name = "page",
                 description = "Page number",
@@ -589,17 +594,28 @@ public class RepositoryController {
     })
     @ApiResponse(responseCode = "200", description = "User repositories paged successfully")
     public PageVO<RepositoryVO> pageUserRepository(
-            @RequestParam("id") Long userId,
+            @RequestParam(name = "id", required = false) Long userId,
+            @RequestParam(name = "username", required = false) String username,
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        var userPO = userService.getById(userId);
+        if (userId == null && username == null) {
+            throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+        }
+        UserPO userPO;
+        if (userId != null) {
+            userPO = userService.getById(userId);
+        } else {
+            QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("username", username);
+            userPO = userService.getOne(queryWrapper);
+        }
         if (userPO == null) {
             throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, userId);
         }
+        userId = userPO.getId();
         QueryWrapper<RepositoryPO> wrapper = new QueryWrapper<RepositoryPO>();
         String idInToken = JwtUtil.getId(accessToken);
-        assert idInToken != null;
         if (!idInToken.equals(userId.toString())) {
             // the user only can see the public repositories of others
             wrapper.eq("is_private", false);
