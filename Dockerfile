@@ -56,15 +56,12 @@ WORKDIR "$JAVA_WORKING_DIRECTORY"
 
 COPY "$TARGET_JAR_PATH" "gcs.jar"
 
-ENV GITOLITE_ADMIN_REPOSITORY="$GITOLITE_ADMIN_REPOSITORY"
-
 RUN echo "\
-    cp /root/.ssh/id_rsa.pub "$GIT_USER_HOME/root.pub" && \
-    chown "$GIT_USER_NAME:$GIT_USER_MAIN_GROUP" "$GIT_USER_HOME/root.pub" && \
-    sudo -u "$GIT_USER_NAME" "$GITOLITE_INSTALLATION_DIR/gitolite" setup -pk "$GIT_USER_HOME/root.pub" && \
     service ssh restart && \
     git -C $GITOLITE_ADMIN_REPOSITORY fetch && \
     git -C $GITOLITE_ADMIN_REPOSITORY reset --hard origin/master && \
+    cp ~/.ssh/id_rsa.pub $GITOLITE_ADMIN_REPOSITORY/keydir/root.pub && \
+    (git -C $GITOLITE_ADMIN_REPOSITORY commit -am 'Update root.pub' && git push -f || true) && \
     java -jar gcs.jar" \
     > \
     "start.sh"
