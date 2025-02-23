@@ -44,7 +44,7 @@ import java.util.Map;
 public class DevelopmentController {
     private static final Logger logger = LoggerFactory.getLogger(DevelopmentController.class);
 
-    private Map<Integer, String> errorCodeConstant = new HashMap<>();
+    private Map<String, Integer> errorCodeConstant = new HashMap<>();
 
     private Map<String, String> apiPathConstant = new HashMap<>();
 
@@ -56,7 +56,7 @@ public class DevelopmentController {
             if (code == ErrorCodeEnum.ZERO_PLACEHOLDER) {
                 continue;
             }
-            errorCodeConstant.put(code.ordinal(), code.name());
+            errorCodeConstant.put(code.name(), code.ordinal());
         }
         for (Field field : ApiPathConstant.class.getFields()) {
             try {
@@ -115,7 +115,7 @@ public class DevelopmentController {
             description = "Get all error messages in the application",
             tags = {"Development", "Get Method"})
     @ApiResponse(responseCode = "200", description = "Error messages retrieved successfully")
-    public Map<Integer, String> getErrorMessage() {
+    public Map<String, Integer> getErrorMessage() {
         return errorCodeConstant;
     }
 
