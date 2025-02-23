@@ -60,17 +60,7 @@ public class RepositoryPO {
             this.userId = null;
         }
         if (generateUrl) {
-            // TODO: https is not supported now
-            this.httpsUrl = "";
-            this.sshUrl =
-                    new StringBuilder("ssh://")
-                            .append(GitConstant.GIT_SERVER_USERNAME)
-                            .append("@")
-                            .append(GitConstant.GIT_SERVER_DOMAIN)
-                            .append(":")
-                            .append(GitConstant.GIT_SERVER_PORT)
-                            .append(Paths.get("/", username, repositoryName).toString())
-                            .toString();
+            this.generateUrl(username);
         }
     }
 
@@ -80,5 +70,25 @@ public class RepositoryPO {
 
     public RepositoryPO(RepositoryDTO repositoryDTO) {
         this(repositoryDTO, null, null, false);
+    }
+
+    public boolean generateUrl(String username) {
+        // TODO: https is not supported now
+        String httpsUrl = "";
+        String sshUrl =
+                new StringBuilder("ssh://")
+                        .append(GitConstant.GIT_SERVER_USERNAME)
+                        .append("@")
+                        .append(GitConstant.GIT_SERVER_DOMAIN)
+                        .append(":")
+                        .append(GitConstant.GIT_SERVER_PORT)
+                        .append(Paths.get("/", username, this.repositoryName).toString())
+                        .toString();
+        if (!httpsUrl.equals(this.httpsUrl) || !sshUrl.equals(this.sshUrl)) {
+            this.httpsUrl = httpsUrl;
+            this.sshUrl = sshUrl;
+            return true;
+        }
+        return false;
     }
 }
