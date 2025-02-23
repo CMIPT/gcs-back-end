@@ -190,8 +190,9 @@ public class RepositoryController {
         } else {
             repository = repositoryService.getById(id);
         }
+        String notFoundMessage = id != null ? id.toString() : username + "/" + repositoryName;
         if (repository == null) {
-            throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, id);
+            throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage);
         }
         String idInToken = JwtUtil.getId(accessToken);
         if (repository.getIsPrivate() && !idInToken.equals(repository.getUserId().toString())) {
@@ -199,7 +200,11 @@ public class RepositoryController {
                     "User[{}] tried to get repository of user[{}]",
                     idInToken,
                     repository.getUserId());
-            throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+            throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage);
+        }
+        // The server's domain or port may be updated, every query we try to update the url
+        if (repository.generateUrl(username)) {
+            repositoryService.updateById(repository);
         }
         return new RepositoryVO(
                 repository, userService.getById(repository.getUserId()).getUsername());
@@ -605,9 +610,12 @@ public class RepositoryController {
                 iPage.getPages(),
                 iPage.getTotal(),
                 iPage.getRecords().stream()
-                        .map(
-                                (RepositoryPO repositoryPO) ->
-                                        new RepositoryVO(repositoryPO, userPO.getUsername()))
+                        .map((RepositoryPO repositoryPO) -> {
+                            if (repositoryPO.generateUrl(userPO.getUsername())) {
+                                repositoryService.updateById(repositoryPO);
+                            }
+                            return new RepositoryVO(repositoryPO, userPO.getUsername());
+                        })
                         .toList());
     }
 }
