@@ -110,22 +110,29 @@ public class JwtFilter extends OncePerRequestFilter {
     private static final Logger logger = LoggerFactory.getLogger(JwtFilter.class);
 
     // Paths that do not need token
-    private Set<String> ignorePath =
-            Set.of(
-                    ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH,
-                    ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH,
-                    ApiPathConstant.AUTHENTICATION_SIGN_OUT_API_PATH,
+    private Map<String, Set<String>> ignorePath =
+            Map.of(
+        "GET", Set.of(
                     ApiPathConstant.DEVELOPMENT_GET_API_MAP_API_PATH,
                     ApiPathConstant.DEVELOPMENT_GET_ERROR_MESSAGE_API_PATH,
                     ApiPathConstant.DEVELOPMENT_GET_VO_AS_TS_API_PATH,
-                    ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH,
                     ApiPathConstant.USER_CHECK_USERNAME_VALIDITY_API_PATH,
                     ApiPathConstant.USER_CHECK_USER_PASSWORD_VALIDITY_API_PATH,
+                    ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH,
                     ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH,
-                    ApiPathConstant.AUTHENTICATION_SEND_EMAIL_VERIFICATION_CODE_API_PATH,
+                    ApiPathConstant.AUTHENTICATION_SEND_EMAIL_VERIFICATION_CODE_API_PATH
+        ),
+        "POST", Set.of(
+                    ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH,
+                    ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH,
                     ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH,
                     ApiPathConstant
-                            .USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH);
+                            .USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH
+
+        ),
+        "DELETE", Set.of(
+                    ApiPathConstant.AUTHENTICATION_SIGN_OUT_API_PATH
+        ));
 
     // Paths that do not need authorization in filter
     private Map<String, Set<String>> passPath =
@@ -158,8 +165,9 @@ public class JwtFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         // ignore non business api and some special api
+        var ignoreSet = ignorePath.get(request.getMethod());
         if (!request.getRequestURI().startsWith(ApiPathConstant.ALL_API_PREFIX)
-                || ignorePath.contains(request.getRequestURI())) {
+                || ignoreSet != null && ignoreSet.contains(request.getRequestURI())) {
             filterChain.doFilter(request, response);
             return;
         }
