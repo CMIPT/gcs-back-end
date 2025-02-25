@@ -4,4 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 
 import edu.cmipt.gcs.pojo.user.UserPO;
 
-public interface UserService extends IService<UserPO> {}
+public interface UserService extends IService<UserPO> {
+    boolean usernameExists(String username);
+    boolean emailExists(String email);
+}

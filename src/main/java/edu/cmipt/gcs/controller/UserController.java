@@ -9,6 +9,7 @@ import edu.cmipt.gcs.constant.ValidationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
+import edu.cmipt.gcs.pojo.user.UserCreateDTO;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.pojo.user.UserUpdateDTO;
 import edu.cmipt.gcs.pojo.user.UserVO;
@@ -51,7 +52,34 @@ import java.util.Set;
 public class UserController {
     @Autowired private UserService userService;
 
-    private Set<String> reservedUsernames = Set.of("new", "settings", "login", "logout");
+    private Set<String> reservedUsernames = Set.of("new", "settings", "login", "logout", "admin", "signup");
+
+    @PostMapping(ApiPathConstant.USER_CREATE_USER_API_PATH)
+    @Operation(
+            summary = "Create a user",
+            description = "Create a user with the given information",
+            tags = {"User", "Post Method"})
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "User created successfully"),
+        @ApiResponse(
+                responseCode = "400",
+                description = "User created failed",
+                content = @Content(schema = @Schema(implementation = ErrorVO.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public void createUser(@Validated @RequestBody UserCreateDTO user) {
+        checkUsernameValidity(user.username());
+        checkEmailValidity(user.email());
+        if (!EmailVerificationCodeUtil.verifyVerificationCode(
+                user.email(), user.emailVerificationCode())) {
+            throw new GenericException(
+                    ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE, user.emailVerificationCode());
+        }
+        boolean res = userService.save(new UserPO(user));
+        if (!res) {
+            throw new GenericException(ErrorCodeEnum.USER_CREATE_FAILED, user);
+        }
+    }
 
     @GetMapping(ApiPathConstant.USER_GET_USER_API_PATH)
     @Operation(
@@ -159,6 +187,7 @@ public class UserController {
         return ResponseEntity.ok().body(userVO);
     }
 
+    // TODO: use request body to pass the parameters
     @PostMapping(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH)
     @Operation(
             summary = "Update user password",
@@ -249,12 +278,12 @@ public class UserController {
             throw new GenericException(
                     ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE, emailVerificationCode);
         }
-        UpdateWrapper<UserPO> wrapper = new UpdateWrapper<UserPO>();
-        wrapper.eq("email", email);
-        if (!userService.exists(wrapper)) {
+        if (!userService.emailExists(email)) {
             throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, email);
         }
         checkPasswordValidity(newPassword);
+        UpdateWrapper<UserPO> wrapper = new UpdateWrapper<UserPO>();
+        wrapper.apply("LOWER(email) = LOWER({0})", email);
         wrapper.set("user_password", MD5Converter.convertToMD5(newPassword));
         if (!userService.update(wrapper)) {
             throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, email);
@@ -324,9 +353,7 @@ public class UserController {
                     @Email(message = "{Email.userController#checkEmailValidity.email}")
                     @NotBlank(message = "{NotBlank.userController#checkEmailValidity.email}")
                     String email) {
-        QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
-        wrapper.eq("email", email);
-        if (userService.exists(wrapper)) {
+        if (userService.emailExists(email)) {
             throw new GenericException(ErrorCodeEnum.EMAIL_ALREADY_EXISTS, email);
         }
     }
@@ -364,9 +391,7 @@ public class UserController {
         if (reservedUsernames.contains(username)) {
             throw new GenericException(ErrorCodeEnum.USERNAME_RESERVED, username);
         }
-        QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
-        wrapper.eq("username", username);
-        if (userService.exists(wrapper)) {
+        if (userService.usernameExists(username)) {
             throw new GenericException(ErrorCodeEnum.USERNAME_ALREADY_EXISTS, username);
         }
     }

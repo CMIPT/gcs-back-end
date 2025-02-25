@@ -10,7 +10,6 @@ import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.pojo.user.UserSignInDTO;
-import edu.cmipt.gcs.pojo.user.UserSignUpDTO;
 import edu.cmipt.gcs.pojo.user.UserVO;
 import edu.cmipt.gcs.service.UserService;
 import edu.cmipt.gcs.util.EmailVerificationCodeUtil;
@@ -62,41 +61,6 @@ public class AuthenticationController {
 
     @Autowired private JavaMailSender javaMailSender;
     @Autowired private UserService userService;
-
-    @PostMapping(ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH)
-    @Operation(
-            summary = "Sign up a user",
-            description = "Sign up a user with the given information",
-            tags = {"Authentication", "Post Method"})
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "User signed up successfully"),
-        @ApiResponse(
-                responseCode = "400",
-                description = "User sign up failed",
-                content = @Content(schema = @Schema(implementation = ErrorVO.class))),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    public void signUp(@Validated @RequestBody UserSignUpDTO user) {
-        QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
-        wrapper.eq("username", user.username());
-        if (userService.exists(wrapper)) {
-            throw new GenericException(ErrorCodeEnum.USERNAME_ALREADY_EXISTS, user.username());
-        }
-        wrapper.clear();
-        wrapper.eq("email", user.email());
-        if (userService.exists(wrapper)) {
-            throw new GenericException(ErrorCodeEnum.EMAIL_ALREADY_EXISTS, user.email());
-        }
-        if (!EmailVerificationCodeUtil.verifyVerificationCode(
-                user.email(), user.emailVerificationCode())) {
-            throw new GenericException(
-                    ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE, user.emailVerificationCode());
-        }
-        boolean res = userService.save(new UserPO(user));
-        if (!res) {
-            throw new GenericException(ErrorCodeEnum.USER_CREATE_FAILED, user);
-        }
-    }
 
     @GetMapping(ApiPathConstant.AUTHENTICATION_SEND_EMAIL_VERIFICATION_CODE_API_PATH)
     @Operation(
@@ -157,7 +121,7 @@ public class AuthenticationController {
     })
     public ResponseEntity<UserVO> signIn(@Validated @RequestBody UserSignInDTO user) {
         QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
-        wrapper.eq("username", user.username());
+        wrapper.apply("LOWER(username) = LOWER({0})", user.username());
         wrapper.eq("user_password", MD5Converter.convertToMD5(user.userPassword()));
         if (!userService.exists(wrapper)) {
             throw new GenericException(ErrorCodeEnum.WRONG_SIGN_IN_INFORMATION);

@@ -6,8 +6,6 @@ public class ApiPathConstant {
     public static final String AUTHENTICATION_API_PREFIX = ALL_API_PREFIX + "/auth";
     public static final String AUTHENTICATION_SIGN_IN_API_PATH =
             AUTHENTICATION_API_PREFIX + "/signin";
-    public static final String AUTHENTICATION_SIGN_UP_API_PATH =
-            AUTHENTICATION_API_PREFIX + "/signup";
     public static final String AUTHENTICATION_SIGN_OUT_API_PATH =
             AUTHENTICATION_API_PREFIX + "/signout";
     public static final String AUTHENTICATION_REFRESH_API_PATH =
@@ -24,6 +22,7 @@ public class ApiPathConstant {
 
     public static final String USER_API_PREFIX = ALL_API_PREFIX + "/user";
 
+    public static final String USER_CREATE_USER_API_PATH = USER_API_PREFIX + "/create";
     public static final String USER_GET_USER_API_PATH = USER_API_PREFIX + "/get";
     public static final String USER_UPDATE_USER_API_PATH = USER_API_PREFIX + "/update";
     public static final String USER_CHECK_EMAIL_VALIDITY_API_PATH = USER_API_PREFIX + "/email";

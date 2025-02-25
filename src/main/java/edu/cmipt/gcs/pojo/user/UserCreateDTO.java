@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 @Schema(description = "User Sign Up Data Transfer Object")
-public record UserSignUpDTO(
+public record UserCreateDTO(
         @Schema(
                         description = "Username",
                         requiredMode = Schema.RequiredMode.REQUIRED,

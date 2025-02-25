@@ -22,6 +22,7 @@ public class UserPO {
     private String username;
     private String email;
     private String userPassword;
+    private String avatarUrl;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime gmtCreated;
@@ -31,7 +32,7 @@ public class UserPO {
 
     @TableLogic private LocalDateTime gmtDeleted;
 
-    public UserPO(UserSignUpDTO user) {
+    public UserPO(UserCreateDTO user) {
         this.username = user.username();
         this.email = user.email();
         this.userPassword = MD5Converter.convertToMD5(user.userPassword());
@@ -40,5 +41,6 @@ public class UserPO {
     public UserPO(UserUpdateDTO user) {
         this.id = Long.parseLong(user.id());
         this.username = user.username();
+        this.avatarUrl = user.avatarUrl();
     }
 }

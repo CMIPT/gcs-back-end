@@ -55,4 +55,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserPO> implements 
         }
         return true;
     }
+
+    @Override
+    public boolean usernameExists(String username) {
+        QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
+        wrapper.apply("LOWER(username) = LOWER({0})", username);
+        return super.exists(wrapper);
+    }
+
+    @Override
+    public boolean emailExists(String email) {
+        QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
+        wrapper.apply("LOWER(email) = LOWER({0})", email);
+        return super.exists(wrapper);
+    }
 }
