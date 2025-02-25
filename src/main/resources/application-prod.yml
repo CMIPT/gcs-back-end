@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    druid:
+      test-on-borrow: false
+      test-on-return: false
