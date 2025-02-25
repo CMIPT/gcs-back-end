@@ -103,7 +103,7 @@ public class UserController {
                 schema = @Schema(implementation = String.class)),
         @Parameter(
                 name = "userType",
-                description = "User's Type. The value can be 'id', 'username' or 'email', 'token'",
+                description = "User's Type. The value can be 'id', 'username', 'email', or 'token'",
                 example = "username",
                 required = true,
                 in = ParameterIn.QUERY,
