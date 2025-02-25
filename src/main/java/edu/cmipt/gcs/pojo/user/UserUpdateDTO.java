@@ -32,7 +32,6 @@ public record UserUpdateDTO(
                         requiredMode = Schema.RequiredMode.NOT_REQUIRED,
                         example = "https://www.example.com/avatar.jpg")
                 @Size(
-        min = ValidationConstant.MIN_AVATAR_URL_LENGTH,
-        max = ValidationConstant.MAX_AVATAR_URL_LENGTH
-    )
+                        min = ValidationConstant.MIN_AVATAR_URL_LENGTH,
+                        max = ValidationConstant.MAX_AVATAR_URL_LENGTH)
                 String avatarUrl) {}

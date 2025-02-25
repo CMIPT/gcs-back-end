@@ -112,27 +112,27 @@ public class JwtFilter extends OncePerRequestFilter {
     // Paths that do not need token
     private Map<String, Set<String>> ignorePath =
             Map.of(
-        "GET", Set.of(
-                    ApiPathConstant.DEVELOPMENT_GET_API_MAP_API_PATH,
-                    ApiPathConstant.DEVELOPMENT_GET_ERROR_MESSAGE_API_PATH,
-                    ApiPathConstant.DEVELOPMENT_GET_VO_AS_TS_API_PATH,
-                    ApiPathConstant.USER_CHECK_USERNAME_VALIDITY_API_PATH,
-                    ApiPathConstant.USER_CHECK_USER_PASSWORD_VALIDITY_API_PATH,
-                    ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH,
-                    ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH,
-                    ApiPathConstant.AUTHENTICATION_SEND_EMAIL_VERIFICATION_CODE_API_PATH
-        ),
-        "POST", Set.of(
-                    ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH,
-                    ApiPathConstant.USER_CREATE_USER_API_PATH,
-                    ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH,
-                    ApiPathConstant
-                            .USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH
-
-        ),
-        "DELETE", Set.of(
-                    ApiPathConstant.AUTHENTICATION_SIGN_OUT_API_PATH
-        ));
+                    "GET",
+                            Set.of(
+                                    ApiPathConstant.DEVELOPMENT_GET_API_MAP_API_PATH,
+                                    ApiPathConstant.DEVELOPMENT_GET_ERROR_MESSAGE_API_PATH,
+                                    ApiPathConstant.DEVELOPMENT_GET_VO_AS_TS_API_PATH,
+                                    ApiPathConstant.USER_CHECK_USERNAME_VALIDITY_API_PATH,
+                                    ApiPathConstant.USER_CHECK_USER_PASSWORD_VALIDITY_API_PATH,
+                                    ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH,
+                                    ApiPathConstant
+                                            .REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH,
+                                    ApiPathConstant
+                                            .AUTHENTICATION_SEND_EMAIL_VERIFICATION_CODE_API_PATH),
+                    "POST",
+                            Set.of(
+                                    ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH,
+                                    ApiPathConstant.USER_CREATE_USER_API_PATH,
+                                    ApiPathConstant
+                                            .USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH,
+                                    ApiPathConstant
+                                            .USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH),
+                    "DELETE", Set.of(ApiPathConstant.AUTHENTICATION_SIGN_OUT_API_PATH));
 
     // Paths that do not need authorization in filter
     private Map<String, Set<String>> passPath =
@@ -181,8 +181,9 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private void authorize(HttpServletRequest request, String accessToken, String refreshToken) {
-        if (accessToken != null && JwtUtil.getTokenType(accessToken) != TokenTypeEnum.ACCESS_TOKEN ||
-        refreshToken != null && JwtUtil.getTokenType(refreshToken) != TokenTypeEnum.REFRESH_TOKEN) {
+        if (accessToken != null && JwtUtil.getTokenType(accessToken) != TokenTypeEnum.ACCESS_TOKEN
+                || refreshToken != null
+                        && JwtUtil.getTokenType(refreshToken) != TokenTypeEnum.REFRESH_TOKEN) {
             throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, accessToken);
         }
         var requestURI = request.getRequestURI();
@@ -194,7 +195,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
                 }
                 JwtUtil.refreshToken(refreshToken);
-            } else{
+            } else {
                 if (accessToken == null) {
                     throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
                 }

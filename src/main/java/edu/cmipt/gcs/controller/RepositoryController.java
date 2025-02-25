@@ -190,11 +190,13 @@ public class RepositoryController {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage);
         }
         String idInToken = JwtUtil.getId(accessToken);
-        if (repository.getIsPrivate() && !idInToken.equals(repository.getUserId().toString()) &&
-                userCollaborateRepositoryService.getOne(
-                        new QueryWrapper<UserCollaborateRepositoryPO>()
-                                .eq("collaborator_id", idInToken)
-                                .eq("repository_id", repository.getId())) == null) {
+        if (repository.getIsPrivate()
+                && !idInToken.equals(repository.getUserId().toString())
+                && userCollaborateRepositoryService.getOne(
+                                new QueryWrapper<UserCollaborateRepositoryPO>()
+                                        .eq("collaborator_id", idInToken)
+                                        .eq("repository_id", repository.getId()))
+                        == null) {
             logger.info(
                     "User[{}] tried to get repository of user[{}]",
                     idInToken,
@@ -206,8 +208,7 @@ public class RepositoryController {
             repositoryService.updateById(repository);
         }
         var userPO = userService.getById(repository.getUserId());
-        return new RepositoryVO(
-                repository, userPO.getUsername(), userPO.getAvatarUrl());
+        return new RepositoryVO(repository, userPO.getUsername(), userPO.getAvatarUrl());
     }
 
     @PostMapping(ApiPathConstant.REPOSITORY_UPDATE_REPOSITORY_API_PATH)
@@ -572,10 +573,10 @@ public class RepositoryController {
                 in = ParameterIn.QUERY,
                 schema = @Schema(implementation = Long.class)),
         @Parameter(
-            name = "username",
-            description = "Username",
-            required = false,
-            schema = @Schema(implementation = Long.class)),
+                name = "username",
+                description = "Username",
+                required = false,
+                schema = @Schema(implementation = Long.class)),
         @Parameter(
                 name = "page",
                 description = "Page number",
@@ -610,7 +611,8 @@ public class RepositoryController {
             userPO = userService.getOne(queryWrapper);
         }
         if (userPO == null) {
-            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, userId == null ? username : userId);
+            throw new GenericException(
+                    ErrorCodeEnum.USER_NOT_FOUND, userId == null ? username : userId);
         }
         userId = userPO.getId();
         QueryWrapper<RepositoryPO> wrapper = new QueryWrapper<RepositoryPO>();
@@ -625,12 +627,16 @@ public class RepositoryController {
                 iPage.getPages(),
                 iPage.getTotal(),
                 iPage.getRecords().stream()
-                        .map((RepositoryPO repositoryPO) -> {
-                            if (repositoryPO.generateUrl(userPO.getUsername())) {
-                                repositoryService.updateById(repositoryPO);
-                            }
-                            return new RepositoryVO(repositoryPO, userPO.getUsername(), userPO.getAvatarUrl());
-                        })
+                        .map(
+                                (RepositoryPO repositoryPO) -> {
+                                    if (repositoryPO.generateUrl(userPO.getUsername())) {
+                                        repositoryService.updateById(repositoryPO);
+                                    }
+                                    return new RepositoryVO(
+                                            repositoryPO,
+                                            userPO.getUsername(),
+                                            userPO.getAvatarUrl());
+                                })
                         .toList());
     }
 }

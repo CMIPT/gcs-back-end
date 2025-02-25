@@ -52,8 +52,16 @@ import java.util.Set;
 public class UserController {
     @Autowired private UserService userService;
 
-    private Set<String> reservedUsernames = Set.of("new", "settings", "login", "logout",
-        "admin", "signup", "testing", "gitolite-admin");
+    private Set<String> reservedUsernames =
+            Set.of(
+                    "new",
+                    "settings",
+                    "login",
+                    "logout",
+                    "admin",
+                    "signup",
+                    "testing",
+                    "gitolite-admin");
 
     @PostMapping(ApiPathConstant.USER_CREATE_USER_API_PATH)
     @Operation(
@@ -122,8 +130,10 @@ public class UserController {
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         // TODO:
         // Use a cutomized type to replace the String type
-        if (!userType.equals("id") && !userType.equals("username") && !userType.equals("email")
-        && !userType.equals("token")) {
+        if (!userType.equals("id")
+                && !userType.equals("username")
+                && !userType.equals("email")
+                && !userType.equals("token")) {
             throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
         }
         QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
