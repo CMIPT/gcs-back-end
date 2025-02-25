@@ -605,7 +605,7 @@ public class RepositoryController {
             userPO = userService.getOne(queryWrapper);
         }
         if (userPO == null) {
-            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, userId);
+            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, userId == null ? username : userId);
         }
         userId = userPO.getId();
         QueryWrapper<RepositoryPO> wrapper = new QueryWrapper<RepositoryPO>();
