@@ -251,10 +251,7 @@ public class RepositoryController {
                     repositoryPO.getUserId());
             throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
         }
-        if (repository.repositoryName() != null
-                && !repository
-                        .repositoryName()
-                        .equals(repositoryService.getById(id).getRepositoryName())) {
+        if (repository.repositoryName() != null) {
             throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
         }
         if (!repositoryService.updateById(new RepositoryPO(repository))) {

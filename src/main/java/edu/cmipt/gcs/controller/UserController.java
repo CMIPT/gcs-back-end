@@ -177,10 +177,9 @@ public class UserController {
     })
     public ResponseEntity<UserVO> updateUser(@Validated @RequestBody UserUpdateDTO user) {
         if (user.username() != null) {
-            checkUsernameValidity(user.username());
+            throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
         }
         // for the null fields, mybatis-plus will ignore by default
-        assert user.id() != null;
         if (!userService.updateById(new UserPO(user))) {
             throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user);
         }
