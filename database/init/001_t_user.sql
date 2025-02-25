@@ -3,7 +3,7 @@ CREATE TABLE public.t_user (
   username character varying(50) NOT NULL,
   email character varying(254) NOT NULL,
   user_password character(32) NOT NULL,
-  avatar_url character varying(1024) NOT NULL,
+  avatar_url character varying(1024) NOT NULL default '',
   gmt_created timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
   gmt_updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
   gmt_deleted timestamp without time zone
