@@ -205,8 +205,9 @@ public class RepositoryController {
         if (repository.generateUrl(username)) {
             repositoryService.updateById(repository);
         }
+        var userPO = userService.getById(repository.getUserId());
         return new RepositoryVO(
-                repository, userService.getById(repository.getUserId()).getUsername());
+                repository, userPO.getUsername(), userPO.getAvatarUrl());
     }
 
     @PostMapping(ApiPathConstant.REPOSITORY_UPDATE_REPOSITORY_API_PATH)
@@ -259,11 +260,13 @@ public class RepositoryController {
         if (!repositoryService.updateById(new RepositoryPO(repository))) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_UPDATE_FAILED, repository);
         }
+        var userPO = userService.getById(userId);
         return ResponseEntity.ok()
                 .body(
                         new RepositoryVO(
                                 repositoryService.getById(id),
-                                userService.getById(userId).getUsername()));
+                                userPO.getUsername(),
+                                userPO.getAvatarUrl()));
     }
 
     @GetMapping(ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH)
@@ -623,7 +626,7 @@ public class RepositoryController {
                             if (repositoryPO.generateUrl(userPO.getUsername())) {
                                 repositoryService.updateById(repositoryPO);
                             }
-                            return new RepositoryVO(repositoryPO, userPO.getUsername());
+                            return new RepositoryVO(repositoryPO, userPO.getUsername(), userPO.getAvatarUrl());
                         })
                         .toList());
     }
