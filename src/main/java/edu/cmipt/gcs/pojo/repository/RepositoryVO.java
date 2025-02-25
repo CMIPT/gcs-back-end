@@ -9,12 +9,13 @@ public record RepositoryVO(
         @Schema(description = "Whether or Not Private Repo") Boolean isPrivate,
         @Schema(description = "Owner ID") String userId,
         @Schema(description = "Owner name") String username,
+        @Schema(description = "Avatar url") String avatarUrl,
         @Schema(description = "Star Count") Integer star,
         @Schema(description = "Fork Count") Integer fork,
         @Schema(description = "Watcher Count") Integer watcher,
         @Schema(description = "HTTPS URL") String httpsUrl,
         @Schema(description = "SSH URL") String sshUrl) {
-    public RepositoryVO(RepositoryPO repositoryPO, String username) {
+    public RepositoryVO(RepositoryPO repositoryPO, String username, String avatarUrl) {
         this(
                 repositoryPO.getId().toString(),
                 repositoryPO.getRepositoryName(),
@@ -22,6 +23,7 @@ public record RepositoryVO(
                 repositoryPO.getIsPrivate(),
                 repositoryPO.getUserId().toString(),
                 username,
+                avatarUrl,
                 repositoryPO.getStar(),
                 repositoryPO.getFork(),
                 repositoryPO.getWatcher(),
