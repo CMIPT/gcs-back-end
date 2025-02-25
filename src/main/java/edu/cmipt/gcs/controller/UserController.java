@@ -141,7 +141,7 @@ public class UserController {
             Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
             wrapper.eq("id", idInToken);
         } else {
-            wrapper.eq(userType, user);
+            wrapper.apply("LOWER(" + userType + ") = LOWER({0})", user);
         }
         if (!userService.exists(wrapper)) {
             throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user);
