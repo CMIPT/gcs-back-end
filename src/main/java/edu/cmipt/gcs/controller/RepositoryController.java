@@ -508,13 +508,7 @@ public class RepositoryController {
                 description = "Page size",
                 required = true,
                 in = ParameterIn.QUERY,
-                schema = @Schema(implementation = Integer.class)),
-        @Parameter(
-                name = "accessToken",
-                description = "Access token",
-                required = true,
-                in = ParameterIn.HEADER,
-                schema = @Schema(implementation = String.class))
+                schema = @Schema(implementation = Integer.class))
     })
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Collaborators paged successfully"),
