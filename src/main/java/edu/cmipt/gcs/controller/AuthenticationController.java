@@ -120,8 +120,15 @@ public class AuthenticationController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<UserVO> signIn(@Validated @RequestBody UserSignInDTO user) {
+        if (user.username() == null && user.email() == null) {
+            throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+        }
         QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
-        wrapper.apply("LOWER(username) = LOWER({0})", user.username());
+        if (user.username() != null) {
+            wrapper.apply("LOWER(username) = LOWER({0})", user.username());
+        } else {
+            wrapper.apply("LOWER(email) = LOWER({0})", user.email());
+        }
         wrapper.eq("user_password", MD5Converter.convertToMD5(user.userPassword()));
         if (!userService.exists(wrapper)) {
             throw new GenericException(ErrorCodeEnum.WRONG_SIGN_IN_INFORMATION);
