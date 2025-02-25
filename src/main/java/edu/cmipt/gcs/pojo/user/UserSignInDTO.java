@@ -10,8 +10,12 @@ public record UserSignInDTO(
                         description = "Username",
                         requiredMode = Schema.RequiredMode.REQUIRED,
                         example = "admin")
-                @NotBlank
                 String username,
+        @Schema(
+                        description = "User Email",
+                        requiredMode = Schema.RequiredMode.REQUIRED,
+                        example = "user@example.com")
+                String email,
         @Schema(
                         description = "User Password (Unencrypted)",
                         requiredMode = Schema.RequiredMode.REQUIRED,
