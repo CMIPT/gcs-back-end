@@ -74,15 +74,10 @@ public class RepositoryController {
     public void createRepository(
             @Validated(CreateGroup.class) @RequestBody RepositoryDTO repository,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        String userId = JwtUtil.getId(accessToken);
-        String username = userService.getById(Long.valueOf(userId)).getUsername();
-        RepositoryPO repositoryPO = new RepositoryPO(repository, userId, username, true);
-        QueryWrapper<RepositoryPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", repositoryPO.getUserId());
-        queryWrapper.eq("repository_name", repositoryPO.getRepositoryName());
-        if (repositoryService.exists(queryWrapper)) {
-            throw new GenericException(ErrorCodeEnum.REPOSITORY_ALREADY_EXISTS, repository);
-        }
+        Long userId = Long.valueOf(JwtUtil.getId(accessToken));
+        checkRepositoryNameValidity(repository.repositoryName(), userId);
+        String username = userService.getById(userId).getUsername();
+        RepositoryPO repositoryPO = new RepositoryPO(repository, userId.toString(), username, true);
         if (!repositoryService.save(repositoryPO)) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_CREATE_FAILED, repository);
         }
@@ -179,13 +174,13 @@ public class RepositoryController {
             }
             QueryWrapper<RepositoryPO> queryWrapper = new QueryWrapper<>();
             QueryWrapper<UserPO> userQueryWrapper = new QueryWrapper<>();
-            userQueryWrapper.eq("username", username);
+            userQueryWrapper.apply("LOWER(username) = LOWER({0})", username);
             var user = userService.getOne(userQueryWrapper);
             if (user == null) {
                 throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, username);
             }
             queryWrapper.eq("user_id", user.getId());
-            queryWrapper.eq("repository_name", repositoryName);
+            queryWrapper.apply("LOWER(repository_name) = LOWER({0})", repositoryName);
             repository = repositoryService.getOne(queryWrapper);
         } else {
             repository = repositoryService.getById(id);
@@ -195,7 +190,11 @@ public class RepositoryController {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage);
         }
         String idInToken = JwtUtil.getId(accessToken);
-        if (repository.getIsPrivate() && !idInToken.equals(repository.getUserId().toString())) {
+        if (repository.getIsPrivate() && !idInToken.equals(repository.getUserId().toString()) &&
+                userCollaborateRepositoryService.getOne(
+                        new QueryWrapper<UserCollaborateRepositoryPO>()
+                                .eq("collaborator_id", idInToken)
+                                .eq("repository_id", repository.getId())) == null) {
             logger.info(
                     "User[{}] tried to get repository of user[{}]",
                     idInToken,
@@ -308,7 +307,7 @@ public class RepositoryController {
             @RequestParam("userId") Long userId) {
         QueryWrapper<RepositoryPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", userId);
-        queryWrapper.eq("repository_name", repositoryName);
+        queryWrapper.apply("LOWER(repository_name) = LOWER({0})", repositoryName);
         if (repositoryService.exists(queryWrapper)) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_ALREADY_EXISTS, repositoryName);
         }
@@ -601,7 +600,7 @@ public class RepositoryController {
             userPO = userService.getById(userId);
         } else {
             QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("username", username);
+            queryWrapper.apply("LOWER(username) = LOWER({0})", username);
             userPO = userService.getOne(queryWrapper);
         }
         if (userPO == null) {

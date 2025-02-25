@@ -123,8 +123,8 @@ public class JwtFilter extends OncePerRequestFilter {
                     ApiPathConstant.AUTHENTICATION_SEND_EMAIL_VERIFICATION_CODE_API_PATH
         ),
         "POST", Set.of(
-                    ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH,
                     ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH,
+                    ApiPathConstant.USER_CREATE_USER_API_PATH,
                     ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH,
                     ApiPathConstant
                             .USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH

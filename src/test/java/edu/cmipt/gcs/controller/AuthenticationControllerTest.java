@@ -50,8 +50,8 @@ public class AuthenticationControllerTest {
      */
     @Test
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    public void testSignUpValid() throws Exception {
-        String userSignUpDTO =
+    public void testCreateUserValid() throws Exception {
+        String userCreateDTO =
                 """
                 {
                     "username": "%s",
@@ -66,7 +66,7 @@ public class AuthenticationControllerTest {
                                 TestConstant.USER_PASSWORD,
                                 EmailVerificationCodeUtil.generateVerificationCode(
                                         TestConstant.EMAIL));
-        String otherUserSignUpDTO =
+        String otherUserCreateDTO =
                 """
                 {
                     "username": "%s",
@@ -82,14 +82,14 @@ public class AuthenticationControllerTest {
                                 EmailVerificationCodeUtil.generateVerificationCode(
                                         TestConstant.OTHER_EMAIL));
         mvc.perform(
-                        post(ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH)
+                        post(ApiPathConstant.USER_CREATE_USER_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(userSignUpDTO))
+                                .content(userCreateDTO))
                 .andExpect(status().isOk());
         mvc.perform(
-                        post(ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH)
+                        post(ApiPathConstant.USER_CREATE_USER_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(otherUserSignUpDTO))
+                                .content(otherUserCreateDTO))
                 .andExpect(status().isOk());
     }
 
@@ -208,8 +208,8 @@ public class AuthenticationControllerTest {
     }
 
     @Test
-    public void testSignUpInvalid() throws Exception {
-        String invalidUserSignUpDTO =
+    public void testCreateUserInvalid() throws Exception {
+        String invalidUserCreateDTO =
                 """
                 {
                     "username": "test",
@@ -218,9 +218,9 @@ public class AuthenticationControllerTest {
                 }
                 """;
         mvc.perform(
-                        post(ApiPathConstant.AUTHENTICATION_SIGN_UP_API_PATH)
+                        post(ApiPathConstant.USER_CREATE_USER_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(invalidUserSignUpDTO))
+                                .content(invalidUserCreateDTO))
                 .andExpectAll(
                         status().isBadRequest(),
                         jsonPath("$.code", is(ErrorCodeEnum.VALIDATION_ERROR.ordinal())));
