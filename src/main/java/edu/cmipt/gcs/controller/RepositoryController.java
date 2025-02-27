@@ -189,9 +189,9 @@ public class RepositoryController {
         if (repository == null) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage);
         }
-        String idInToken = JwtUtil.getId(accessToken);
+        Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
         if (repository.getIsPrivate()
-                && !idInToken.equals(repository.getUserId().toString())
+                && !idInToken.equals(repository.getUserId())
                 && userCollaborateRepositoryService.getOne(
                                 new QueryWrapper<UserCollaborateRepositoryPO>()
                                         .eq("collaborator_id", idInToken)
