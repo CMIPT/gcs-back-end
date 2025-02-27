@@ -105,9 +105,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorVO> handleException(Exception e, HttpServletRequest request) {
-        logger.error(e.getMessage());
-        // TODO: use logger to log the exception
-        e.printStackTrace();
+        logger.error("Internal server error: ", e);
         return handleGenericException(new GenericException(ErrorCodeEnum.SERVER_ERROR), request);
     }
 
