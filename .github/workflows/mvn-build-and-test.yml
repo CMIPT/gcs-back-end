@@ -1,0 +1,94 @@
+name: Maven Build and Test
+
+on:
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  maven-build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      posgres:
+        image: postgres:14
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:6
+        ports:
+          - 6379:6379
+    steps:
+      - name: Setup jdk17 and maven
+        uses: s4u/setup-maven-action@v1.18.0
+        with:
+          java-version: 17
+          checkout-submodules: true
+
+      - name: Create tables
+        run: |
+          for file in $(ls database/init/*.sql); do
+            psql -f $file postgresql://postgres:postgres@localhost:5432/postgres;
+          done
+
+      - name: Initialize ssh
+        run: |
+          ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N ""
+          ssh-keyscan -H localhost >> ~/.ssh/known_hosts
+
+      - name: Initialize gitolite with git user
+        run: |
+          sudo useradd -m git
+          sudo cp -r 3rdparty/gitolite /home/git/gitolite
+          sudo chown -R git:git /home/git/gitolite
+          sudo -u git mkdir -p /home/git/bin
+          sudo -u git /home/git/gitolite/install -to /home/git/bin
+          sudo cp ~/.ssh/id_rsa.pub /home/git/root.pub
+          sudo chown git:git /home/git/root.pub
+          sudo -u git /home/git/bin/gitolite setup -pk /home/git/root.pub
+          git clone git@localhost:gitolite-admin ~/gitolite-admin
+          mkdir -p ~/gitolite-admin/conf/gitolite.d/user
+          mkdir -p ~/gitolite-admin/conf/gitolite.d/repository
+          echo "
+          @admin = root
+          repo gitolite-admin
+              RW+ = @admin
+          repo testing
+              RW+ = @admin
+          include \"gitolite.d/user/*.conf\"
+          include \"gitolite.d/repository/*.conf\"
+          @all_public_repo = testing
+          repo @all_public_repo
+          R = @all" > ~/gitolite-admin/conf/gitolite.conf
+          git -C ~/gitolite-admin config user.name 'root'
+          git -C ~/gitolite-admin config user.email 'root@localhost'
+          git -C ~/gitolite-admin commit -am 'Init the gitolite-admin'
+          git -C ~/gitolite-admin push
+
+      - name: Test with maven
+        run: |
+          mvn -q clean test
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/postgres
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: postgres
+          SPRING_REDIS_HOST: localhost
+          SPRING_REDIS_PORT: 6379
+          GIT_SERVER_DOMAIN: localhost
+          GIT_SERVER_PORT: 22
+          GIT_SERVER_USERNAME: git
+          GIT_SERVER_HOME: /home/git
+          GIT_SERVER_ADMIN_REPOSITORY: /home/runner/gitolite-admin
+          GCS_LOGGING_DIRECTORY: /home/runner/gcs-logs
+          GCS_LOGGING_FILE_MAX_SIZE: 10MB
+          GCS_LOGGING_MAX_HISTORY: 30
+          GCS_LOGGING_TOTAL_SIZE_CAP: 1GB
+          SPRING_MAIL_HOST: smtp.neverused.com
+          SPRING_MAIL_PORT: 465
+          SPRING_MAIL_USERNAME: neverused
+          SPRING_MAIL_PASSWORD: neverused
+          SPRING_MAIL_PROTOCOL: smtps
+          SPRING_MAIL_DEFAULT_ENCODING: UTF-8
+          FRONT_END_URL: http://neverused.com
+          MD5_SALT: neverused

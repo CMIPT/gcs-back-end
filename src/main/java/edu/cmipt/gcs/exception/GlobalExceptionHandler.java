@@ -62,6 +62,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorVO> handleHttpMessageNotReadableException(
             HttpMessageNotReadableException e, HttpServletRequest request) {
+        logger.error("Http message not readable: ", e);
         return handleGenericException(
                 new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR), request);
     }
@@ -97,6 +98,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(JsonParseException.class)
     public ResponseEntity<ErrorVO> handleJsonParseException(
             JsonParseException e, HttpServletRequest request) {
+        logger.error("Json parse exception: ", e);
         GenericException exception = new GenericException(e.getMessage());
         exception.setCode(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
         return handleGenericException(exception, request);

@@ -143,7 +143,6 @@ public class UserControllerTest {
 
     @Test
     public void testUpdateUserValid() throws Exception {
-        TestConstant.USERNAME += new Date().getTime() + "new";
         mvc.perform(
                         post(ApiPathConstant.USER_UPDATE_USER_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -152,13 +151,13 @@ public class UserControllerTest {
                                         """
                                         {
                                             "id": "%s",
-                                            "username": "%s"
+                                            "avatarUrl": "%s"
                                         }
                                         """
-                                                .formatted(TestConstant.ID, TestConstant.USERNAME)))
+                                                .formatted(TestConstant.ID, TestConstant.AVATAR_URL)))
                 .andExpectAll(
                         status().isOk(),
-                        jsonPath("$.username", is(TestConstant.USERNAME)),
+                        jsonPath("$.avatarUrl", is(TestConstant.AVATAR_URL)),
                         jsonPath("$.id").isString());
     }
 
@@ -173,10 +172,10 @@ public class UserControllerTest {
                                         """
                                         {
                                             "id": "%s",
-                                            "username": "%s"
+                                            "avatarUrl": "%s"
                                         }
                                         """
-                                                .formatted(otherID, TestConstant.USERNAME)))
+                                                .formatted(otherID, TestConstant.AVATAR_URL)))
                 .andExpectAll(
                         status().isForbidden(),
                         content()
@@ -236,9 +235,19 @@ public class UserControllerTest {
     public void testUpdateUserPasswordWithOldPasswordInvalid() throws Exception {
         mvc.perform(
                         post(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH)
-                                .param("id", TestConstant.ID)
-                                .param("oldPassword", TestConstant.USER_PASSWORD + "wrong")
-                                .param("newPassword", TestConstant.USER_PASSWORD + "new"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {
+                                            "id": "%s",
+                                            "oldPassword": "%s",
+                                            "newPassword": "%s"
+                                        }
+                                        """
+                                                .formatted(
+                                                        TestConstant.ID,
+                                                        TestConstant.USER_PASSWORD + "wrong",
+                                                        TestConstant.USER_PASSWORD + "new")))
                 .andExpectAll(
                         status().isBadRequest(),
                         content()
@@ -351,6 +360,6 @@ public class UserControllerTest {
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                                 .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN)
                                 .param("id", TestConstant.ID))
-                .andExpectAll(status().isOk());
+                .andExpectAll(status().isNotImplemented());
     }
 }
