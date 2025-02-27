@@ -1,9 +1,11 @@
 name: Google Java Style Format
 
 on:
-  pull_request:
-    branches: 
-      - master
+  workflow_run:
+    workflows:
+      - Maven Build and Test
+    types:
+      - completed
 
 jobs:
   java-formatting:
