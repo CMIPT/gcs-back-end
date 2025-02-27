@@ -10,7 +10,7 @@
     </parent>
     <groupId>edu.cmipt</groupId>
     <artifactId>gcs</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <name>gcs</name>
     <description>The back end of git center server</description>
     <url/>
@@ -145,6 +145,7 @@
     </dependencies>
 
     <build>
+        <finalName>gcs-back-end</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
