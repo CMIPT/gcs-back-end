@@ -54,7 +54,7 @@ public class GitoliteUtil {
                 }
             }
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            logger.error("Failed during writing user configuration: ", e);
             return false;
         }
         logger.error("Can not find @all_public_repo in gitolite.conf");

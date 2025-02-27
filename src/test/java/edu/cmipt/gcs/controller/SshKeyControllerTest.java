@@ -28,6 +28,9 @@ import org.springframework.core.Ordered;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -39,8 +42,18 @@ public class SshKeyControllerTest {
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public void testUploadSshKeyValid() throws Exception {
         for (int i = 0; i < TestConstant.SSH_KEY_SIZE; i++) {
-            String name = "My SSH Key " + i;
-            String publicKey = "This is my public key " + i;
+            String name = "GCS_TEST_SSH_TMP_" + i;
+            String publicKey = null;
+            // generate ssh key pair to /tmp and read the public key, then delete the key pair
+            ProcessBuilder processBuilder =
+                    new ProcessBuilder("ssh-keygen", "-t", "rsa", "-f", "/tmp/" + name, "-N", "");
+            if (processBuilder.start().waitFor() == 0) {
+                publicKey = Files.readAllLines(Paths.get("/tmp/" + name + ".pub")).get(0);
+                new ProcessBuilder("rm", "/tmp/" + name, "/tmp/" + name + ".pub").start().waitFor();
+            }
+            if (publicKey == null) {
+                throw new Exception("Failed to generate ssh key pair");
+            }
             mockMvc.perform(
                             post(ApiPathConstant.SSH_KEY_UPLOAD_SSH_KEY_API_PATH)
                                     .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)

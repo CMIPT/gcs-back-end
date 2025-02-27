@@ -12,6 +12,7 @@ import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.user.UserCreateDTO;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.pojo.user.UserUpdateDTO;
+import edu.cmipt.gcs.pojo.user.UserUpdatePasswordDTO;
 import edu.cmipt.gcs.pojo.user.UserVO;
 import edu.cmipt.gcs.service.UserService;
 import edu.cmipt.gcs.util.EmailVerificationCodeUtil;
@@ -197,7 +198,6 @@ public class UserController {
         return ResponseEntity.ok().body(userVO);
     }
 
-    // TODO: use request body to pass the parameters
     @PostMapping(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH)
     @Operation(
             summary = "Update user password",
@@ -210,44 +210,23 @@ public class UserController {
                 description = "User password update failed",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    @Parameters({
-        @Parameter(
-                name = "id",
-                description = "User ID",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = String.class)),
-        @Parameter(
-                name = "oldPassword",
-                description = "Old password",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = String.class)),
-        @Parameter(
-                name = "newPassword",
-                description = "New password",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = String.class))
-    })
     public void updateUserPasswordWithOldPassword(
-            @RequestParam("id") Long id,
-            @RequestParam("oldPassword") String oldPassword,
-            @RequestParam("newPassword") String newPassword) {
+            @Validated @RequestBody UserUpdatePasswordDTO user) {
         UpdateWrapper<UserPO> wrapper = new UpdateWrapper<UserPO>();
-        wrapper.eq("id", id);
-        wrapper.eq("user_password", MD5Converter.convertToMD5(oldPassword));
+        wrapper.eq("id", Long.valueOf(user.id()));
+        wrapper.eq("user_password", MD5Converter.convertToMD5(user.oldPassword()));
         if (!userService.exists(wrapper)) {
             throw new GenericException(ErrorCodeEnum.WRONG_UPDATE_PASSWORD_INFORMATION);
         }
-        checkPasswordValidity(newPassword);
-        wrapper.set("user_password", MD5Converter.convertToMD5(newPassword));
+        checkPasswordValidity(user.newPassword());
+        wrapper.set("user_password", MD5Converter.convertToMD5(user.newPassword()));
         if (!userService.update(wrapper)) {
-            throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, newPassword);
+            throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user);
         }
-        JwtUtil.blacklistToken(id);
+        JwtUtil.blacklistToken(Long.valueOf(user.id()));
     }
 
+    // TODO: use request body to pass the parameters
     @PostMapping(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH)
     @Operation(
             summary = "Update user password with email verification code",
