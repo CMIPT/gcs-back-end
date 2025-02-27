@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM ubuntu:latest
 
 RUN apt-get update && apt-get install -y sudo openssh-server git openjdk-17-jre-headless nodejs
 
@@ -13,7 +13,7 @@ ARG GITOLITE_ADMIN_REPOSITORY_USER_NAME=root
 ARG GITOLITE_ADMIN_REPOSITORY_USER_EMAIL=root@localhost
 ARG GITOLITE_PATH=./3rdparty/gitolite
 ARG JAVA_WORKING_DIRECTORY=/gcs
-ARG TARGET_JAR_PATH=./target/gcs.jar
+ARG TARGET_JAR_PATH=./target/gcs-back-end.jar
 
 RUN useradd -m "$GIT_USER_NAME" && echo "$GIT_USER_NAME:$GIT_USER_PASSWORD" | chpasswd
 
@@ -54,15 +54,18 @@ EXPOSE 22 8080
 
 WORKDIR "$JAVA_WORKING_DIRECTORY"
 
-COPY "$TARGET_JAR_PATH" "gcs.jar"
+RUN mkdir -p .output
+COPY "$TARGET_JAR_PATH" .output* .output
 
 RUN echo "\
+    if [ -f $JAVA_WORKING_DIRECTORY/.output/gcs-back-end.jar ]; then mv $JAVA_WORKING_DIRECTORY/.output/gcs-back-end.jar $JAVA_WORKING_DIRECTORY/gcs-back-end.jar; fi && \
     service ssh restart && \
     git -C $GITOLITE_ADMIN_REPOSITORY fetch && \
     git -C $GITOLITE_ADMIN_REPOSITORY reset --hard origin/master && \
     cp ~/.ssh/id_rsa.pub $GITOLITE_ADMIN_REPOSITORY/keydir/root.pub && \
     (git -C $GITOLITE_ADMIN_REPOSITORY commit -am 'Update root.pub' && git push -f || true) && \
-    java -jar gcs.jar" \
+    if [ -f $JAVA_WORKING_DIRECTORY/.output/server/index.mjs ]; then node /gcs/.output/server/index.mjs & fi && \
+    java -jar gcs-back-end.jar" \
     > \
     "start.sh"
 
