@@ -1,8 +1,11 @@
 name: Maven Build and Test
 
 on:
-  pull_request:
-    branches: [ master, develop ]
+  workflow_run:
+    workflows:
+      - Google Java Style Format
+    types:
+      - completed
 
 jobs:
   maven-build-and-test:

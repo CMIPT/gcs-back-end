@@ -7,39 +7,26 @@ on:
 jobs:
   java-formatting:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.PAT }}
-
-      - name: Check for Java files
-        id: check_java_files
-        run: |
-          if [ -n "$(find . -name '*.java' -print -quit)" ]; then
-            echo "java_files_exist=true" >> $GITHUB_OUTPUT
-          else
-            echo "java_files_exist=false" >> $GITHUB_OUTPUT
-          fi
 
       - name: Set up openjdk-17
         uses: actions/setup-java@v4
-        if: steps.check_java_files.outputs.java_files_exist == 'true'
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Google Java Style Format
-        if: steps.check_java_files.outputs.java_files_exist == 'true'
-        uses: axel-op/googlejavaformat-action@v3
+      - name: Format
+        uses: axel-op/googlejavaformat-action@v4
         with:
-          # --aosp: 4-space indentation
           args: "--replace --aosp"
-          # Can not auto commit, we'll commit manually
           skip-commit: true
 
       - name: Commit Changes
-        if: steps.check_java_files.outputs.java_files_exist == 'true'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Apply Google Java Style Format"
