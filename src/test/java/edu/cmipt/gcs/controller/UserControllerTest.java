@@ -154,7 +154,8 @@ public class UserControllerTest {
                                             "avatarUrl": "%s"
                                         }
                                         """
-                                                .formatted(TestConstant.ID, TestConstant.AVATAR_URL)))
+                                                .formatted(
+                                                        TestConstant.ID, TestConstant.AVATAR_URL)))
                 .andExpectAll(
                         status().isOk(),
                         jsonPath("$.avatarUrl", is(TestConstant.AVATAR_URL)),

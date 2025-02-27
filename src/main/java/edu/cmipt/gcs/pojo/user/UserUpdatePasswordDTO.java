@@ -10,23 +10,19 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 @Schema(description = "User Update Password Data Transfer Object")
-public record UserUpdatePasswordDTO (
-    @Schema(description = "User ID")
-    @NotNull
-    String id,
-    @Schema(description = "Old Password")
-    @Size(
-            min = ValidationConstant.MIN_PASSWORD_LENGTH,
-            max = ValidationConstant.MAX_PASSWORD_LENGTH)
-    @NotBlank
-    @Pattern(regexp = ValidationConstant.PASSWORD_PATTERN)
-    String oldPassword,
-    @Schema(description = "New Password")
-    @Size(
-            min = ValidationConstant.MIN_PASSWORD_LENGTH,
-            max = ValidationConstant.MAX_PASSWORD_LENGTH)
-    @NotBlank
-    @Pattern(regexp = ValidationConstant.PASSWORD_PATTERN)
-    String newPassword
-) {
-}
+public record UserUpdatePasswordDTO(
+        @Schema(description = "User ID") @NotNull String id,
+        @Schema(description = "Old Password")
+                @Size(
+                        min = ValidationConstant.MIN_PASSWORD_LENGTH,
+                        max = ValidationConstant.MAX_PASSWORD_LENGTH)
+                @NotBlank
+                @Pattern(regexp = ValidationConstant.PASSWORD_PATTERN)
+                String oldPassword,
+        @Schema(description = "New Password")
+                @Size(
+                        min = ValidationConstant.MIN_PASSWORD_LENGTH,
+                        max = ValidationConstant.MAX_PASSWORD_LENGTH)
+                @NotBlank
+                @Pattern(regexp = ValidationConstant.PASSWORD_PATTERN)
+                String newPassword) {}

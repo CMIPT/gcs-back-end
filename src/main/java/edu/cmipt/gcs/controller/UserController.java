@@ -210,7 +210,8 @@ public class UserController {
                 description = "User password update failed",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public void updateUserPasswordWithOldPassword(@Validated @RequestBody UserUpdatePasswordDTO user) {
+    public void updateUserPasswordWithOldPassword(
+            @Validated @RequestBody UserUpdatePasswordDTO user) {
         UpdateWrapper<UserPO> wrapper = new UpdateWrapper<UserPO>();
         wrapper.eq("id", Long.valueOf(user.id()));
         wrapper.eq("user_password", MD5Converter.convertToMD5(user.oldPassword()));
