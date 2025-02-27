@@ -197,9 +197,19 @@ public class UserControllerTest {
     public void testUpdateUserPasswordWithOldPasswordValid() throws Exception {
         mvc.perform(
                         post(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH)
-                                .param("id", TestConstant.ID)
-                                .param("oldPassword", TestConstant.USER_PASSWORD)
-                                .param("newPassword", TestConstant.USER_PASSWORD + "new"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {
+                                            "id": "%s",
+                                            "oldPassword": "%s",
+                                            "newPassword": "%s"
+                                        }
+                                        """
+                                                .formatted(
+                                                        TestConstant.ID,
+                                                        TestConstant.USER_PASSWORD,
+                                                        TestConstant.USER_PASSWORD + "new")))
                 .andExpectAll(status().isOk());
         TestConstant.USER_PASSWORD += "new";
         String userSignInDTO =
