@@ -5,6 +5,7 @@ import java.util.Date;
 public class TestConstant {
     public static String ID;
     public static String USERNAME = new Date().getTime() + "";
+    public static String AVATAR_URL = "https://www.example.com/avatar.jpg";
     public static String USER_PASSWORD = "123456";
     public static String EMAIL = USERNAME + "@cmipt.edu";
     public static String ACCESS_TOKEN;
