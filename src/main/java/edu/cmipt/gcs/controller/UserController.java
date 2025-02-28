@@ -1,6 +1,5 @@
 package edu.cmipt.gcs.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 
 import edu.cmipt.gcs.constant.ApiPathConstant;
@@ -172,7 +171,7 @@ public class UserController {
         if (!userService.updateById(new UserPO(user))) {
             throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user);
         }
-        UserVO userVO = new UserVO(userService.getById(Long.valueOf(user.id())));
+        var userVO = new UserVO(userService.getById(Long.valueOf(user.id())));
         return ResponseEntity.ok().body(userVO);
     }
 
@@ -190,7 +189,7 @@ public class UserController {
     })
     public void updateUserPasswordWithOldPassword(
             @Validated @RequestBody UserUpdatePasswordDTO user) {
-        UpdateWrapper<UserPO> wrapper = new UpdateWrapper<UserPO>();
+        var wrapper = new UpdateWrapper<UserPO>();
         wrapper.eq("id", Long.valueOf(user.id()));
         wrapper.eq("user_password", MD5Converter.convertToMD5(user.oldPassword()));
         if (!userService.exists(wrapper)) {
@@ -249,7 +248,7 @@ public class UserController {
             throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, email);
         }
         checkPasswordValidity(newPassword);
-        UpdateWrapper<UserPO> wrapper = new UpdateWrapper<UserPO>();
+        var wrapper = new UpdateWrapper<UserPO>();
         wrapper.apply("LOWER(email) = LOWER({0})", email);
         wrapper.set("user_password", MD5Converter.convertToMD5(newPassword));
         if (!userService.update(wrapper)) {

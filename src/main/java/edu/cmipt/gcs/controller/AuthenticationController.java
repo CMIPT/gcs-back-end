@@ -27,13 +27,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import jakarta.mail.internet.MimeMessage;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -86,13 +84,13 @@ public class AuthenticationController {
                                     "{NotBlank.authenticationController#sendEmailVerificationCode.email}")
                     String email) {
         String code = EmailVerificationCodeUtil.generateVerificationCode(email);
-        MimeMessage message = javaMailSender.createMimeMessage();
+        var mimeMessage = javaMailSender.createMimeMessage();
         try {
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            helper.setFrom(fromEmail);
-            helper.setTo(email);
-            helper.setSubject(MessageSourceUtil.getMessage("EMAIL_VERIFICATION_CODE_SUBJECT"));
-            helper.setText(
+            var mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
+            mimeMessageHelper.setFrom(fromEmail);
+            mimeMessageHelper.setTo(email);
+            mimeMessageHelper.setSubject(MessageSourceUtil.getMessage("EMAIL_VERIFICATION_CODE_SUBJECT"));
+            mimeMessageHelper.setText(
                     MessageSourceUtil.getMessage(
                             "EMAIL_VERIFICATION_CODE_CONTENT",
                             code,
@@ -100,7 +98,7 @@ public class AuthenticationController {
         } catch (Exception e) {
             throw new GenericException(ErrorCodeEnum.SERVER_ERROR, e);
         }
-        javaMailSender.send(message);
+        javaMailSender.send(mimeMessage);
     }
 
     @PostMapping(ApiPathConstant.AUTHENTICATION_SIGN_IN_API_PATH)
@@ -123,7 +121,7 @@ public class AuthenticationController {
         if (user.username() == null && user.email() == null) {
             throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
         }
-        QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
+        var wrapper = new QueryWrapper<UserPO>();
         if (user.username() != null) {
             wrapper.apply("LOWER(username) = LOWER({0})", user.username());
         } else {
@@ -133,8 +131,8 @@ public class AuthenticationController {
         if (!userService.exists(wrapper)) {
             throw new GenericException(ErrorCodeEnum.WRONG_SIGN_IN_INFORMATION);
         }
-        UserVO userVO = new UserVO(userService.getOne(wrapper));
-        HttpHeaders headers = JwtUtil.generateHeaders(userVO.id());
+        var userVO = new UserVO(userService.getOne(wrapper));
+        var headers = JwtUtil.generateHeaders(userVO.id());
         return ResponseEntity.ok().headers(headers).body(userVO);
     }
 
@@ -178,7 +176,7 @@ public class AuthenticationController {
     })
     public ResponseEntity<Void> refreshToken(
             @RequestHeader(HeaderParameter.REFRESH_TOKEN) String refreshToken) {
-        HttpHeaders headers = JwtUtil.generateHeaders(JwtUtil.getId(refreshToken), false);
+        var headers = JwtUtil.generateHeaders(JwtUtil.getId(refreshToken), false);
         return ResponseEntity.ok().headers(headers).build();
     }
 }

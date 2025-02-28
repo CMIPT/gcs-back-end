@@ -213,7 +213,7 @@ public class SshKeyController {
             @RequestParam("id") Long userId,
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size) {
-        QueryWrapper<SshKeyPO> wrapper = new QueryWrapper<>();
+        var wrapper = new QueryWrapper<SshKeyPO>();
         wrapper.eq("user_id", userId);
         var iPage = sshKeyService.page(new Page<>(page, size), wrapper);
         return new PageVO<>(
@@ -258,7 +258,7 @@ public class SshKeyController {
                     String name,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-        QueryWrapper<SshKeyPO> wrapper = new QueryWrapper<>();
+        var wrapper = new QueryWrapper<SshKeyPO>();
         wrapper.eq("user_id", idInToken);
         wrapper.eq("name", name);
         if (sshKeyService.exists(wrapper)) {
@@ -324,7 +324,7 @@ public class SshKeyController {
             throw new GenericException(ErrorCodeEnum.SSH_KEY_PUBLIC_KEY_INVALID, publicKey);
         }
         Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-        QueryWrapper<SshKeyPO> wrapper = new QueryWrapper<>();
+        var wrapper = new QueryWrapper<SshKeyPO>();
         wrapper.eq("user_id", idInToken);
         wrapper.eq("public_key", publicKey);
         if (sshKeyService.exists(wrapper)) {
