@@ -30,12 +30,10 @@ public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
-     * Handles MethodArgumentNotValidException
+     * Handle MethodArgumentNotValidException
      *
      * <p>This method is used to handle the MethodArgumentNotValidException, which is thrown when
      * the validation of the request body fails.
-     *
-     * @param e MethodArgumentNotValidException
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorVO> handleMethodArgumentNotValidException(
@@ -47,12 +45,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handles ConstraintViolationException
+     * Handle ConstraintViolationException
      *
      * <p>This method is used to handle the ConstraintViolationException, which is thrown when the
      * validation of the path variables or request parameters fails.
-     *
-     * @param e ConstraintViolationException
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorVO> handleConstraintViolationException(
@@ -61,6 +57,12 @@ public class GlobalExceptionHandler {
                 e.getConstraintViolations().iterator().next().getMessage(), request);
     }
 
+    /**
+     * Handle HttpMessageNotReadableException
+     * 
+     * <p>This method is used to handle the HttpMessageNotReadableException, which is thrown when
+     * the request body is not readable. For example, when the request body is not a valid JSON.
+     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorVO> handleHttpMessageNotReadableException(
             HttpMessageNotReadableException e, HttpServletRequest request) {
@@ -70,13 +72,11 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handles ConversionFailedException
+     * Handle ConversionFailedException
      *
      * <p>This method is used to handle the ConversionFailedException, which is thrown when the
      * conversion of the request fails, such as converting a string to an integer or a string to an
      * enum.
-     *
-     * @param e ConversionFailedException
      */
     @ExceptionHandler(ConversionFailedException.class)
     public ResponseEntity<ErrorVO> handleConversionFailedException(
@@ -86,6 +86,12 @@ public class GlobalExceptionHandler {
                 new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR), request);
     }
 
+    /**
+     * Handle GenericException
+     *
+     * <p>This method is used to handle the GenericException, which is thrown when an error occurs
+     * during the execution of the program.
+     */
     @ExceptionHandler(GenericException.class)
     public ResponseEntity<ErrorVO> handleGenericException(
             GenericException e, HttpServletRequest request) {
@@ -135,8 +141,6 @@ public class GlobalExceptionHandler {
      *
      * <p>This method is used to handle the JsonParseException, which is thrown when the JSON
      * parsing fails.
-     *
-     * @param e JsonParseException
      */
     @ExceptionHandler(JsonParseException.class)
     public ResponseEntity<ErrorVO> handleJsonParseException(
@@ -145,6 +149,12 @@ public class GlobalExceptionHandler {
         return handleGenericException(new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR), request);
     }
 
+    /**
+     * Handle Exception
+     *
+     * <p>This method is used to handle the Exception, which is thrown when an unexpected error
+     * occurs.
+     */
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorVO> handleException(Exception e, HttpServletRequest request) {
