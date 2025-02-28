@@ -17,7 +17,6 @@ import lombok.Setter;
  * @author Kaiser
  */
 @Getter
-@Setter
 public class GenericException extends RuntimeException {
     private ErrorCodeEnum code;
 

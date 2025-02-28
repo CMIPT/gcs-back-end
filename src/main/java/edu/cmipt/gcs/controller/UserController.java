@@ -7,6 +7,7 @@ import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.ValidationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.user.UserCreateDTO;
@@ -112,11 +113,11 @@ public class UserController {
                 schema = @Schema(implementation = String.class)),
         @Parameter(
                 name = "userType",
-                description = "User's Type. The value can be 'id', 'username', 'email', or 'token'",
-                example = "username",
+                description = "User's Type. The value can be 'ID', 'USERNAME', 'EMAIL', or 'TOKEN'",
+                example = "USERNAME",
                 required = true,
                 in = ParameterIn.QUERY,
-                schema = @Schema(implementation = String.class))
+                schema = @Schema(implementation = UserQueryTypeEnum.class))
     })
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "User information returned successfully"),
@@ -127,37 +128,14 @@ public class UserController {
     })
     public UserVO getUser(
             @RequestParam(name = "user", required = false) String user,
-            @RequestParam("userType") String userType,
+            @RequestParam("userType") UserQueryTypeEnum userType,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        // TODO:
-        // Use a cutomized type to replace the String type
-        if (!userType.equals("id")
-                && !userType.equals("username")
-                && !userType.equals("email")
-                && !userType.equals("token")) {
-            throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+        var wrapper = UserQueryTypeEnum.getQueryWrapper(userType, user, accessToken);
+        var userPO = userService.getOne(wrapper);
+        if (userPO == null) {
+            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user != null ? user : accessToken);
         }
-        QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
-        if (userType.equals("id")) {
-            if (user == null) {
-                throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-            }
-            try {
-                Long id = Long.valueOf(user);
-                wrapper.eq("id", id);
-            } catch (Exception e) {
-                throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-            }
-        } else if (userType.equals("token")) {
-            Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-            wrapper.eq("id", idInToken);
-        } else {
-            wrapper.apply("LOWER(" + userType + ") = LOWER({0})", user);
-        }
-        if (!userService.exists(wrapper)) {
-            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user);
-        }
-        return new UserVO(userService.getOne(wrapper));
+        return new UserVO(userPO);
     }
 
     @PostMapping(ApiPathConstant.USER_UPDATE_USER_API_PATH)

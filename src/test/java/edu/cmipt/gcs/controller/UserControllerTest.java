@@ -13,6 +13,7 @@ import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.util.EmailVerificationCodeUtil;
 import edu.cmipt.gcs.util.MessageSourceUtil;
 
@@ -48,7 +49,7 @@ public class UserControllerTest {
                         get(ApiPathConstant.USER_GET_USER_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                                 .param("user", TestConstant.USERNAME)
-                                .param("userType", "username"))
+                                .param("userType", UserQueryTypeEnum.USERNAME.name()))
                 .andExpectAll(
                         status().isOk(),
                         jsonPath("$.username", is(TestConstant.USERNAME)),
@@ -63,7 +64,7 @@ public class UserControllerTest {
                         get(ApiPathConstant.USER_GET_USER_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                                 .param("user", invalidUsername)
-                                .param("userType", "username"))
+                                .param("userType", "USERNAME"))
                 .andExpectAll(
                         status().isNotFound(),
                         content()

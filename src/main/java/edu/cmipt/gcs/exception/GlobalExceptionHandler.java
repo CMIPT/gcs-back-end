@@ -10,10 +10,12 @@ import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.json.JsonParseException;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -67,6 +69,23 @@ public class GlobalExceptionHandler {
                 new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR), request);
     }
 
+    /**
+     * Handles ConversionFailedException
+     *
+     * <p>This method is used to handle the ConversionFailedException, which is thrown when the
+     * conversion of the request fails, such as converting a string to an integer or a string to an
+     * enum.
+     *
+     * @param e ConversionFailedException
+     */
+    @ExceptionHandler(ConversionFailedException.class)
+    public ResponseEntity<ErrorVO> handleConversionFailedException(
+            ConversionFailedException e, HttpServletRequest request) {
+        logger.error("Conversion failed: ", e);
+        return handleGenericException(
+                new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR), request);
+    }
+
     @ExceptionHandler(GenericException.class)
     public ResponseEntity<ErrorVO> handleGenericException(
             GenericException e, HttpServletRequest request) {
@@ -95,13 +114,35 @@ public class GlobalExceptionHandler {
         }
     }
 
+    /**
+     * Handle MissingServletRequestParameterException
+     *
+     * <p>This method is used to handle the MissingServletRequestParameterException, which is thrown
+     * when the required request parameter is missing.
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorVO> handleMissingServletRequestParameterException(
+            MissingServletRequestParameterException e, HttpServletRequest request) {
+        logger.error("Missing request parameter: ", e.getParameterName());
+        return handleValidationException(
+                MessageSourceUtil.getMessage(
+                        ErrorCodeEnum.VALIDATION_ERROR, e.getParameterName()),
+                request);
+    }
+
+    /**
+     * Handle JsonParseException
+     *
+     * <p>This method is used to handle the JsonParseException, which is thrown when the JSON
+     * parsing fails.
+     *
+     * @param e JsonParseException
+     */
     @ExceptionHandler(JsonParseException.class)
     public ResponseEntity<ErrorVO> handleJsonParseException(
             JsonParseException e, HttpServletRequest request) {
         logger.error("Json parse exception: ", e);
-        GenericException exception = new GenericException(e.getMessage());
-        exception.setCode(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-        return handleGenericException(exception, request);
+        return handleGenericException(new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR), request);
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

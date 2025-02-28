@@ -14,6 +14,7 @@ import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
+import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
 
@@ -70,7 +71,8 @@ public class RepositoryControllerTest {
                                         .header(
                                                 HeaderParameter.ACCESS_TOKEN,
                                                 TestConstant.ACCESS_TOKEN)
-                                        .param("id", TestConstant.ID)
+                                        .param("user", TestConstant.ID)
+                                        .param("userType", UserQueryTypeEnum.ID.name())
                                         .param("page", "1")
                                         .param("size", TestConstant.REPOSITORY_SIZE.toString()))
                         .andExpectAll(
@@ -177,7 +179,8 @@ public class RepositoryControllerTest {
         mvc.perform(
                         get(ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                                .param("id", TestConstant.ID)
+                                .param("user", TestConstant.ID)
+                                .param("userType", UserQueryTypeEnum.ID.name())
                                 .param("page", "1")
                                 .param("size", TestConstant.REPOSITORY_SIZE.toString()))
                 .andExpectAll(
@@ -196,7 +199,8 @@ public class RepositoryControllerTest {
                                 .header(
                                         HeaderParameter.ACCESS_TOKEN,
                                         TestConstant.OTHER_ACCESS_TOKEN)
-                                .param("id", TestConstant.ID)
+                                .param("user", TestConstant.ID)
+                                .param("userType", UserQueryTypeEnum.ID.name())
                                 .param("page", "1")
                                 .param("size", TestConstant.REPOSITORY_SIZE.toString()))
                 .andExpectAll(

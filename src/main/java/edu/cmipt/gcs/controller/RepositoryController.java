@@ -7,6 +7,7 @@ import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.ValidationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
 import edu.cmipt.gcs.pojo.other.PageVO;
@@ -567,16 +568,19 @@ public class RepositoryController {
                 in = ParameterIn.HEADER,
                 schema = @Schema(implementation = String.class)),
         @Parameter(
-                name = "id",
-                description = "User id",
+                name = "user",
+                description = "User's Information",
+                example = "admin",
                 required = false,
                 in = ParameterIn.QUERY,
-                schema = @Schema(implementation = Long.class)),
+                schema = @Schema(implementation = String.class)),
         @Parameter(
-                name = "username",
-                description = "Username",
-                required = false,
-                schema = @Schema(implementation = Long.class)),
+                name = "userType",
+                description = "User's Type. The value can be 'ID', 'USERNAME', 'EMAIL', or 'TOKEN'",
+                example = "USERNAME",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = UserQueryTypeEnum.class)),
         @Parameter(
                 name = "page",
                 description = "Page number",
@@ -593,30 +597,21 @@ public class RepositoryController {
                 schema = @Schema(implementation = Integer.class))
     })
     @ApiResponse(responseCode = "200", description = "User repositories paged successfully")
-    public PageVO<RepositoryVO> pageUserRepository(
-            @RequestParam(name = "id", required = false) Long userId,
-            @RequestParam(name = "username", required = false) String username,
+    public PageVO<RepositoryVO> pageRepository(
+            @RequestParam(name = "user", required = false) String user,
+            @RequestParam(name = "userType") UserQueryTypeEnum userType,
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        if (userId == null && username == null) {
-            throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-        }
-        UserPO userPO;
-        if (userId != null) {
-            userPO = userService.getById(userId);
-        } else {
-            QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.apply("LOWER(username) = LOWER({0})", username);
-            userPO = userService.getOne(queryWrapper);
-        }
+        var userQueryWrapper = UserQueryTypeEnum.getQueryWrapper(userType, user, accessToken);
+        var userPO = userService.getOne(userQueryWrapper);
         if (userPO == null) {
             throw new GenericException(
-                    ErrorCodeEnum.USER_NOT_FOUND, userId == null ? username : userId);
+                    ErrorCodeEnum.USER_NOT_FOUND, user != null ? user : accessToken);
         }
-        userId = userPO.getId();
-        QueryWrapper<RepositoryPO> wrapper = new QueryWrapper<RepositoryPO>();
-        String idInToken = JwtUtil.getId(accessToken);
+        var userId = userPO.getId();
+        var idInToken = JwtUtil.getId(accessToken);
+        var wrapper = new QueryWrapper<RepositoryPO>();
         if (!idInToken.equals(userId.toString())) {
             // the user only can see the public repositories of others
             wrapper.eq("is_private", false);
@@ -629,6 +624,8 @@ public class RepositoryController {
                 iPage.getRecords().stream()
                         .map(
                                 (RepositoryPO repositoryPO) -> {
+                                    // The server's domain or port may be updated,
+                                    // every query we try to update the url
                                     if (repositoryPO.generateUrl(userPO.getUsername())) {
                                         repositoryService.updateById(repositoryPO);
                                     }
