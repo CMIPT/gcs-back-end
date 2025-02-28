@@ -526,27 +526,32 @@ public class RepositoryController {
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        RepositoryPO repository = repositoryService.getById(repositoryId);
+        var repository = repositoryService.getById(repositoryId);
         if (repository == null) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
         }
-        Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-        Long userId = repository.getUserId();
-        var iPage =
-                userCollaborateRepositoryService.pageCollaboratorsByRepositoryId(
-                        repositoryId, new Page<>(page, size));
+        var idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+        var userId = repository.getUserId();
         // only the creator and collaborators of the repository can page collaborators of a private
         // repository
         if (repository.getIsPrivate()
                 && !idInToken.equals(userId)
-                && iPage.getRecords().stream().noneMatch(user -> user.getId().equals(idInToken))) {
-            logger.error(
+                && userCollaborateRepositoryService.getOne(
+                                new QueryWrapper<UserCollaborateRepositoryPO>()
+                                        .eq("collaborator_id", idInToken)
+                                        .eq("repository_id", repositoryId))
+                        == null) {
+            logger.info(
                     "User[{}] tried to page collaborators of repository[{}] whose creator is [{}]",
                     idInToken,
                     repositoryId,
                     userId);
-            throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+            // We return NOT_FOUND to make sure the user can't know the repository exists
+            throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
         }
+        var iPage =
+                userCollaborateRepositoryService.pageCollaboratorsByRepositoryId(
+                        repositoryId, new Page<>(page, size));
         return new PageVO<>(
                 iPage.getPages(),
                 iPage.getTotal(),
