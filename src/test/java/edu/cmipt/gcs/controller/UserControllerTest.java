@@ -198,7 +198,7 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testUpdateUserPasswordWithOldPasswordValid() throws Exception {
+    public void testUpdateUserPasswordValid() throws Exception {
         mvc.perform(
                         post(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -237,7 +237,7 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testUpdateUserPasswordWithOldPasswordInvalid() throws Exception {
+    public void testUpdateUserPasswordInvalid() throws Exception {
         mvc.perform(
                         post(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -273,16 +273,24 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testUpdateUserPasswordWithEmailVerificationCodeValid() throws Exception {
+    public void testResetUserPasswordValid() throws Exception {
         mvc.perform(
                         post(ApiPathConstant
                                         .USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH)
-                                .param("email", TestConstant.EMAIL)
-                                .param(
-                                        "emailVerificationCode",
-                                        EmailVerificationCodeUtil.generateVerificationCode(
-                                                TestConstant.EMAIL))
-                                .param("newPassword", TestConstant.USER_PASSWORD + "new"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {
+                                            "email": "%s",
+                                            "emailVerificationCode": "%s",
+                                            "newPassword": "%s"
+                                        }
+                                        """
+                                                .formatted(
+                                                        TestConstant.EMAIL,
+                EmailVerificationCodeUtil.generateVerificationCode(
+                                                                TestConstant.EMAIL),
+                                                        TestConstant.USER_PASSWORD + "new")))
                 .andExpectAll(status().isOk());
         TestConstant.USER_PASSWORD += "new";
         String userSignInDTO =
@@ -306,13 +314,23 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testUpdateUserPasswordWithEmailVerificationCodeInvalid() throws Exception {
+    public void testResetUserPasswordInvalid() throws Exception {
         mvc.perform(
                         post(ApiPathConstant
                                         .USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH)
-                                .param("email", TestConstant.EMAIL)
-                                .param("emailVerificationCode", "123456")
-                                .param("newPassword", TestConstant.USER_PASSWORD + "new"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {
+                                            "email": "%s",
+                                            "emailVerificationCode": "%s",
+                                            "newPassword": "%s"
+                                        }
+                                        """
+                                                .formatted(
+                                                        TestConstant.EMAIL,
+                                                        "123456",
+                                                        TestConstant.USER_PASSWORD + "new")))
                 .andExpectAll(
                         status().isBadRequest(),
                         content()

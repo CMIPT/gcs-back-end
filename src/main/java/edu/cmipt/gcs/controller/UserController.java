@@ -11,6 +11,7 @@ import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.user.UserCreateDTO;
 import edu.cmipt.gcs.pojo.user.UserPO;
+import edu.cmipt.gcs.pojo.user.UserResetPasswordDTO;
 import edu.cmipt.gcs.pojo.user.UserUpdateDTO;
 import edu.cmipt.gcs.pojo.user.UserUpdatePasswordDTO;
 import edu.cmipt.gcs.pojo.user.UserVO;
@@ -187,7 +188,7 @@ public class UserController {
                 description = "User password update failed",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public void updateUserPasswordWithOldPassword(
+    public void updateUserPassword(
             @Validated @RequestBody UserUpdatePasswordDTO user) {
         var wrapper = new UpdateWrapper<UserPO>();
         wrapper.eq("id", Long.valueOf(user.id()));
@@ -203,11 +204,10 @@ public class UserController {
         JwtUtil.blacklistToken(Long.valueOf(user.id()));
     }
 
-    // TODO: use request body to pass the parameters
     @PostMapping(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH)
     @Operation(
-            summary = "Update user password with email verification code",
-            description = "Update user password with email verification code",
+            summary = "Reset user's password",
+            description = "Reset user's password with email verification code",
             tags = {"User", "Post Method"})
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "User password updated successfully"),
@@ -216,43 +216,22 @@ public class UserController {
                 description = "User password update failed",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    @Parameters({
-        @Parameter(
-                name = "email",
-                description = "Email",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = String.class)),
-        @Parameter(
-                name = "emailVerificationCode",
-                description = "Email verification code",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = String.class)),
-        @Parameter(
-                name = "newPassword",
-                description = "New password",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = String.class))
-    })
-    public void updateUserPasswordWithEmailVerificationCode(
-            @RequestParam("email") String email,
-            @RequestParam("emailVerificationCode") String emailVerificationCode,
-            @RequestParam("newPassword") String newPassword) {
-        if (!EmailVerificationCodeUtil.verifyVerificationCode(email, emailVerificationCode)) {
+    public void resetUserPassword(@RequestBody @Validated UserResetPasswordDTO user) {
+        if (!EmailVerificationCodeUtil.verifyVerificationCode(user.email(),
+            user.emailVerificationCode())) {
             throw new GenericException(
-                    ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE, emailVerificationCode);
+                    ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE,
+                    user.emailVerificationCode());
         }
-        if (!userService.emailExists(email)) {
-            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, email);
+        if (!userService.emailExists(user.email())) {
+            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user.email());
         }
-        checkPasswordValidity(newPassword);
         var wrapper = new UpdateWrapper<UserPO>();
-        wrapper.apply("LOWER(email) = LOWER({0})", email);
-        wrapper.set("user_password", MD5Converter.convertToMD5(newPassword));
+        wrapper.apply("LOWER(email) = LOWER({0})", user.email());
+        wrapper.set("user_password", MD5Converter.convertToMD5(user.newPassword()));
         if (!userService.update(wrapper)) {
-            throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, email);
+            throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED,
+                user.email());
         }
         JwtUtil.blacklistToken(userService.getOne(wrapper).getId());
     }
