@@ -1,16 +1,17 @@
 package edu.cmipt.gcs.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.ValidationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.user.UserCreateDTO;
 import edu.cmipt.gcs.pojo.user.UserPO;
+import edu.cmipt.gcs.pojo.user.UserResetPasswordDTO;
 import edu.cmipt.gcs.pojo.user.UserUpdateDTO;
 import edu.cmipt.gcs.pojo.user.UserUpdatePasswordDTO;
 import edu.cmipt.gcs.pojo.user.UserVO;
@@ -112,11 +113,11 @@ public class UserController {
                 schema = @Schema(implementation = String.class)),
         @Parameter(
                 name = "userType",
-                description = "User's Type. The value can be 'id', 'username', 'email', or 'token'",
-                example = "username",
+                description = "User's Type. The value can be 'ID', 'USERNAME', 'EMAIL', or 'TOKEN'",
+                example = "USERNAME",
                 required = true,
                 in = ParameterIn.QUERY,
-                schema = @Schema(implementation = String.class))
+                schema = @Schema(implementation = UserQueryTypeEnum.class))
     })
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "User information returned successfully"),
@@ -127,37 +128,14 @@ public class UserController {
     })
     public UserVO getUser(
             @RequestParam(name = "user", required = false) String user,
-            @RequestParam("userType") String userType,
+            @RequestParam("userType") UserQueryTypeEnum userType,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        // TODO:
-        // Use a cutomized type to replace the String type
-        if (!userType.equals("id")
-                && !userType.equals("username")
-                && !userType.equals("email")
-                && !userType.equals("token")) {
-            throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+        var wrapper = UserQueryTypeEnum.getQueryWrapper(userType, user, accessToken);
+        var userPO = userService.getOne(wrapper);
+        if (userPO == null) {
+            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user != null ? user : accessToken);
         }
-        QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
-        if (userType.equals("id")) {
-            if (user == null) {
-                throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-            }
-            try {
-                Long id = Long.valueOf(user);
-                wrapper.eq("id", id);
-            } catch (Exception e) {
-                throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-            }
-        } else if (userType.equals("token")) {
-            Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-            wrapper.eq("id", idInToken);
-        } else {
-            wrapper.apply("LOWER(" + userType + ") = LOWER({0})", user);
-        }
-        if (!userService.exists(wrapper)) {
-            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user);
-        }
-        return new UserVO(userService.getOne(wrapper));
+        return new UserVO(userPO);
     }
 
     @PostMapping(ApiPathConstant.USER_UPDATE_USER_API_PATH)
@@ -194,7 +172,7 @@ public class UserController {
         if (!userService.updateById(new UserPO(user))) {
             throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user);
         }
-        UserVO userVO = new UserVO(userService.getById(Long.valueOf(user.id())));
+        var userVO = new UserVO(userService.getById(Long.valueOf(user.id())));
         return ResponseEntity.ok().body(userVO);
     }
 
@@ -210,9 +188,9 @@ public class UserController {
                 description = "User password update failed",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public void updateUserPasswordWithOldPassword(
+    public void updateUserPassword(
             @Validated @RequestBody UserUpdatePasswordDTO user) {
-        UpdateWrapper<UserPO> wrapper = new UpdateWrapper<UserPO>();
+        var wrapper = new UpdateWrapper<UserPO>();
         wrapper.eq("id", Long.valueOf(user.id()));
         wrapper.eq("user_password", MD5Converter.convertToMD5(user.oldPassword()));
         if (!userService.exists(wrapper)) {
@@ -226,11 +204,10 @@ public class UserController {
         JwtUtil.blacklistToken(Long.valueOf(user.id()));
     }
 
-    // TODO: use request body to pass the parameters
     @PostMapping(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH)
     @Operation(
-            summary = "Update user password with email verification code",
-            description = "Update user password with email verification code",
+            summary = "Reset user's password",
+            description = "Reset user's password with email verification code",
             tags = {"User", "Post Method"})
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "User password updated successfully"),
@@ -239,43 +216,22 @@ public class UserController {
                 description = "User password update failed",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    @Parameters({
-        @Parameter(
-                name = "email",
-                description = "Email",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = String.class)),
-        @Parameter(
-                name = "emailVerificationCode",
-                description = "Email verification code",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = String.class)),
-        @Parameter(
-                name = "newPassword",
-                description = "New password",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = String.class))
-    })
-    public void updateUserPasswordWithEmailVerificationCode(
-            @RequestParam("email") String email,
-            @RequestParam("emailVerificationCode") String emailVerificationCode,
-            @RequestParam("newPassword") String newPassword) {
-        if (!EmailVerificationCodeUtil.verifyVerificationCode(email, emailVerificationCode)) {
+    public void resetUserPassword(@RequestBody @Validated UserResetPasswordDTO user) {
+        if (!EmailVerificationCodeUtil.verifyVerificationCode(user.email(),
+            user.emailVerificationCode())) {
             throw new GenericException(
-                    ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE, emailVerificationCode);
+                    ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE,
+                    user.emailVerificationCode());
         }
-        if (!userService.emailExists(email)) {
-            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, email);
+        if (!userService.emailExists(user.email())) {
+            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user.email());
         }
-        checkPasswordValidity(newPassword);
-        UpdateWrapper<UserPO> wrapper = new UpdateWrapper<UserPO>();
-        wrapper.apply("LOWER(email) = LOWER({0})", email);
-        wrapper.set("user_password", MD5Converter.convertToMD5(newPassword));
+        var wrapper = new UpdateWrapper<UserPO>();
+        wrapper.apply("LOWER(email) = LOWER({0})", user.email());
+        wrapper.set("user_password", MD5Converter.convertToMD5(user.newPassword()));
         if (!userService.update(wrapper)) {
-            throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, email);
+            throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED,
+                user.email());
         }
         JwtUtil.blacklistToken(userService.getOne(wrapper).getId());
     }

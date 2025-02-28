@@ -42,8 +42,4 @@ public record UserCreateDTO(
                         description = "Email Verification Code",
                         requiredMode = Schema.RequiredMode.REQUIRED,
                         example = "123456")
-                @Size(
-                        min = ValidationConstant.EMAIL_VERIFICATION_CODE_LENGTH,
-                        max = ValidationConstant.EMAIL_VERIFICATION_CODE_LENGTH)
-                @Pattern(regexp = ValidationConstant.EMAIL_VERIFICATION_CODE_PATTERN)
                 String emailVerificationCode) {}

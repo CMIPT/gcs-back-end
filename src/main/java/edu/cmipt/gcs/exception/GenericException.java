@@ -4,7 +4,6 @@ import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.util.MessageSourceUtil;
 
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * GenericException
@@ -17,7 +16,6 @@ import lombok.Setter;
  * @author Kaiser
  */
 @Getter
-@Setter
 public class GenericException extends RuntimeException {
     private ErrorCodeEnum code;
 

@@ -7,6 +7,7 @@ import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.ValidationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
 import edu.cmipt.gcs.pojo.other.PageVO;
@@ -77,7 +78,7 @@ public class RepositoryController {
         Long userId = Long.valueOf(JwtUtil.getId(accessToken));
         checkRepositoryNameValidity(repository.repositoryName(), userId);
         String username = userService.getById(userId).getUsername();
-        RepositoryPO repositoryPO = new RepositoryPO(repository, userId.toString(), username, true);
+        var repositoryPO = new RepositoryPO(repository, userId.toString(), username, true);
         if (!repositoryService.save(repositoryPO)) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_CREATE_FAILED, repository);
         }
@@ -110,16 +111,16 @@ public class RepositoryController {
     public void deleteRepository(
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
             @RequestParam("id") Long id) {
-        var repository = repositoryService.getById(id);
-        if (repository == null) {
+        var repositoryPO = repositoryService.getById(id);
+        if (repositoryPO == null) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, id);
         }
         String userId = JwtUtil.getId(accessToken);
-        if (!userId.equals(repository.getUserId().toString())) {
+        if (!userId.equals(repositoryPO.getUserId().toString())) {
             logger.info(
                     "User[{}] tried to delete repository of user[{}]",
                     userId,
-                    repository.getUserId());
+                    repositoryPO.getUserId());
             throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
         }
         if (!repositoryService.removeById(id)) {
@@ -167,48 +168,48 @@ public class RepositoryController {
             @RequestParam(value = "username", required = false) String username,
             @RequestParam(value = "repositoryName", required = false) String repositoryName,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        RepositoryPO repository;
+        RepositoryPO repositoryPO;
         if (id == null) {
             if (username == null || repositoryName == null) {
                 throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
             }
-            QueryWrapper<RepositoryPO> queryWrapper = new QueryWrapper<>();
-            QueryWrapper<UserPO> userQueryWrapper = new QueryWrapper<>();
+            var repositoryQueryWrapper = new QueryWrapper<RepositoryPO>();
+            var userQueryWrapper = new QueryWrapper<UserPO>();
             userQueryWrapper.apply("LOWER(username) = LOWER({0})", username);
-            var user = userService.getOne(userQueryWrapper);
-            if (user == null) {
+            var userPO = userService.getOne(userQueryWrapper);
+            if (userPO == null) {
                 throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, username);
             }
-            queryWrapper.eq("user_id", user.getId());
-            queryWrapper.apply("LOWER(repository_name) = LOWER({0})", repositoryName);
-            repository = repositoryService.getOne(queryWrapper);
+            repositoryQueryWrapper.eq("user_id", userPO.getId());
+            repositoryQueryWrapper.apply("LOWER(repository_name) = LOWER({0})", repositoryName);
+            repositoryPO = repositoryService.getOne(repositoryQueryWrapper);
         } else {
-            repository = repositoryService.getById(id);
+            repositoryPO = repositoryService.getById(id);
         }
         String notFoundMessage = id != null ? id.toString() : username + "/" + repositoryName;
-        if (repository == null) {
+        if (repositoryPO == null) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage);
         }
         Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-        if (repository.getIsPrivate()
-                && !idInToken.equals(repository.getUserId())
+        if (repositoryPO.getIsPrivate()
+                && !idInToken.equals(repositoryPO.getUserId())
                 && userCollaborateRepositoryService.getOne(
                                 new QueryWrapper<UserCollaborateRepositoryPO>()
                                         .eq("collaborator_id", idInToken)
-                                        .eq("repository_id", repository.getId()))
+                                        .eq("repository_id", repositoryPO.getId()))
                         == null) {
             logger.info(
                     "User[{}] tried to get repository of user[{}]",
                     idInToken,
-                    repository.getUserId());
+                    repositoryPO.getUserId());
             throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage);
         }
         // The server's domain or port may be updated, every query we try to update the url
-        if (repository.generateUrl(username)) {
-            repositoryService.updateById(repository);
+        if (repositoryPO.generateUrl(username)) {
+            repositoryService.updateById(repositoryPO);
         }
-        var userPO = userService.getById(repository.getUserId());
-        return new RepositoryVO(repository, userPO.getUsername(), userPO.getAvatarUrl());
+        var userPO = userService.getById(repositoryPO.getUserId());
+        return new RepositoryVO(repositoryPO, userPO.getUsername(), userPO.getAvatarUrl());
     }
 
     @PostMapping(ApiPathConstant.REPOSITORY_UPDATE_REPOSITORY_API_PATH)
@@ -306,7 +307,7 @@ public class RepositoryController {
                                     "{Pattern.repositoryController#checkRepositoryNameValidity.repositoryName}")
                     String repositoryName,
             @RequestParam("userId") Long userId) {
-        QueryWrapper<RepositoryPO> queryWrapper = new QueryWrapper<>();
+        var queryWrapper = new QueryWrapper<RepositoryPO>();
         queryWrapper.eq("user_id", userId);
         queryWrapper.apply("LOWER(repository_name) = LOWER({0})", repositoryName);
         if (repositoryService.exists(queryWrapper)) {
@@ -362,7 +363,7 @@ public class RepositoryController {
                 && !collaboratorType.equals("email")) {
             throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
         }
-        QueryWrapper<UserPO> userQueryWrapper = new QueryWrapper<>();
+        var userQueryWrapper = new QueryWrapper<UserPO>();
         if (collaboratorType.equals("id")) {
             try {
                 userQueryWrapper.eq(collaboratorType, Long.valueOf(collaborator));
@@ -372,17 +373,17 @@ public class RepositoryController {
         } else {
             userQueryWrapper.eq(collaboratorType, collaborator);
         }
-        UserPO user = userService.getOne(userQueryWrapper);
-        if (user == null) {
+        var userPO = userService.getOne(userQueryWrapper);
+        if (userPO == null) {
             throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, collaborator);
         }
-        Long collaboratorId = user.getId();
-        RepositoryPO repository = repositoryService.getById(repositoryId);
-        if (repository == null) {
+        Long collaboratorId = userPO.getId();
+        var repositoryPO = repositoryService.getById(repositoryId);
+        if (repositoryPO == null) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
         }
         Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-        Long repositoryUserId = repository.getUserId();
+        Long repositoryUserId = repositoryPO.getUserId();
         if (!idInToken.equals(repositoryUserId)) {
             logger.error(
                     "User[{}] tried to add collaborator to repository[{}] whose creator is [{}]",
@@ -398,7 +399,7 @@ public class RepositoryController {
                     repositoryId);
             throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
         }
-        QueryWrapper<UserCollaborateRepositoryPO> collaborationQueryWrapper = new QueryWrapper<>();
+        var collaborationQueryWrapper = new QueryWrapper<UserCollaborateRepositoryPO>();
         collaborationQueryWrapper.eq("collaborator_id", collaboratorId);
         collaborationQueryWrapper.eq("repository_id", repositoryId);
         if (userCollaborateRepositoryService.exists(collaborationQueryWrapper)) {
@@ -455,10 +456,10 @@ public class RepositoryController {
             @RequestParam("repositoryId") Long repositoryId,
             @RequestParam("collaboratorId") Long collaboratorId,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        QueryWrapper<UserCollaborateRepositoryPO> queryWrapper = new QueryWrapper<>();
+        var queryWrapper = new QueryWrapper<UserCollaborateRepositoryPO>();
         queryWrapper.eq("collaborator_id", collaboratorId);
         queryWrapper.eq("repository_id", repositoryId);
-        UserCollaborateRepositoryPO userCollaborateRepositoryPO =
+        var userCollaborateRepositoryPO =
                 userCollaborateRepositoryService.getOne(queryWrapper);
         if (userCollaborateRepositoryPO == null) {
             throw new GenericException(
@@ -525,27 +526,32 @@ public class RepositoryController {
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        RepositoryPO repository = repositoryService.getById(repositoryId);
+        var repository = repositoryService.getById(repositoryId);
         if (repository == null) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
         }
         Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
         Long userId = repository.getUserId();
-        var iPage =
-                userCollaborateRepositoryService.pageCollaboratorsByRepositoryId(
-                        repositoryId, new Page<>(page, size));
         // only the creator and collaborators of the repository can page collaborators of a private
         // repository
         if (repository.getIsPrivate()
                 && !idInToken.equals(userId)
-                && iPage.getRecords().stream().noneMatch(user -> user.getId().equals(idInToken))) {
-            logger.error(
+                && userCollaborateRepositoryService.getOne(
+                                new QueryWrapper<UserCollaborateRepositoryPO>()
+                                        .eq("collaborator_id", idInToken)
+                                        .eq("repository_id", repositoryId))
+                        == null) {
+            logger.info(
                     "User[{}] tried to page collaborators of repository[{}] whose creator is [{}]",
                     idInToken,
                     repositoryId,
                     userId);
-            throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+            // We return NOT_FOUND to make sure the user can't know the repository exists
+            throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
         }
+        var iPage =
+                userCollaborateRepositoryService.pageCollaboratorsByRepositoryId(
+                        repositoryId, new Page<>(page, size));
         return new PageVO<>(
                 iPage.getPages(),
                 iPage.getTotal(),
@@ -567,16 +573,19 @@ public class RepositoryController {
                 in = ParameterIn.HEADER,
                 schema = @Schema(implementation = String.class)),
         @Parameter(
-                name = "id",
-                description = "User id",
+                name = "user",
+                description = "User's Information",
+                example = "admin",
                 required = false,
                 in = ParameterIn.QUERY,
-                schema = @Schema(implementation = Long.class)),
+                schema = @Schema(implementation = String.class)),
         @Parameter(
-                name = "username",
-                description = "Username",
-                required = false,
-                schema = @Schema(implementation = Long.class)),
+                name = "userType",
+                description = "User's Type. The value can be 'ID', 'USERNAME', 'EMAIL', or 'TOKEN'",
+                example = "USERNAME",
+                required = true,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = UserQueryTypeEnum.class)),
         @Parameter(
                 name = "page",
                 description = "Page number",
@@ -593,30 +602,21 @@ public class RepositoryController {
                 schema = @Schema(implementation = Integer.class))
     })
     @ApiResponse(responseCode = "200", description = "User repositories paged successfully")
-    public PageVO<RepositoryVO> pageUserRepository(
-            @RequestParam(name = "id", required = false) Long userId,
-            @RequestParam(name = "username", required = false) String username,
+    public PageVO<RepositoryVO> pageRepository(
+            @RequestParam(name = "user", required = false) String user,
+            @RequestParam(name = "userType") UserQueryTypeEnum userType,
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        if (userId == null && username == null) {
-            throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-        }
-        UserPO userPO;
-        if (userId != null) {
-            userPO = userService.getById(userId);
-        } else {
-            QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.apply("LOWER(username) = LOWER({0})", username);
-            userPO = userService.getOne(queryWrapper);
-        }
+        var userQueryWrapper = UserQueryTypeEnum.getQueryWrapper(userType, user, accessToken);
+        var userPO = userService.getOne(userQueryWrapper);
         if (userPO == null) {
             throw new GenericException(
-                    ErrorCodeEnum.USER_NOT_FOUND, userId == null ? username : userId);
+                    ErrorCodeEnum.USER_NOT_FOUND, user != null ? user : accessToken);
         }
-        userId = userPO.getId();
-        QueryWrapper<RepositoryPO> wrapper = new QueryWrapper<RepositoryPO>();
+        Long userId = userPO.getId();
         String idInToken = JwtUtil.getId(accessToken);
+        var wrapper = new QueryWrapper<RepositoryPO>();
         if (!idInToken.equals(userId.toString())) {
             // the user only can see the public repositories of others
             wrapper.eq("is_private", false);
@@ -629,6 +629,8 @@ public class RepositoryController {
                 iPage.getRecords().stream()
                         .map(
                                 (RepositoryPO repositoryPO) -> {
+                                    // The server's domain or port may be updated,
+                                    // every query we try to update the url
                                     if (repositoryPO.generateUrl(userPO.getUsername())) {
                                         repositoryService.updateById(repositoryPO);
                                     }

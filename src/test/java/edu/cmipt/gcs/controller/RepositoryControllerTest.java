@@ -11,8 +11,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.cmipt.gcs.constant.ApiPathConstant;
+import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
+import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
 
@@ -25,6 +27,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.Ordered;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
@@ -35,6 +38,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@ActiveProfiles({ApplicationConstant.TEST_PROFILE})
 public class RepositoryControllerTest {
     @Autowired private ObjectMapper objectMapper;
     @Autowired private MockMvc mvc;
@@ -67,7 +71,8 @@ public class RepositoryControllerTest {
                                         .header(
                                                 HeaderParameter.ACCESS_TOKEN,
                                                 TestConstant.ACCESS_TOKEN)
-                                        .param("id", TestConstant.ID)
+                                        .param("user", TestConstant.ID)
+                                        .param("userType", UserQueryTypeEnum.ID.name())
                                         .param("page", "1")
                                         .param("size", TestConstant.REPOSITORY_SIZE.toString()))
                         .andExpectAll(
@@ -174,7 +179,8 @@ public class RepositoryControllerTest {
         mvc.perform(
                         get(ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                                .param("id", TestConstant.ID)
+                                .param("user", TestConstant.ID)
+                                .param("userType", UserQueryTypeEnum.ID.name())
                                 .param("page", "1")
                                 .param("size", TestConstant.REPOSITORY_SIZE.toString()))
                 .andExpectAll(
@@ -193,7 +199,8 @@ public class RepositoryControllerTest {
                                 .header(
                                         HeaderParameter.ACCESS_TOKEN,
                                         TestConstant.OTHER_ACCESS_TOKEN)
-                                .param("id", TestConstant.ID)
+                                .param("user", TestConstant.ID)
+                                .param("userType", UserQueryTypeEnum.ID.name())
                                 .param("page", "1")
                                 .param("size", TestConstant.REPOSITORY_SIZE.toString()))
                 .andExpectAll(
