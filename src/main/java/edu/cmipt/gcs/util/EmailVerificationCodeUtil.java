@@ -1,9 +1,9 @@
 package edu.cmipt.gcs.util;
 
 import edu.cmipt.gcs.constant.ApplicationConstant;
-import edu.cmipt.gcs.constant.ValidationConstant;
 
 public class EmailVerificationCodeUtil {
+
     public static String generateVerificationCode(String email) {
         String code =
                 String.valueOf(
@@ -11,7 +11,7 @@ public class EmailVerificationCodeUtil {
                                 ((Math.random() * 9 + 1)
                                         * Math.pow(
                                                 10,
-                                                ValidationConstant.EMAIL_VERIFICATION_CODE_LENGTH
+                                                ApplicationConstant.EMAIL_VERIFICATION_CODE_LENGTH
                                                         - 1)));
         RedisUtil.set(
                 generateRedisKey(email),

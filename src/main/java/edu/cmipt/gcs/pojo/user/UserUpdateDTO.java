@@ -1,5 +1,7 @@
 package edu.cmipt.gcs.pojo.user;
 
+import org.hibernate.validator.constraints.URL;
+
 import edu.cmipt.gcs.constant.ValidationConstant;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -34,4 +36,5 @@ public record UserUpdateDTO(
                 @Size(
                         min = ValidationConstant.MIN_AVATAR_URL_LENGTH,
                         max = ValidationConstant.MAX_AVATAR_URL_LENGTH)
+                @URL
                 String avatarUrl) {}
