@@ -130,8 +130,7 @@ public class SshKeyControllerTest {
                                             "name": "My SSH Key Updated"
                                         }
                                         """
-                                                .formatted(
-                                                        TestConstant.SSH_KEY_ID)))
+                                                .formatted(TestConstant.SSH_KEY_ID)))
                 .andExpectAll(
                         status().isOk(),
                         jsonPath("$.id", is(TestConstant.SSH_KEY_ID)),
@@ -152,8 +151,7 @@ public class SshKeyControllerTest {
                                             "publicKey": "This is not a valid public key"
                                         }
                                         """
-                                                .formatted(
-                                                        TestConstant.SSH_KEY_ID)))
+                                                .formatted(TestConstant.SSH_KEY_ID)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -163,7 +161,9 @@ public class SshKeyControllerTest {
         // delete other user's ssh key
         mockMvc.perform(
                         delete(ApiPathConstant.SSH_KEY_DELETE_SSH_KEY_API_PATH)
-                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.OTHER_ACCESS_TOKEN)
+                                .header(
+                                        HeaderParameter.ACCESS_TOKEN,
+                                        TestConstant.OTHER_ACCESS_TOKEN)
                                 .param("id", TestConstant.SSH_KEY_ID))
                 .andExpect(status().isForbidden());
     }

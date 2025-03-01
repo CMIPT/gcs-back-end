@@ -385,8 +385,7 @@ public class RepositoryController {
                                     new QueryWrapper<UserCollaborateRepositoryPO>()
                                             .eq("collaborator_id", idInToken)
                                             .eq("repository_id", repositoryId))
-                            == null
-        ) {
+                            == null) {
                 throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
             }
             throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
@@ -463,13 +462,14 @@ public class RepositoryController {
         Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
         // return NOT_FOUND to make sure the user can't know the repository exists
         // if the repository is private
-        if (repositoryPO == null ||
-            repositoryPO.getIsPrivate() && !idInToken.equals(repositoryPO.getUserId()) &&
-            userCollaborateRepositoryService.getOne(
-                new QueryWrapper<UserCollaborateRepositoryPO>()
-                        .eq("collaborator_id", idInToken)
-                        .eq("repository_id", repositoryId))
-                == null) {
+        if (repositoryPO == null
+                || repositoryPO.getIsPrivate()
+                        && !idInToken.equals(repositoryPO.getUserId())
+                        && userCollaborateRepositoryService.getOne(
+                                        new QueryWrapper<UserCollaborateRepositoryPO>()
+                                                .eq("collaborator_id", idInToken)
+                                                .eq("repository_id", repositoryId))
+                                == null) {
             throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
         }
         Long repositoryUserId = repositoryService.getById(repositoryId).getUserId();
@@ -485,8 +485,7 @@ public class RepositoryController {
         var queryWrapper = new QueryWrapper<UserCollaborateRepositoryPO>();
         queryWrapper.eq("collaborator_id", collaboratorId);
         queryWrapper.eq("repository_id", repositoryId);
-        var userCollaborateRepositoryPO =
-                userCollaborateRepositoryService.getOne(queryWrapper);
+        var userCollaborateRepositoryPO = userCollaborateRepositoryService.getOne(queryWrapper);
         if (userCollaborateRepositoryPO == null) {
             throw new GenericException(
                     ErrorCodeEnum.COLLABORATION_NOT_FOUND, collaboratorId, repositoryId);

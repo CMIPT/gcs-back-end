@@ -133,7 +133,8 @@ public class UserController {
         var wrapper = userType.getQueryWrapper(user, accessToken);
         var userPO = userService.getOne(wrapper);
         if (userPO == null) {
-            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user != null ? user : accessToken);
+            throw new GenericException(
+                    ErrorCodeEnum.USER_NOT_FOUND, user != null ? user : accessToken);
         }
         return new UserVO(userPO);
     }
@@ -188,8 +189,7 @@ public class UserController {
                 description = "User password update failed",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public void updateUserPassword(
-            @Validated @RequestBody UserUpdatePasswordDTO user) {
+    public void updateUserPassword(@Validated @RequestBody UserUpdatePasswordDTO user) {
         var wrapper = new UpdateWrapper<UserPO>();
         wrapper.eq("id", Long.valueOf(user.id()));
         wrapper.eq("user_password", MD5Converter.convertToMD5(user.oldPassword()));
@@ -217,11 +217,10 @@ public class UserController {
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
     public void resetUserPassword(@RequestBody @Validated UserResetPasswordDTO user) {
-        if (!EmailVerificationCodeUtil.verifyVerificationCode(user.email(),
-            user.emailVerificationCode())) {
+        if (!EmailVerificationCodeUtil.verifyVerificationCode(
+                user.email(), user.emailVerificationCode())) {
             throw new GenericException(
-                    ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE,
-                    user.emailVerificationCode());
+                    ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE, user.emailVerificationCode());
         }
         if (!userService.emailExists(user.email())) {
             throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user.email());
@@ -230,8 +229,7 @@ public class UserController {
         wrapper.apply("LOWER(email) = LOWER({0})", user.email());
         wrapper.set("user_password", MD5Converter.convertToMD5(user.newPassword()));
         if (!userService.update(wrapper)) {
-            throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED,
-                user.email());
+            throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user.email());
         }
         JwtUtil.blacklistToken(userService.getOne(wrapper).getId());
     }

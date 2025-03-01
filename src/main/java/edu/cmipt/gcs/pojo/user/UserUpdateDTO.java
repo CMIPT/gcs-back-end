@@ -1,7 +1,5 @@
 package edu.cmipt.gcs.pojo.user;
 
-import org.hibernate.validator.constraints.URL;
-
 import edu.cmipt.gcs.constant.ValidationConstant;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -9,6 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+
+import org.hibernate.validator.constraints.URL;
 
 /**
  * User Data Transfer Object

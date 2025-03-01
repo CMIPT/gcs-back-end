@@ -89,7 +89,8 @@ public class AuthenticationController {
             var mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
             mimeMessageHelper.setFrom(fromEmail);
             mimeMessageHelper.setTo(email);
-            mimeMessageHelper.setSubject(MessageSourceUtil.getMessage("EMAIL_VERIFICATION_CODE_SUBJECT"));
+            mimeMessageHelper.setSubject(
+                    MessageSourceUtil.getMessage("EMAIL_VERIFICATION_CODE_SUBJECT"));
             mimeMessageHelper.setText(
                     MessageSourceUtil.getMessage(
                             "EMAIL_VERIFICATION_CODE_CONTENT",
@@ -150,8 +151,7 @@ public class AuthenticationController {
                 in = ParameterIn.HEADER,
                 schema = @Schema(implementation = String.class))
     })
-    public void signOut(
-        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    public void signOut(@RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         JwtUtil.blacklistToken(JwtUtil.getId(accessToken));
     }
 

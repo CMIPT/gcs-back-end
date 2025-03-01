@@ -225,8 +225,9 @@ public class UserControllerTest {
                                         """
                                                 .formatted(
                                                         TestConstant.EMAIL,
-                EmailVerificationCodeUtil.generateVerificationCode(
-                                                                TestConstant.EMAIL),
+                                                        EmailVerificationCodeUtil
+                                                                .generateVerificationCode(
+                                                                        TestConstant.EMAIL),
                                                         TestConstant.USER_PASSWORD + "new")))
                 .andExpectAll(status().isOk());
         TestConstant.USER_PASSWORD += "new";
@@ -390,7 +391,7 @@ public class UserControllerTest {
     public void testCheckPasswordValidityValid() throws Exception {
         mvc.perform(
                         get(ApiPathConstant.USER_CHECK_USER_PASSWORD_VALIDITY_API_PATH)
-        .param("userPassword", "123456"))
+                                .param("userPassword", "123456"))
                 .andExpectAll(status().isOk());
     }
 
@@ -398,7 +399,7 @@ public class UserControllerTest {
     public void testCheckPasswordValidityInvalid() throws Exception {
         mvc.perform(
                         get(ApiPathConstant.USER_CHECK_USER_PASSWORD_VALIDITY_API_PATH)
-        .param("userPassword", "???!!!!"))
+                                .param("userPassword", "???!!!!"))
                 .andExpectAll(status().isBadRequest());
     }
 }

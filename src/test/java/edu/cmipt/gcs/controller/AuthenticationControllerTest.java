@@ -1,9 +1,9 @@
 package edu.cmipt.gcs.controller;
 
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -11,8 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.ApiPathConstant;
+import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
@@ -108,7 +108,6 @@ public class AuthenticationControllerTest {
                         status().isBadRequest(),
                         jsonPath("$.code", is(ErrorCodeEnum.VALIDATION_ERROR.ordinal())));
     }
-
 
     /**
      * Test sign in with valid user information

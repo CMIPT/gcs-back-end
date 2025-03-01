@@ -28,7 +28,8 @@ public enum AddCollaboratorTypeEnum {
                 if (collaborator == null) {
                     throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
                 }
-                wrapper.apply("LOWER(" + this.name().toLowerCase() + ") = LOWER({0})", collaborator);
+                wrapper.apply(
+                        "LOWER(" + this.name().toLowerCase() + ") = LOWER({0})", collaborator);
                 break;
         }
         return wrapper;

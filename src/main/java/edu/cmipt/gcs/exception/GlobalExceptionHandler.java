@@ -59,7 +59,7 @@ public class GlobalExceptionHandler {
 
     /**
      * Handle HttpMessageNotReadableException
-     * 
+     *
      * <p>This method is used to handle the HttpMessageNotReadableException, which is thrown when
      * the request body is not readable. For example, when the request body is not a valid JSON.
      */
@@ -143,7 +143,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorVO> handleJsonParseException(
             JsonParseException e, HttpServletRequest request) {
         logger.error("Json parse exception: ", e);
-        return handleGenericException(new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR), request);
+        return handleGenericException(
+                new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR), request);
     }
 
     /**
