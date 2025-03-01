@@ -168,6 +168,12 @@ public class SshKeyController {
                     sshKeyPO.getUserId());
             throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
         }
+        if (sshKeyDTO.name() != null) {
+            checkSshKeyNameValidity(sshKeyDTO.name(), accessToken);
+        }
+        if (sshKeyDTO.publicKey() != null) {
+            checkSshKeyPublicKeyValidity(sshKeyDTO.publicKey(), accessToken);
+        }
         if (!sshKeyService.updateById(new SshKeyPO(sshKeyDTO))) {
             throw new GenericException(ErrorCodeEnum.SSH_KEY_UPDATE_FAILED, sshKeyDTO);
         }
@@ -178,7 +184,7 @@ public class SshKeyController {
     @GetMapping(ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH)
     @Operation(
             summary = "Page SSH key",
-            description = "Page SSH key with the given information",
+            description = "Page SSH key with the given access token",
             tags = {"SSH", "Get Method"})
     @Parameters({
         @Parameter(
@@ -187,12 +193,6 @@ public class SshKeyController {
                 required = true,
                 in = ParameterIn.HEADER,
                 schema = @Schema(implementation = String.class)),
-        @Parameter(
-                name = "id",
-                description = "User ID",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = Long.class)),
         @Parameter(
                 name = "page",
                 description = "Page number",
@@ -210,11 +210,12 @@ public class SshKeyController {
     })
     @ApiResponse(responseCode = "200", description = "SSH key paged successfully")
     public PageVO<SshKeyVO> pageSshKey(
-            @RequestParam("id") Long userId,
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
             @RequestParam("page") Integer page,
             @RequestParam("size") Integer size) {
+        Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
         var wrapper = new QueryWrapper<SshKeyPO>();
-        wrapper.eq("user_id", userId);
+        wrapper.eq("user_id", idInToken);
         var iPage = sshKeyService.page(new Page<>(page, size), wrapper);
         return new PageVO<>(
                 iPage.getPages(),

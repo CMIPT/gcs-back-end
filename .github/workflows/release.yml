@@ -21,20 +21,14 @@ jobs:
       - name: Build jar package
         run: mvn clean package -Dmaven.test.skip=true
 
-      - name: Get latest tar from gcs-front-end
-        run: curl -L https://github.com/CMIPT/gcs-front-end/releases/latest/download/gcs-front-end.tar.gz -o gcs-front-end.tar.gz
-
-      - name: Extract gcs-front-end
-        run: tar -xzf gcs-front-end.tar.gz
-
-      - name: Tar as a gcs.tar.gz
-        run: tar -czf gcs.tar.gz target/gcs-back-end.jar .env Dockerfile docker-compose.yml 3rdparty/gitolite .output database/init
+      - name: Tar as a gcs-back-end.tar.gz
+        run: tar -czf gcs-back-end.tar.gz target/gcs-back-end.jar .env Dockerfile docker-compose.yml 3rdparty/gitolite database/init
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: gcs
-          path: gcs.tar.gz
+          name: gcs-back-end
+          path: gcs-back-end.tar.gz
 
   release:
     name: Release to GitHub
@@ -46,7 +40,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: gcs
+          name: gcs-back-end
 
       - name: Upload release asset
         uses: softprops/action-gh-release@v2
@@ -54,7 +48,7 @@ jobs:
           name: ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           token: ${{ github.token }}
-          files: gcs.tar.gz
+          files: gcs-back-end.tar.gz
           draft: false
           prerelease: false
           generate_release_notes: true

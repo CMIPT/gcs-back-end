@@ -130,10 +130,11 @@ public class UserController {
             @RequestParam(name = "user", required = false) String user,
             @RequestParam("userType") UserQueryTypeEnum userType,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-        var wrapper = UserQueryTypeEnum.getQueryWrapper(userType, user, accessToken);
+        var wrapper = userType.getQueryWrapper(user, accessToken);
         var userPO = userService.getOne(wrapper);
         if (userPO == null) {
-            throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user != null ? user : accessToken);
+            throw new GenericException(
+                    ErrorCodeEnum.USER_NOT_FOUND, user != null ? user : accessToken);
         }
         return new UserVO(userPO);
     }
@@ -150,29 +151,24 @@ public class UserController {
                 description = "User information update failed",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    @Parameters({
-        @Parameter(
-                name = HeaderParameter.ACCESS_TOKEN,
-                description = "Access token",
-                required = true,
-                in = ParameterIn.HEADER,
-                schema = @Schema(implementation = String.class)),
-        @Parameter(
-                name = HeaderParameter.REFRESH_TOKEN,
-                description = "Refresh token",
-                required = true,
-                in = ParameterIn.HEADER,
-                schema = @Schema(implementation = String.class))
-    })
-    public ResponseEntity<UserVO> updateUser(@Validated @RequestBody UserUpdateDTO user) {
+    @Parameter(
+            name = HeaderParameter.ACCESS_TOKEN,
+            description = "Access token",
+            required = true,
+            in = ParameterIn.HEADER,
+            schema = @Schema(implementation = String.class))
+    public ResponseEntity<UserVO> updateUser(
+            @Validated @RequestBody UserUpdateDTO user,
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         if (user.username() != null) {
             throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
         }
+        Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
         // for the null fields, mybatis-plus will ignore by default
-        if (!userService.updateById(new UserPO(user))) {
+        if (!userService.updateById(new UserPO(user, idInToken))) {
             throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user);
         }
-        var userVO = new UserVO(userService.getById(Long.valueOf(user.id())));
+        var userVO = new UserVO(userService.getById(idInToken));
         return ResponseEntity.ok().body(userVO);
     }
 
@@ -181,6 +177,12 @@ public class UserController {
             summary = "Update user password",
             description = "Update user password",
             tags = {"User", "Post Method"})
+    @Parameter(
+            name = HeaderParameter.ACCESS_TOKEN,
+            description = "Access token",
+            required = true,
+            in = ParameterIn.HEADER,
+            schema = @Schema(implementation = String.class))
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "User password updated successfully"),
         @ApiResponse(
@@ -189,9 +191,11 @@ public class UserController {
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
     public void updateUserPassword(
-            @Validated @RequestBody UserUpdatePasswordDTO user) {
+            @Validated @RequestBody UserUpdatePasswordDTO user,
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         var wrapper = new UpdateWrapper<UserPO>();
-        wrapper.eq("id", Long.valueOf(user.id()));
+        Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+        wrapper.eq("id", idInToken);
         wrapper.eq("user_password", MD5Converter.convertToMD5(user.oldPassword()));
         if (!userService.exists(wrapper)) {
             throw new GenericException(ErrorCodeEnum.WRONG_UPDATE_PASSWORD_INFORMATION);
@@ -201,7 +205,7 @@ public class UserController {
         if (!userService.update(wrapper)) {
             throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user);
         }
-        JwtUtil.blacklistToken(Long.valueOf(user.id()));
+        JwtUtil.blacklistToken(idInToken);
     }
 
     @PostMapping(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH)
@@ -217,11 +221,10 @@ public class UserController {
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
     public void resetUserPassword(@RequestBody @Validated UserResetPasswordDTO user) {
-        if (!EmailVerificationCodeUtil.verifyVerificationCode(user.email(),
-            user.emailVerificationCode())) {
+        if (!EmailVerificationCodeUtil.verifyVerificationCode(
+                user.email(), user.emailVerificationCode())) {
             throw new GenericException(
-                    ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE,
-                    user.emailVerificationCode());
+                    ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE, user.emailVerificationCode());
         }
         if (!userService.emailExists(user.email())) {
             throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user.email());
@@ -230,8 +233,7 @@ public class UserController {
         wrapper.apply("LOWER(email) = LOWER({0})", user.email());
         wrapper.set("user_password", MD5Converter.convertToMD5(user.newPassword()));
         if (!userService.update(wrapper)) {
-            throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED,
-                user.email());
+            throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user.email());
         }
         JwtUtil.blacklistToken(userService.getOne(wrapper).getId());
     }
@@ -241,20 +243,12 @@ public class UserController {
             summary = "Delete user",
             description = "Delete user by id",
             tags = {"User", "Delete Method"})
-    @Parameters({
-        @Parameter(
-                name = HeaderParameter.ACCESS_TOKEN,
-                description = "Access token",
-                required = true,
-                in = ParameterIn.HEADER,
-                schema = @Schema(implementation = String.class)),
-        @Parameter(
-                name = "id",
-                description = "User id",
-                required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = Long.class))
-    })
+    @Parameter(
+            name = HeaderParameter.ACCESS_TOKEN,
+            description = "Access token",
+            required = true,
+            in = ParameterIn.HEADER,
+            schema = @Schema(implementation = String.class))
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "User deleted successfully"),
         @ApiResponse(
@@ -262,7 +256,7 @@ public class UserController {
                 description = "User not found",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public void deleteUser(@RequestParam("id") Long id) {
+    public void deleteUser() {
         // do not support delete user by now
         throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
         // if (userService.getById(id) == null) {

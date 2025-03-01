@@ -63,7 +63,7 @@ RUN echo "\
     git -C $GITOLITE_ADMIN_REPOSITORY fetch && \
     git -C $GITOLITE_ADMIN_REPOSITORY reset --hard origin/master && \
     cp ~/.ssh/id_rsa.pub $GITOLITE_ADMIN_REPOSITORY/keydir/root.pub && \
-    (git -C $GITOLITE_ADMIN_REPOSITORY commit -am 'Update root.pub' && git push -f || true) && \
+    (git -C $GITOLITE_ADMIN_REPOSITORY commit -am 'Update root.pub' && git -C $GITOLITE_ADMIN_REPOSITORY push -f || true) && \
     if [ -f $JAVA_WORKING_DIRECTORY/.output/server/index.mjs ]; then node /gcs/.output/server/index.mjs & fi && \
     java -jar gcs-back-end.jar" \
     > \

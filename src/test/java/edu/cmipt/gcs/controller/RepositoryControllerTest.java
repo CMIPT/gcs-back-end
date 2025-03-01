@@ -14,13 +14,16 @@ import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
+import edu.cmipt.gcs.enumeration.AddCollaboratorTypeEnum;
 import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -29,6 +32,8 @@ import org.springframework.core.Ordered;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.function.BiFunction;
 
 /**
  * Tests for RepositoryController
@@ -39,53 +44,150 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @ActiveProfiles({ApplicationConstant.TEST_PROFILE})
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RepositoryControllerTest {
     @Autowired private ObjectMapper objectMapper;
     @Autowired private MockMvc mvc;
+    private BiFunction<String, String, Exception> repositoryCreator;
+    private BiFunction<String, String, Exception> repositoryPager;
+
+    @BeforeAll
+    public void init() {
+        repositoryCreator =
+                (accessToken, repositoryDTO) -> {
+                    try {
+                        mvc.perform(
+                                        post(ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH)
+                                                .header(HeaderParameter.ACCESS_TOKEN, accessToken)
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .content(repositoryDTO))
+                                .andExpect(status().isOk());
+                    } catch (Exception e) {
+                        return e;
+                    }
+                    return null;
+                };
+        repositoryPager =
+                (accessToken, userID) -> {
+                    try {
+                        var content =
+                                mvc.perform(
+                                                get(ApiPathConstant
+                                                                .REPOSITORY_PAGE_REPOSITORY_API_PATH)
+                                                        .header(
+                                                                HeaderParameter.ACCESS_TOKEN,
+                                                                accessToken)
+                                                        .param("user", userID)
+                                                        .param(
+                                                                "userType",
+                                                                UserQueryTypeEnum.ID.name())
+                                                        .param("page", "1")
+                                                        .param(
+                                                                "size",
+                                                                TestConstant.REPOSITORY_SIZE
+                                                                        .toString()))
+                                        .andExpectAll(
+                                                status().isOk(),
+                                                jsonPath("$.pages").value(greaterThan(0)),
+                                                jsonPath("$.total").value(greaterThan(0)),
+                                                jsonPath("$.records").isArray(),
+                                                jsonPath("$.records.length()")
+                                                        .value(TestConstant.REPOSITORY_SIZE))
+                                        .andReturn()
+                                        .getResponse()
+                                        .getContentAsString();
+                        var pageVO =
+                                objectMapper.readValue(
+                                        content, new TypeReference<PageVO<RepositoryVO>>() {});
+                        if (userID.equals(TestConstant.ID)) {
+                            TestConstant.REPOSITORY_ID = pageVO.records().get(0).id();
+                            TestConstant.REPOSITORY_NAME = pageVO.records().get(0).repositoryName();
+                        } else {
+                            TestConstant.OTHER_REPOSITORY_ID = pageVO.records().get(0).id();
+                            TestConstant.OTHER_PRIVATE_REPOSITORY_ID =
+                                    pageVO.records().stream()
+                                            .filter(RepositoryVO::isPrivate)
+                                            .findFirst()
+                                            .map(RepositoryVO::id)
+                                            .orElse(null);
+                        }
+                    } catch (Exception e) {
+                        return e;
+                    }
+                    return null;
+                };
+    }
 
     @Test
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public void testCreateRepositoryValid() throws Exception {
-        String repositoryName = "";
         for (int i = 0; i < TestConstant.REPOSITORY_SIZE; i++) {
-            repositoryName = String.valueOf(i);
-            mvc.perform(
-                            post(ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH)
-                                    .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(
-                                            """
-                                            {
-                                                "repositoryName": "%s",
-                                                "isPrivate": %s
-                                            }
-                                            """
-                                                    .formatted(
-                                                            repositoryName,
-                                                            i % 2 == 0 ? "false" : "true")))
-                    .andExpect(status().isOk());
+            String repositoryDTO =
+                    """
+                    {
+                        "repositoryName": "%s",
+                        "isPrivate": %s
+                    }
+                    """
+                            .formatted(String.valueOf(i), i % 2 == 0 ? "false" : "true");
+            var result1 = repositoryCreator.apply(TestConstant.ACCESS_TOKEN, repositoryDTO);
+            if (result1 != null) {
+                throw result1;
+            }
+            var result2 = repositoryCreator.apply(TestConstant.OTHER_ACCESS_TOKEN, repositoryDTO);
+            if (result2 != null) {
+                throw result2;
+            }
         }
-        var content =
-                mvc.perform(
-                                get(ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH)
-                                        .header(
-                                                HeaderParameter.ACCESS_TOKEN,
-                                                TestConstant.ACCESS_TOKEN)
-                                        .param("user", TestConstant.ID)
-                                        .param("userType", UserQueryTypeEnum.ID.name())
-                                        .param("page", "1")
-                                        .param("size", TestConstant.REPOSITORY_SIZE.toString()))
-                        .andExpectAll(
-                                status().isOk(),
-                                jsonPath("$.pages").value(greaterThan(0)),
-                                jsonPath("$.records").isArray(),
-                                jsonPath("$.records.length()").value(TestConstant.REPOSITORY_SIZE))
-                        .andReturn()
-                        .getResponse()
-                        .getContentAsString();
-        var pageVO = objectMapper.readValue(content, new TypeReference<PageVO<RepositoryVO>>() {});
-        TestConstant.REPOSITORY_ID = pageVO.records().get(0).id();
-        TestConstant.REPOSITORY_NAME = pageVO.records().get(0).repositoryName();
+        var result1 = repositoryPager.apply(TestConstant.ACCESS_TOKEN, TestConstant.ID);
+        if (result1 != null) {
+            throw result1;
+        }
+        var result2 = repositoryPager.apply(TestConstant.OTHER_ACCESS_TOKEN, TestConstant.OTHER_ID);
+        if (result2 != null) {
+            throw result2;
+        }
+    }
+
+    @Test
+    public void testCreateRepositoryInvalid() throws Exception {
+        mvc.perform(
+                        post(ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {
+                                            "repositoryName": "",
+                                            "isPrivate": false
+                                        }
+                                        """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testGetRepositoryValid() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("id", TestConstant.REPOSITORY_ID))
+                .andExpectAll(
+                        status().isOk(),
+                        jsonPath("$.id").value(TestConstant.REPOSITORY_ID),
+                        jsonPath("$.repositoryName").value(TestConstant.REPOSITORY_NAME),
+                        jsonPath("$.userId").value(TestConstant.ID),
+                        jsonPath("$.star").value(0),
+                        jsonPath("$.fork").value(0),
+                        jsonPath("$.watcher").value(0));
+    }
+
+    @Test
+    public void testGetOtherPrivateRepositoryInvalid() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("id", TestConstant.OTHER_PRIVATE_REPOSITORY_ID))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -118,6 +220,23 @@ public class RepositoryControllerTest {
     }
 
     @Test
+    public void testUpdateOtherRepositoryInvalid() throws Exception {
+        mvc.perform(
+                        post(ApiPathConstant.REPOSITORY_UPDATE_REPOSITORY_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {
+                                            "id": "%s",
+                                            "repositoryDescription": "This is a test description"
+                                        }
+                                        """
+                                                .formatted(TestConstant.OTHER_REPOSITORY_ID)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @Order(Ordered.HIGHEST_PRECEDENCE + 2)
     public void testAddCollaboratorValid() throws Exception {
         mvc.perform(
@@ -125,8 +244,28 @@ public class RepositoryControllerTest {
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                                 .param("repositoryId", TestConstant.REPOSITORY_ID)
                                 .param("collaborator", TestConstant.OTHER_ID)
-                                .param("collaboratorType", "id"))
+                                .param("collaboratorType", AddCollaboratorTypeEnum.ID.name()))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testAddCollaboratorInvalid() throws Exception {
+        // add self to other's public repository
+        mvc.perform(
+                        post(ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("repositoryId", TestConstant.OTHER_REPOSITORY_ID)
+                                .param("collaborator", TestConstant.USERNAME)
+                                .param("collaboratorType", AddCollaboratorTypeEnum.USERNAME.name()))
+                .andExpect(status().isForbidden());
+        // add self to other's private repository
+        mvc.perform(
+                        post(ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("repositoryId", TestConstant.OTHER_PRIVATE_REPOSITORY_ID)
+                                .param("collaborator", TestConstant.USERNAME)
+                                .param("collaboratorType", AddCollaboratorTypeEnum.USERNAME.name()))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -150,6 +289,17 @@ public class RepositoryControllerTest {
     }
 
     @Test
+    public void testPageOtherCollaboratorInvalid() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.REPOSITORY_PAGE_COLLABORATOR_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("repositoryId", TestConstant.OTHER_PRIVATE_REPOSITORY_ID)
+                                .param("page", "1")
+                                .param("size", "10"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @Order(Ordered.HIGHEST_PRECEDENCE + 4)
     public void testRemoveCollaborationValid() throws Exception {
         mvc.perform(
@@ -158,6 +308,25 @@ public class RepositoryControllerTest {
                                 .param("repositoryId", TestConstant.REPOSITORY_ID)
                                 .param("collaboratorId", TestConstant.OTHER_ID))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(Ordered.HIGHEST_PRECEDENCE + 4)
+    public void testRemoveCollaborationInvalid() throws Exception {
+        // remove self from other's public repository
+        mvc.perform(
+                        delete(ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("repositoryId", TestConstant.OTHER_REPOSITORY_ID)
+                                .param("collaboratorId", TestConstant.ID))
+                .andExpect(status().isForbidden());
+        // remove self from other's private repository
+        mvc.perform(
+                        delete(ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("repositoryId", TestConstant.OTHER_PRIVATE_REPOSITORY_ID)
+                                .param("collaboratorId", TestConstant.ID))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -174,21 +343,21 @@ public class RepositoryControllerTest {
     }
 
     @Test
-    @Order(Ordered.HIGHEST_PRECEDENCE + 6)
-    public void testPageUserRepositoryValid() throws Exception {
+    public void testDeleteOtherRepositoryInvalid() throws Exception {
         mvc.perform(
-                        get(ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH)
+                        delete(ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                                .param("user", TestConstant.ID)
-                                .param("userType", UserQueryTypeEnum.ID.name())
-                                .param("page", "1")
-                                .param("size", TestConstant.REPOSITORY_SIZE.toString()))
-                .andExpectAll(
-                        status().isOk(),
-                        jsonPath("$.pages").value(greaterThan(0)),
-                        jsonPath("$.total").value(greaterThan(0)),
-                        jsonPath("$.records").isArray(),
-                        jsonPath("$.records.length()").value(TestConstant.REPOSITORY_SIZE));
+                                .param("id", TestConstant.OTHER_REPOSITORY_ID))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @Order(Ordered.HIGHEST_PRECEDENCE + 6)
+    public void testPageRepositoryValid() throws Exception {
+        var result = repositoryPager.apply(TestConstant.ACCESS_TOKEN, TestConstant.ID);
+        if (result != null) {
+            throw result;
+        }
     }
 
     @Test
@@ -209,5 +378,24 @@ public class RepositoryControllerTest {
                         jsonPath("$.total").value(greaterThan(0)),
                         jsonPath("$.records").isArray(),
                         jsonPath("$.records.length()").value(TestConstant.REPOSITORY_SIZE / 2));
+    }
+
+    @Test
+    public void testCheckRepositoryNameValidityValid() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("repositoryName", "test")
+                                .param("userId", TestConstant.ID))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testCheckRepositoryNameValidityInvalid() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("repositoryName", "??!!"))
+                .andExpect(status().isBadRequest());
     }
 }

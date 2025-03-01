@@ -75,6 +75,24 @@ public class SshKeyControllerTest {
     }
 
     @Test
+    public void testUploadSshKeyInvalid() throws Exception {
+        mockMvc.perform(
+                        post(ApiPathConstant.SSH_KEY_UPLOAD_SSH_KEY_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {
+                                            "name": "GCS_TEST_SSH_TMP",
+                                            "userId": "%s",
+                                            "publicKey": "This is not a valid public key"
+                                        }
+                                        """
+                                                .formatted(TestConstant.ID)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @Order(Ordered.HIGHEST_PRECEDENCE + 1)
     public void testPageSshKeyValid() throws Exception {
         var content =
@@ -83,7 +101,6 @@ public class SshKeyControllerTest {
                                         .header(
                                                 HeaderParameter.ACCESS_TOKEN,
                                                 TestConstant.ACCESS_TOKEN)
-                                        .param("id", TestConstant.ID)
                                         .param("page", "1")
                                         .param("size", TestConstant.SSH_KEY_SIZE.toString()))
                         .andExpectAll(
@@ -110,19 +127,45 @@ public class SshKeyControllerTest {
                                         """
                                         {
                                             "id": "%s",
-                                            "name": "My SSH Key Updated",
-                                            "userId": "%s",
-                                            "publicKey": "This is my public key updated"
+                                            "name": "My SSH Key Updated"
                                         }
                                         """
-                                                .formatted(
-                                                        TestConstant.SSH_KEY_ID, TestConstant.ID)))
+                                                .formatted(TestConstant.SSH_KEY_ID)))
                 .andExpectAll(
                         status().isOk(),
                         jsonPath("$.id", is(TestConstant.SSH_KEY_ID)),
                         jsonPath("$.userId", is(TestConstant.ID)),
-                        jsonPath("$.name", is("My SSH Key Updated")),
-                        jsonPath("$.publicKey", is("This is my public key updated")));
+                        jsonPath("$.name", is("My SSH Key Updated")));
+    }
+
+    @Test
+    public void testUpdateSshKeyInvalid() throws Exception {
+        mockMvc.perform(
+                        post(ApiPathConstant.SSH_KEY_UPDATE_SSH_KEY_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {
+                                            "id": "%s",
+                                            "publicKey": "This is not a valid public key"
+                                        }
+                                        """
+                                                .formatted(TestConstant.SSH_KEY_ID)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Order(Ordered.HIGHEST_PRECEDENCE + 2)
+    public void testDeleteSshKeyInvalid() throws Exception {
+        // delete other user's ssh key
+        mockMvc.perform(
+                        delete(ApiPathConstant.SSH_KEY_DELETE_SSH_KEY_API_PATH)
+                                .header(
+                                        HeaderParameter.ACCESS_TOKEN,
+                                        TestConstant.OTHER_ACCESS_TOKEN)
+                                .param("id", TestConstant.SSH_KEY_ID))
+                .andExpect(status().isForbidden());
     }
 
     /**

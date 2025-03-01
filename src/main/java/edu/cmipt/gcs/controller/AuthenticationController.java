@@ -89,7 +89,8 @@ public class AuthenticationController {
             var mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
             mimeMessageHelper.setFrom(fromEmail);
             mimeMessageHelper.setTo(email);
-            mimeMessageHelper.setSubject(MessageSourceUtil.getMessage("EMAIL_VERIFICATION_CODE_SUBJECT"));
+            mimeMessageHelper.setSubject(
+                    MessageSourceUtil.getMessage("EMAIL_VERIFICATION_CODE_SUBJECT"));
             mimeMessageHelper.setText(
                     MessageSourceUtil.getMessage(
                             "EMAIL_VERIFICATION_CODE_CONTENT",
@@ -144,14 +145,14 @@ public class AuthenticationController {
     @ApiResponse(responseCode = "200", description = "User signed out successfully")
     @Parameters({
         @Parameter(
-                name = "id",
-                description = "User ID",
+                name = HeaderParameter.ACCESS_TOKEN,
+                description = "Access token",
                 required = true,
-                in = ParameterIn.QUERY,
-                schema = @Schema(implementation = Long.class))
+                in = ParameterIn.HEADER,
+                schema = @Schema(implementation = String.class))
     })
-    public void signOut(@RequestParam("id") Long id) {
-        JwtUtil.blacklistToken(id);
+    public void signOut(@RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+        JwtUtil.blacklistToken(JwtUtil.getId(accessToken));
     }
 
     @GetMapping(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)
