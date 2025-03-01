@@ -81,16 +81,14 @@ public class JwtFilter extends OncePerRequestFilter {
                                     ApiPathConstant.SSH_KEY_UPDATE_SSH_KEY_API_PATH,
                                     ApiPathConstant.USER_UPDATE_USER_API_PATH,
                                     ApiPathConstant
-                                            .USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH
-        ),
+                                            .USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH),
                     "DELETE",
                             Set.of(
                                     ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH,
                                     ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH,
                                     ApiPathConstant.SSH_KEY_DELETE_SSH_KEY_API_PATH,
                                     ApiPathConstant.AUTHENTICATION_SIGN_OUT_API_PATH,
-                                    ApiPathConstant.USER_DELETE_USER_API_PATH
-        ));
+                                    ApiPathConstant.USER_DELETE_USER_API_PATH));
 
     @Override
     protected void doFilterInternal(

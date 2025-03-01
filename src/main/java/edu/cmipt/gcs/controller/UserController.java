@@ -157,9 +157,9 @@ public class UserController {
             required = true,
             in = ParameterIn.HEADER,
             schema = @Schema(implementation = String.class))
-    public ResponseEntity<UserVO> updateUser(@Validated @RequestBody UserUpdateDTO user
-            , @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken
-    ) {
+    public ResponseEntity<UserVO> updateUser(
+            @Validated @RequestBody UserUpdateDTO user,
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         if (user.username() != null) {
             throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
         }
@@ -190,9 +190,9 @@ public class UserController {
                 description = "User password update failed",
                 content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public void updateUserPassword(@Validated @RequestBody UserUpdatePasswordDTO user
-            , @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken
-    ) {
+    public void updateUserPassword(
+            @Validated @RequestBody UserUpdatePasswordDTO user,
+            @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         var wrapper = new UpdateWrapper<UserPO>();
         Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
         wrapper.eq("id", idInToken);
