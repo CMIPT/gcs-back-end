@@ -38,8 +38,8 @@ public class UserPO {
         this.userPassword = MD5Converter.convertToMD5(user.userPassword());
     }
 
-    public UserPO(UserUpdateDTO user) {
-        this.id = Long.parseLong(user.id());
+    public UserPO(UserUpdateDTO user, Long id) {
+        this.id = id;
         this.username = user.username();
         this.avatarUrl = user.avatarUrl();
     }

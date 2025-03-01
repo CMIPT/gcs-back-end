@@ -4,7 +4,6 @@ import edu.cmipt.gcs.constant.ValidationConstant;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -17,9 +16,6 @@ import org.hibernate.validator.constraints.URL;
  */
 @Schema(description = "User Update Data Transfer Object")
 public record UserUpdateDTO(
-        @Schema(description = "User ID") @NotNull
-                // The Long can not be expressed correctly in json, so use String instead
-                String id,
         @Schema(
                         description = "Username",
                         requiredMode = Schema.RequiredMode.REQUIRED,

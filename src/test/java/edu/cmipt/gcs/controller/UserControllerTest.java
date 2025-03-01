@@ -1,6 +1,7 @@
 package edu.cmipt.gcs.controller;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -91,12 +92,10 @@ public class UserControllerTest {
                                 .content(
                                         """
                                         {
-                                            "id": "%s",
                                             "avatarUrl": "%s"
                                         }
                                         """
-                                                .formatted(
-                                                        TestConstant.ID, TestConstant.AVATAR_URL)))
+                                                .formatted(TestConstant.AVATAR_URL)))
                 .andExpectAll(
                         status().isOk(),
                         jsonPath("$.avatarUrl", is(TestConstant.AVATAR_URL)),
@@ -105,7 +104,6 @@ public class UserControllerTest {
 
     @Test
     public void testUpdateUserInvalid() throws Exception {
-        String otherID = "123";
         mvc.perform(
                         post(ApiPathConstant.USER_UPDATE_USER_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -113,42 +111,30 @@ public class UserControllerTest {
                                 .content(
                                         """
                                         {
-                                            "id": "%s",
-                                            "avatarUrl": "%s"
+                                            "avatarUrl": "this is not a url"
                                         }
                                         """
-                                                .formatted(otherID, TestConstant.AVATAR_URL)))
+                                                .formatted(TestConstant.AVATAR_URL)))
                 .andExpectAll(
-                        status().isForbidden(),
-                        content()
-                                .json(
-                                        """
-                                        {
-                                            "code": %d,
-                                            "message": "%s"
-                                        }
-                                        """
-                                                .formatted(
-                                                        ErrorCodeEnum.ACCESS_DENIED.ordinal(),
-                                                        MessageSourceUtil.getMessage(
-                                                                ErrorCodeEnum.ACCESS_DENIED))));
+                        status().isBadRequest(),
+                        jsonPath("$.code", is(ErrorCodeEnum.VALIDATION_ERROR.ordinal())),
+                        jsonPath("$.message", startsWith("Validation error")));
     }
 
     @Test
     public void testUpdateUserPasswordValid() throws Exception {
         mvc.perform(
                         post(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(
                                         """
                                         {
-                                            "id": "%s",
                                             "oldPassword": "%s",
                                             "newPassword": "%s"
                                         }
                                         """
                                                 .formatted(
-                                                        TestConstant.ID,
                                                         TestConstant.USER_PASSWORD,
                                                         TestConstant.USER_PASSWORD + "new")))
                 .andExpectAll(status().isOk());
@@ -178,16 +164,15 @@ public class UserControllerTest {
         mvc.perform(
                         post(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH)
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                                 .content(
                                         """
                                         {
-                                            "id": "%s",
                                             "oldPassword": "%s",
                                             "newPassword": "%s"
                                         }
                                         """
                                                 .formatted(
-                                                        TestConstant.ID,
                                                         TestConstant.USER_PASSWORD + "wrong",
                                                         TestConstant.USER_PASSWORD + "new")))
                 .andExpectAll(
@@ -290,37 +275,12 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testDeleteUserInvalid() throws Exception {
-        String otherID = "123";
-        mvc.perform(
-                        delete(ApiPathConstant.USER_DELETE_USER_API_PATH)
-                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                                .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN)
-                                .param("id", otherID))
-                .andExpectAll(
-                        status().isForbidden(),
-                        content()
-                                .json(
-                                        """
-                                        {
-                                            "code": %d,
-                                            "message": "%s"
-                                        }
-                                        """
-                                                .formatted(
-                                                        ErrorCodeEnum.ACCESS_DENIED.ordinal(),
-                                                        MessageSourceUtil.getMessage(
-                                                                ErrorCodeEnum.ACCESS_DENIED))));
-    }
-
-    @Test
     @Order(Ordered.LOWEST_PRECEDENCE)
     public void testDeleteUserValid() throws Exception {
         mvc.perform(
                         delete(ApiPathConstant.USER_DELETE_USER_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                                .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN)
-                                .param("id", TestConstant.ID))
+                                .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN))
                 .andExpectAll(status().isNotImplemented());
     }
 
