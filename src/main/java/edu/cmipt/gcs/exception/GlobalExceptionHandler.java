@@ -129,11 +129,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ErrorVO> handleMissingServletRequestParameterException(
             MissingServletRequestParameterException e, HttpServletRequest request) {
-        logger.error("Missing request parameter: ", e.getParameterName());
-        return handleValidationException(
-                MessageSourceUtil.getMessage(
-                        ErrorCodeEnum.VALIDATION_ERROR, e.getParameterName()),
-                request);
+        logger.error("Missing request parameter: {}", e.getParameterName());
+        return handleValidationException(e.getParameterName(), request);
     }
 
     /**

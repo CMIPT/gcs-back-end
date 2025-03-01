@@ -3,6 +3,7 @@ package edu.cmipt.gcs.controller;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -44,13 +45,6 @@ public class AuthenticationControllerTest {
     @Autowired private MockMvc mvc;
     @Autowired private ObjectMapper objectMapper;
 
-    /**
-     * Test sign in with invalid user information
-     *
-     * <p>This must excute before {@link #testSignInValid() testSignInValid}
-     *
-     * @throws Exception
-     */
     @Test
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public void testCreateUserValid() throws Exception {
@@ -95,6 +89,26 @@ public class AuthenticationControllerTest {
                                 .content(otherUserCreateDTO))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    public void testCreateUserInvalid() throws Exception {
+        String invalidUserCreateDTO =
+                """
+                {
+                    "username": "test",
+                    "email": "invalid email address",
+                    "userPassword": "123456"
+                }
+                """;
+        mvc.perform(
+                        post(ApiPathConstant.USER_CREATE_USER_API_PATH)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(invalidUserCreateDTO))
+                .andExpectAll(
+                        status().isBadRequest(),
+                        jsonPath("$.code", is(ErrorCodeEnum.VALIDATION_ERROR.ordinal())));
+    }
+
 
     /**
      * Test sign in with valid user information
@@ -162,21 +176,12 @@ public class AuthenticationControllerTest {
     }
 
     /**
-     * Test refresh token with valid refresh token
+     * Test sign in with invalid user information
      *
-     * <p>This must excute after {@link #testSignInValid() testSignInValid}
+     * <p>This must excute before {@link #testSignInValid() testSignInValid}
      *
      * @throws Exception
      */
-    @Test
-    @Order(Ordered.HIGHEST_PRECEDENCE + 2)
-    public void testRefreshValid() throws Exception {
-        mvc.perform(
-                        get(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)
-                                .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN))
-                .andExpectAll(status().isOk(), header().exists(HeaderParameter.ACCESS_TOKEN));
-    }
-
     @Test
     public void testSignInInvalid() throws Exception {
         String invalidUserSignInDTO =
@@ -210,23 +215,20 @@ public class AuthenticationControllerTest {
                                                                         .WRONG_SIGN_IN_INFORMATION))));
     }
 
+    /**
+     * Test refresh token with valid refresh token
+     *
+     * <p>This must excute after {@link #testSignInValid() testSignInValid}
+     *
+     * @throws Exception
+     */
     @Test
-    public void testCreateUserInvalid() throws Exception {
-        String invalidUserCreateDTO =
-                """
-                {
-                    "username": "test",
-                    "email": "invalid email address",
-                    "userPassword": "123456"
-                }
-                """;
+    @Order(Ordered.HIGHEST_PRECEDENCE + 2)
+    public void testRefreshValid() throws Exception {
         mvc.perform(
-                        post(ApiPathConstant.USER_CREATE_USER_API_PATH)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(invalidUserCreateDTO))
-                .andExpectAll(
-                        status().isBadRequest(),
-                        jsonPath("$.code", is(ErrorCodeEnum.VALIDATION_ERROR.ordinal())));
+                        get(ApiPathConstant.AUTHENTICATION_REFRESH_API_PATH)
+                                .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN))
+                .andExpectAll(status().isOk(), header().exists(HeaderParameter.ACCESS_TOKEN));
     }
 
     @Test
@@ -250,5 +252,15 @@ public class AuthenticationControllerTest {
                                                         MessageSourceUtil.getMessage(
                                                                 ErrorCodeEnum.INVALID_TOKEN,
                                                                 invalidToken))));
+    }
+
+    @Test
+    public void testSignOutValid() throws Exception {
+        mvc.perform(
+                        delete(ApiPathConstant.AUTHENTICATION_SIGN_OUT_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN))
+                .andExpectAll(status().isOk());
+        // Sign in again to make the information consistent
+        testSignInValid();
     }
 }

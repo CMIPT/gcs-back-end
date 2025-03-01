@@ -131,8 +131,7 @@ public class JwtFilter extends OncePerRequestFilter {
                                     ApiPathConstant
                                             .USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH,
                                     ApiPathConstant
-                                            .USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH),
-                    "DELETE", Set.of(ApiPathConstant.AUTHENTICATION_SIGN_OUT_API_PATH));
+                                            .USER_UPDATE_USER_PASSWORD_WITH_EMAIL_VERIFICATION_CODE_API_PATH));
 
     // Paths that do not need authorization in filter
     private Map<String, Set<String>> passPath =
@@ -146,7 +145,8 @@ public class JwtFilter extends OncePerRequestFilter {
                                     ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH,
                                     ApiPathConstant.USER_GET_USER_API_PATH,
                                     ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH,
-                                    ApiPathConstant.REPOSITORY_PAGE_COLLABORATOR_API_PATH),
+                                    ApiPathConstant.REPOSITORY_PAGE_COLLABORATOR_API_PATH,
+                                    ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH),
                     "POST",
                             Set.of(
                                     ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH,
@@ -158,7 +158,8 @@ public class JwtFilter extends OncePerRequestFilter {
                             Set.of(
                                     ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH,
                                     ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH,
-                                    ApiPathConstant.SSH_KEY_DELETE_SSH_KEY_API_PATH));
+                                    ApiPathConstant.SSH_KEY_DELETE_SSH_KEY_API_PATH,
+                                    ApiPathConstant.AUTHENTICATION_SIGN_OUT_API_PATH));
 
     @Override
     protected void doFilterInternal(
@@ -206,20 +207,10 @@ public class JwtFilter extends OncePerRequestFilter {
         if (accessToken == null) {
             throw new GenericException(ErrorCodeEnum.TOKEN_NOT_FOUND);
         }
+        // TODO: remove all checks
         switch (requestMethod) {
             case "GET":
-                if (requestURI.equals(ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH)) {
-                    String idInToken = JwtUtil.getId(accessToken);
-                    String idInParam = request.getParameter("id");
-                    if (!idInToken.equals(idInParam)) {
-                        logger.info(
-                                "User[{}] tried to get SSH key of user[{}]", idInToken, idInParam);
-                        throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
-                    }
-                } else {
-                    throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
-                }
-                break;
+                throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
             case "POST":
                 if (requestURI.equals(ApiPathConstant.USER_UPDATE_USER_API_PATH)) {
                     // User can not update other user's information

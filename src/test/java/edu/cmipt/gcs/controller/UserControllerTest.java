@@ -83,69 +83,6 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testCheckEmailValidityExists() throws Exception {
-        mvc.perform(
-                        get(ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH)
-                                .param("email", TestConstant.EMAIL))
-                .andExpectAll(
-                        status().isBadRequest(),
-                        content()
-                                .json(
-                                        """
-                                        {
-                                            "code": %d,
-                                            "message": "%s"
-                                        }
-                                        """
-                                                .formatted(
-                                                        ErrorCodeEnum.EMAIL_ALREADY_EXISTS
-                                                                .ordinal(),
-                                                        MessageSourceUtil.getMessage(
-                                                                ErrorCodeEnum.EMAIL_ALREADY_EXISTS,
-                                                                TestConstant.EMAIL))));
-    }
-
-    @Test
-    public void testCheckEmailValidityValid() throws Exception {
-        mvc.perform(
-                        get(ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH)
-                                .param("email", new Date().getTime() + "@cmipt.edu"))
-                .andExpectAll(status().isOk());
-    }
-
-    @Test
-    public void testCheckUsernameValidityExists() throws Exception {
-        mvc.perform(
-                        get(ApiPathConstant.USER_CHECK_USERNAME_VALIDITY_API_PATH)
-                                .param("username", TestConstant.USERNAME))
-                .andExpectAll(
-                        status().isBadRequest(),
-                        content()
-                                .json(
-                                        """
-                                        {
-                                            "code": %d,
-                                            "message": "%s"
-                                        }
-                                        """
-                                                .formatted(
-                                                        ErrorCodeEnum.USERNAME_ALREADY_EXISTS
-                                                                .ordinal(),
-                                                        MessageSourceUtil.getMessage(
-                                                                ErrorCodeEnum
-                                                                        .USERNAME_ALREADY_EXISTS,
-                                                                TestConstant.USERNAME))));
-    }
-
-    @Test
-    public void testCheckUsernameValidityValid() throws Exception {
-        mvc.perform(
-                        get(ApiPathConstant.USER_CHECK_USERNAME_VALIDITY_API_PATH)
-                                .param("username", new Date().getTime() + ""))
-                .andExpectAll(status().isOk());
-    }
-
-    @Test
     public void testUpdateUserValid() throws Exception {
         mvc.perform(
                         post(ApiPathConstant.USER_UPDATE_USER_API_PATH)
@@ -384,5 +321,84 @@ public class UserControllerTest {
                                 .header(HeaderParameter.REFRESH_TOKEN, TestConstant.REFRESH_TOKEN)
                                 .param("id", TestConstant.ID))
                 .andExpectAll(status().isNotImplemented());
+    }
+
+    @Test
+    public void testCheckEmailValidityExists() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH)
+                                .param("email", TestConstant.EMAIL))
+                .andExpectAll(
+                        status().isBadRequest(),
+                        content()
+                                .json(
+                                        """
+                                        {
+                                            "code": %d,
+                                            "message": "%s"
+                                        }
+                                        """
+                                                .formatted(
+                                                        ErrorCodeEnum.EMAIL_ALREADY_EXISTS
+                                                                .ordinal(),
+                                                        MessageSourceUtil.getMessage(
+                                                                ErrorCodeEnum.EMAIL_ALREADY_EXISTS,
+                                                                TestConstant.EMAIL))));
+    }
+
+    @Test
+    public void testCheckEmailValidityValid() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.USER_CHECK_EMAIL_VALIDITY_API_PATH)
+                                .param("email", new Date().getTime() + "@cmipt.edu"))
+                .andExpectAll(status().isOk());
+    }
+
+    @Test
+    public void testCheckUsernameValidityExists() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.USER_CHECK_USERNAME_VALIDITY_API_PATH)
+                                .param("username", TestConstant.USERNAME))
+                .andExpectAll(
+                        status().isBadRequest(),
+                        content()
+                                .json(
+                                        """
+                                        {
+                                            "code": %d,
+                                            "message": "%s"
+                                        }
+                                        """
+                                                .formatted(
+                                                        ErrorCodeEnum.USERNAME_ALREADY_EXISTS
+                                                                .ordinal(),
+                                                        MessageSourceUtil.getMessage(
+                                                                ErrorCodeEnum
+                                                                        .USERNAME_ALREADY_EXISTS,
+                                                                TestConstant.USERNAME))));
+    }
+
+    @Test
+    public void testCheckUsernameValidityValid() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.USER_CHECK_USERNAME_VALIDITY_API_PATH)
+                                .param("username", new Date().getTime() + ""))
+                .andExpectAll(status().isOk());
+    }
+
+    @Test
+    public void testCheckPasswordValidityValid() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.USER_CHECK_USER_PASSWORD_VALIDITY_API_PATH)
+        .param("userPassword", "123456"))
+                .andExpectAll(status().isOk());
+    }
+
+    @Test
+    public void testCheckPasswordValidityInvalid() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.USER_CHECK_USER_PASSWORD_VALIDITY_API_PATH)
+        .param("userPassword", "???!!!!"))
+                .andExpectAll(status().isBadRequest());
     }
 }
