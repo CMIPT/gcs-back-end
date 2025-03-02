@@ -1,4 +1,15 @@
 services:
+  gcs-nginx:
+    image: nginx:latest
+    container_name: gcs-nginx
+    restart: always
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+    ports:
+      - ${FRONT_END_REVERSE_PROXY_PORT}:443
+    depends_on:
+      - gcs
   gcs-postgres:
     image: postgres:14
     container_name: gcs-postgres
@@ -11,7 +22,7 @@ services:
       - gcs-postgres-data:/var/lib/postgresql/data
       - ${DATABASE_INIT_SCRIPT_PATH}:/docker-entrypoint-initdb.d
   gcs-redis:
-    image: redis:6
+    image: redis:latest
     container_name: gcs-redis
     restart: always
   gcs:
@@ -38,7 +49,6 @@ services:
     ports:
       - ${GCS_SPRING_MAPPING_PORT}:8080
       - ${GCS_SSH_MAPPING_PORT}:22
-      - ${FRONT_END_REVERSE_PROXY_PORT}:3000
     
     depends_on:
       - gcs-postgres
@@ -63,7 +73,6 @@ services:
       GIT_SERVER_USERNAME: ${GIT_SERVER_USERNAME}
       GIT_SERVER_HOME: ${GIT_SERVER_HOME}
       GIT_SERVER_ADMIN_REPOSITORY: ${GIT_SERVER_ADMIN_REPOSITORY}
-      FRONT_END_URL: ${FRONT_END_URL}
       MD5_SALT: ${MD5_SALT}
       GCS_LOGGING_DIRECTORY: ${GCS_LOGGING_DIRECTORY}
       GCS_LOGGING_FILE_MAX_SIZE: ${GCS_LOGGING_FILE_MAX_SIZE}

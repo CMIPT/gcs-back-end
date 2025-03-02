@@ -50,7 +50,7 @@ repo @all_public_repo\n\
 
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
-EXPOSE 22 8080
+EXPOSE 22 8080 3000
 
 WORKDIR "$JAVA_WORKING_DIRECTORY"
 
@@ -58,6 +58,7 @@ RUN mkdir -p .output
 COPY "$TARGET_JAR_PATH" .output* .output
 
 RUN echo "\
+    chown -R $GIT_USER_NAME:$GIT_USER_MAIN_GROUP $GIT_USER_HOME/repositories && \
     if [ -f $JAVA_WORKING_DIRECTORY/.output/gcs-back-end.jar ]; then mv $JAVA_WORKING_DIRECTORY/.output/gcs-back-end.jar $JAVA_WORKING_DIRECTORY/gcs-back-end.jar; fi && \
     service ssh restart && \
     git -C $GITOLITE_ADMIN_REPOSITORY fetch && \
