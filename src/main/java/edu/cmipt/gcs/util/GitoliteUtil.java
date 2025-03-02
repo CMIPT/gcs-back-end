@@ -2,17 +2,32 @@ package edu.cmipt.gcs.util;
 
 import edu.cmipt.gcs.constant.GitConstant;
 
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.LinkedList;
 import java.util.List;
 
 public class GitoliteUtil {
     private static final Logger logger = LoggerFactory.getLogger(GitoliteUtil.class);
+    private static Git git;
+    static {
+        try {
+            var repository = new FileRepositoryBuilder()
+                    .setGitDir(new File(GitConstant.GIT_SERVER_ADMIN_REPOSITORY))
+                    .build();
+            git = new Git(repository);
+        } catch (Exception e) {
+            logger.error("Failed to initialize git repository: ", e);
+            throw new RuntimeException(e);
+        }
+    }
 
     public static synchronized boolean initUserConfig(Long userId) {
         var userFileName = new StringBuilder().append(userId).append(".conf").toString();
@@ -366,59 +381,18 @@ public class GitoliteUtil {
             return false;
         }
         try {
-            List<String> command = new LinkedList<>();
-            command.add("git");
-            command.add("-C");
-            command.add(GitConstant.GIT_SERVER_ADMIN_REPOSITORY);
-            command.add("add");
-            command.addAll(List.of(files).stream().map(Path::toString).toList());
-            ProcessBuilder add = new ProcessBuilder(command);
-            Process process = add.start();
-            if (process.waitFor() != 0) {
-                logger.error("Failed to add files: {}", List.of(files));
-                throw new RuntimeException(process.errorReader().lines().toList().toString());
-            }
-            ProcessBuilder commit =
-                    new ProcessBuilder(
-                            "git",
-                            "-C",
-                            GitConstant.GIT_SERVER_ADMIN_REPOSITORY,
-                            "commit",
-                            "-m",
-                            message);
-            process = commit.start();
-            if (process.waitFor() != 0) {
-                logger.error("Failed to commit changes");
-                throw new RuntimeException(process.errorReader().lines().toList().toString());
-            }
-            ProcessBuilder push =
-                    new ProcessBuilder(
-                            "git", "-C", GitConstant.GIT_SERVER_ADMIN_REPOSITORY, "push");
-            process = push.start();
-            if (process.waitFor() != 0) {
-                logger.error("Failed to push changes");
-                throw new RuntimeException(process.errorReader().lines().toList().toString());
-            }
+            List.of(files).stream().forEach(file -> git.add().addFilepattern(file.toString()));
+            git.commit().setMessage(message).call();
+            git.push().call();
         } catch (Exception e) {
+            logger.error("Failed to commit and push: ", e);
+            logger.error("Trying to reset the repository");
             // reset the state of the repository
             try {
-                ProcessBuilder reset =
-                        new ProcessBuilder(
-                                "git",
-                                "-C",
-                                GitConstant.GIT_SERVER_ADMIN_REPOSITORY,
-                                "reset",
-                                "--hard",
-                                "HEAD^");
-                Process process = reset.start();
-                if (process.waitFor() != 0) {
-                    logger.error("Failed to reset repository");
-                    throw new RuntimeException(process.errorReader().lines().toList().toString());
-                }
+                git.reset().setMode(ResetType.HARD).setRef("HEAD^").call();
             } catch (Exception ex) {
-                logger.error(ex.getMessage());
+                logger.error("Failed to reset the repository: ", ex);
             }
-            logger.error(e.getMessage());
             return false;
         }
         return true;

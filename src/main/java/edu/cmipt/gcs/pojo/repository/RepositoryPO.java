@@ -83,6 +83,7 @@ public class RepositoryPO {
                         .append(":")
                         .append(GitConstant.GIT_SERVER_PORT)
                         .append(Paths.get("/", username, this.repositoryName).toString())
+                        .append(".git")
                         .toString();
         if (!httpsUrl.equals(this.httpsUrl) || !sshUrl.equals(this.sshUrl)) {
             this.httpsUrl = httpsUrl;

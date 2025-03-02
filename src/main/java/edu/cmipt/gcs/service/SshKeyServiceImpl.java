@@ -18,7 +18,7 @@ import java.io.Serializable;
 @Service
 public class SshKeyServiceImpl extends ServiceImpl<SshKeyMapper, SshKeyPO>
         implements SshKeyService {
-    private static final Logger logger = LoggerFactory.getLogger(RepositoryServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(SshKeyServiceImpl.class);
 
     @Transactional
     @Override
