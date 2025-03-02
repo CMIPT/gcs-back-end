@@ -8,7 +8,6 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,7 +19,7 @@ public class GitoliteUtil {
     static {
         try {
             var repository = new FileRepositoryBuilder()
-                    .setGitDir(new File(GitConstant.GIT_SERVER_ADMIN_REPOSITORY))
+                    .setGitDir(Paths.get(GitConstant.GIT_SERVER_ADMIN_REPOSITORY, ".git").toFile())
                     .build();
             git = new Git(repository);
         } catch (Exception e) {
@@ -228,6 +227,7 @@ public class GitoliteUtil {
                         logger.error("Failed to commit and push");
                         return false;
                     }
+                    initialCommit(repositoryName, userName);
                     return true;
                 }
             }
@@ -381,7 +381,9 @@ public class GitoliteUtil {
             return false;
         }
         try {
-            List.of(files).stream().forEach(file -> git.add().addFilepattern(file.toString()));
+            var gitAdd = git.add();
+            List.of(files).stream().forEach(file -> gitAdd.addFilepattern(file.toString()));
+            gitAdd.call();
             git.commit().setMessage(message).call();
             git.push().call();
         } catch (Exception e) {
@@ -396,5 +398,35 @@ public class GitoliteUtil {
             return false;
         }
         return true;
+    }
+
+    private static synchronized void initialCommit(String username, String repositoryName) {
+        try {
+            var savePath = Paths.get("/tmp/gcs/repositories/", username, repositoryName).toFile();
+            if (savePath.exists()) {
+                savePath.delete();
+            }
+            savePath.mkdirs();
+            logger.debug("Save path: {}", savePath.toString());
+            var remoteURI = new StringBuilder()
+                        .append(GitConstant.GIT_SERVER_USERNAME)
+                        .append("@localhost:")
+                        .append(Paths.get(username, repositoryName).toString())
+                        .append(".git")
+                        .toString();
+            logger.debug("Remote URI: {}", remoteURI);
+            Git userGit = Git.cloneRepository()
+                .setURI(remoteURI)
+                .setDirectory(savePath)
+            .call();
+            var readmeFile = Paths.get(savePath.toString(), "README.md").toFile();
+            readmeFile.createNewFile();
+            userGit.add().addFilepattern("README.md").call();
+            userGit.commit().setMessage("Initial commit").call();
+            userGit.push().call();
+            savePath.delete();
+        } catch (Exception e) {
+            logger.error("Failed to initial commit: ", e);
+        }
     }
 }
