@@ -10,6 +10,6 @@ public record RepositoryFileDetailVO(
         @Schema(description = "When the path is a directory and there is a READM.md, this will be the content of the file") String readmeContent,
         @Schema(description = "When the path is a directory and there is a LICENSE, this will be the content of the file") String licenseContent,
         @Schema(description = "When the path is a directory, this contains the sub-dir or files")
-            List<RepositoryFileVO> directory
+            List<RepositoryFileVO> directoryList
 ) {
 }
