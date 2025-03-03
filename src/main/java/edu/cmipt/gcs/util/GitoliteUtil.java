@@ -16,12 +16,16 @@ import java.util.List;
 public class GitoliteUtil {
     private static final Logger logger = LoggerFactory.getLogger(GitoliteUtil.class);
     private static Git git;
+
     static {
         try {
-            var repository = new FileRepositoryBuilder()
-                    .setGitDir(Paths.get(GitConstant.GIT_SERVER_ADMIN_REPOSITORY, ".git").toFile())
-                    .setMustExist(true)
-                    .build();
+            var repository =
+                    new FileRepositoryBuilder()
+                            .setGitDir(
+                                    Paths.get(GitConstant.GIT_SERVER_ADMIN_REPOSITORY, ".git")
+                                            .toFile())
+                            .setMustExist(true)
+                            .build();
             git = new Git(repository);
         } catch (Exception e) {
             logger.error("Failed to initialize git repository: ", e);
@@ -410,17 +414,15 @@ public class GitoliteUtil {
             }
             savePath.mkdirs();
             logger.debug("Save path: {}", savePath.toString());
-            var remoteURI = new StringBuilder()
-                        .append(GitConstant.GIT_SERVER_USERNAME)
-                        .append("@localhost:")
-                        .append(Paths.get(username, repositoryName).toString())
-                        .append(".git")
-                        .toString();
+            var remoteURI =
+                    new StringBuilder()
+                            .append(GitConstant.GIT_SERVER_USERNAME)
+                            .append("@localhost:")
+                            .append(Paths.get(username, repositoryName).toString())
+                            .append(".git")
+                            .toString();
             logger.debug("Remote URI: {}", remoteURI);
-            Git userGit = Git.cloneRepository()
-                .setURI(remoteURI)
-                .setDirectory(savePath)
-            .call();
+            Git userGit = Git.cloneRepository().setURI(remoteURI).setDirectory(savePath).call();
             var readmeFile = Paths.get(savePath.toString(), "README.md").toFile();
             readmeFile.createNewFile();
             userGit.add().addFilepattern("README.md").call();

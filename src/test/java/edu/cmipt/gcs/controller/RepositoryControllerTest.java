@@ -176,7 +176,8 @@ public class RepositoryControllerTest {
                 .andExpectAll(
                         status().isOk(),
                         jsonPath("$.repositoryVO.id").value(TestConstant.REPOSITORY_ID),
-                        jsonPath("$.repositoryVO.repositoryName").value(TestConstant.REPOSITORY_NAME),
+                        jsonPath("$.repositoryVO.repositoryName")
+                                .value(TestConstant.REPOSITORY_NAME),
                         jsonPath("$.repositoryVO.userId").value(TestConstant.ID),
                         jsonPath("$.repositoryVO.star").value(0),
                         jsonPath("$.repositoryVO.fork").value(0),
@@ -201,8 +202,7 @@ public class RepositoryControllerTest {
                         get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                                 .param("id", TestConstant.REPOSITORY_ID)
-                                .param("ref", "invalid ref")
-        )
+                                .param("ref", "invalid ref"))
                 .andExpectAll(status().isNotFound());
     }
 
