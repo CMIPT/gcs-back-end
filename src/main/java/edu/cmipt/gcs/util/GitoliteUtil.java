@@ -20,6 +20,7 @@ public class GitoliteUtil {
         try {
             var repository = new FileRepositoryBuilder()
                     .setGitDir(Paths.get(GitConstant.GIT_SERVER_ADMIN_REPOSITORY, ".git").toFile())
+                    .setMustExist(true)
                     .build();
             git = new Git(repository);
         } catch (Exception e) {
