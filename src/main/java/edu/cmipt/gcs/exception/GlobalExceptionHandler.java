@@ -98,6 +98,7 @@ public class GlobalExceptionHandler {
         logger.error("Error caused by {}:\n {}", request.getRemoteAddr(), e.getMessage());
         switch (e.getCode()) {
             case INVALID_TOKEN:
+            case TOKEN_NOT_FOUND:
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new ErrorVO(e.getCode(), e.getMessage()));
             case ACCESS_DENIED:
@@ -106,6 +107,9 @@ public class GlobalExceptionHandler {
             case USER_NOT_FOUND:
             case SSH_KEY_NOT_FOUND:
             case REPOSITORY_NOT_FOUND:
+            case REPOSITORY_REF_NOT_FOUND:
+            case REPOSITORY_PATH_NOT_FOUND:
+            case COLLABORATION_NOT_FOUND:
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(new ErrorVO(e.getCode(), e.getMessage()));
             case OPERATION_NOT_IMPLEMENTED:

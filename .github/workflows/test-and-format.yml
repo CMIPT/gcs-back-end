@@ -91,7 +91,6 @@ jobs:
           SPRING_MAIL_PASSWORD: neverused
           SPRING_MAIL_PROTOCOL: smtps
           SPRING_MAIL_DEFAULT_ENCODING: UTF-8
-          FRONT_END_URL: http://neverused.com
           MD5_SALT: neverused
 
   google-java-format:

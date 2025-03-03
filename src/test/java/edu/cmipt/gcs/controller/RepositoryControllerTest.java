@@ -166,19 +166,44 @@ public class RepositoryControllerTest {
     }
 
     @Test
-    public void testGetRepositoryValid() throws Exception {
+    public void testGetRepositoryDetailsValid() throws Exception {
         mvc.perform(
                         get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH)
                                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                                .param("id", TestConstant.REPOSITORY_ID))
+                                .param("id", TestConstant.REPOSITORY_ID)
+                                .param("ref", "master")
+                                .param("path", "/"))
                 .andExpectAll(
                         status().isOk(),
-                        jsonPath("$.id").value(TestConstant.REPOSITORY_ID),
-                        jsonPath("$.repositoryName").value(TestConstant.REPOSITORY_NAME),
-                        jsonPath("$.userId").value(TestConstant.ID),
-                        jsonPath("$.star").value(0),
-                        jsonPath("$.fork").value(0),
-                        jsonPath("$.watcher").value(0));
+                        jsonPath("$.repositoryVO.id").value(TestConstant.REPOSITORY_ID),
+                        jsonPath("$.repositoryVO.repositoryName")
+                                .value(TestConstant.REPOSITORY_NAME),
+                        jsonPath("$.repositoryVO.userId").value(TestConstant.ID),
+                        jsonPath("$.repositoryVO.star").value(0),
+                        jsonPath("$.repositoryVO.fork").value(0),
+                        jsonPath("$.repositoryVO.watcher").value(0),
+                        jsonPath("$.branchList").isArray(),
+                        jsonPath("$.branchList.length()").value(1),
+                        jsonPath("$.branchList[0]").value("refs/heads/master"),
+                        jsonPath("$.tagList").isArray(),
+                        jsonPath("$.tagList.length()").value(0),
+                        jsonPath("$.defaultRef").value("refs/heads/master"),
+                        jsonPath("$.path.isDirectory").value(true),
+                        jsonPath("$.path.content").value(""),
+                        jsonPath("$.path.readmeContent").value(""),
+                        jsonPath("$.path.licenseContent").value(""),
+                        jsonPath("$.path.directoryList").isArray(),
+                        jsonPath("$.path.directoryList.length()").value(1));
+    }
+
+    @Test
+    public void testGetRepositoryDetailsInvalid() throws Exception {
+        mvc.perform(
+                        get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH)
+                                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                                .param("id", TestConstant.REPOSITORY_ID)
+                                .param("ref", "invalid ref"))
+                .andExpectAll(status().isNotFound());
     }
 
     @Test
