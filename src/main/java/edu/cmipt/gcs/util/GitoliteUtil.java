@@ -227,7 +227,7 @@ public class GitoliteUtil {
                         logger.error("Failed to commit and push");
                         return false;
                     }
-                    initialCommit(repositoryName, userName);
+                    initialCommit(userName, repositoryName);
                     return true;
                 }
             }
@@ -401,6 +401,7 @@ public class GitoliteUtil {
     }
 
     private static synchronized void initialCommit(String username, String repositoryName) {
+        // TODO: find a faster way to do this below
         try {
             var savePath = Paths.get("/tmp/gcs/repositories/", username, repositoryName).toFile();
             if (savePath.exists()) {

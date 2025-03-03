@@ -9,6 +9,6 @@ public record RepositoryDetailVO(
         @Schema(description = "Branch List") List<String> branchList,
         @Schema(description = "Tag List") List<String> tagList,
         @Schema(description = "Default ref") String defaultRef,
-        @Schema(description = "Root Directory Info") List<RepositoryFileVO> rootDirectory
+        @Schema(description = "Information of request path") RepositoryFileDetailVO path
 ) {
 }

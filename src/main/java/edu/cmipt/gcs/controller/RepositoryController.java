@@ -3,6 +3,9 @@ package edu.cmipt.gcs.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.GitConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
@@ -12,9 +15,11 @@ import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
+import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryDTO;
 import edu.cmipt.gcs.pojo.repository.RepositoryDetailVO;
+import edu.cmipt.gcs.pojo.repository.RepositoryFileDetailVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryFileVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
@@ -31,7 +36,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,6 +51,7 @@ import java.util.List;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.treewalk.TreeWalk;
@@ -171,16 +176,31 @@ public class RepositoryController {
                 description = "Repository Name",
                 required = false,
                 in = ParameterIn.QUERY,
-                schema = @Schema(implementation = String.class))
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = "ref",
+                description = "Ref, default to the default ref",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class)),
+        @Parameter(
+                name = "path",
+                description = "Path, default to '.' (root directory)",
+                required = false,
+                in = ParameterIn.QUERY,
+                schema = @Schema(implementation = String.class)),
     })
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Repository got successfully"),
-        @ApiResponse(responseCode = "404", description = "Repository not found")
+        @ApiResponse(responseCode = "404", description = "Repository not found",
+                    content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public RepositoryDetailVO getRepository(
+    public RepositoryDetailVO getRepositoryDetails(
             @RequestParam(value = "id", required = false) Long id,
             @RequestParam(value = "username", required = false) String username,
             @RequestParam(value = "repositoryName", required = false) String repositoryName,
+            @RequestParam(value = "ref", required = false) String ref,
+            @RequestParam(value = "path", required = false) String path,
             @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
         RepositoryPO repositoryPO;
         if (id == null) {
@@ -227,15 +247,9 @@ public class RepositoryController {
         }
         var userPO = userService.getById(repositoryPO.getUserId());
         var repositoryVO = new RepositoryVO(repositoryPO, userPO.getUsername(), userPO.getAvatarUrl());
-        var git = createGitWithRepository(username, repositoryName);
-        try {
-            if (git.getRepository().getAllRefsByPeeledObjectId().isEmpty()) {
-                return new RepositoryDetailVO(repositoryVO, List.of(), List.of(), "", List.of());
-            }
-            return fetchRepositoryDetails(git, repositoryVO);
-        } catch (Exception e) {
-            logger.error("Failed to get repository: {}/{}", username, repositoryName);
-            throw new RuntimeException(e);
+        try(var repository = createJGitRepository(username, repositoryName)) {
+            var git = new Git(repository);
+            return fetchRepositoryDetails(git, repositoryVO, ref, path);
         }
     }
 
@@ -680,8 +694,9 @@ public class RepositoryController {
                                 })
                         .toList());
     }
+    
 
-    private Git createGitWithRepository(String username, String repositoryName) {
+    private Repository createJGitRepository(String username, String repositoryName) {
         try {
             var repositoryGitPath = Path.of(
                     GitConstant.GIT_SERVER_HOME,
@@ -689,38 +704,125 @@ public class RepositoryController {
                     username,
                     repositoryName + ".git"
             ).toString();
-            logger.info("Repository git path: {}", repositoryGitPath);
-            var repository = new FileRepositoryBuilder()
+            logger.debug("Repository git path: {}", repositoryGitPath);
+            return new FileRepositoryBuilder()
+                    .setMustExist(true)
                     .setGitDir(new File(repositoryGitPath))
                     .build();
-            return new Git(repository);
         } catch (Exception e) {
             logger.error("Failed to create git with repository: {}/{}", username, repositoryName);
             throw new RuntimeException(e);
         }
     }
 
-    private RepositoryDetailVO fetchRepositoryDetails(Git git, RepositoryVO repositoryVO) throws Exception {
-        String defaultRef = git.getRepository().getFullBranch();
-        var branchList = git.branchList().call().stream().map(Ref::getName).toList();
-        var tagList = git.tagList().call().stream().map(Ref::getName).toList();
-        var rootDirectory = getRootDirectory(git, defaultRef);
-        return new RepositoryDetailVO(repositoryVO, branchList, tagList, defaultRef, rootDirectory);
+    private RepositoryDetailVO fetchRepositoryDetails(Git git, RepositoryVO repositoryVO, String ref, String path) {
+        // remove leading '/'
+        while (path != null && path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        // remove leading './'
+        while (path != null && path.startsWith("./")) {
+            path = path.substring(2);
+        }
+        // default to root directory
+        if (path == null || path.isBlank()) {
+            path = ".";
+        }
+        try {
+            String defaultRef = git.getRepository().getFullBranch();
+            if (ref == null || ref.isBlank()) {
+                ref = defaultRef;
+            }
+            // empty repository
+            if (git.getRepository().getAllRefsByPeeledObjectId().isEmpty()) {
+                if (ref.equals(defaultRef)) {
+                    if (".".equals(path)) {
+                        return new RepositoryDetailVO(repositoryVO, List.of(), List.of(), "", 
+                            new RepositoryFileDetailVO(true, "", "", "", List.of())
+                        );
+                    }
+                    throw new GenericException(ErrorCodeEnum.REPOSITORY_PATH_NOT_FOUND, path);
+                }
+                throw new GenericException(ErrorCodeEnum.REPOSITORY_REF_NOT_FOUND, ref);
+            }
+            return new RepositoryDetailVO(repositoryVO,
+                git.branchList().call().stream().map(Ref::getName).toList(),
+                git.tagList().call().stream().map(Ref::getName).toList(),
+                defaultRef, getPathContent(git, ref, path));
+        } catch (GenericException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private List<RepositoryFileVO> getRootDirectory(Git git, String ref) throws Exception {
-        var rootDirectory = new LinkedList<RepositoryFileVO>();
-        try (RevWalk revWalk = new RevWalk(git.getRepository())) {
-            var commit = revWalk.parseCommit(git.getRepository().resolve(ref));
-            var revTree = commit.getTree();
-            try (TreeWalk treeWalk = new TreeWalk(git.getRepository())) {
-                treeWalk.addTree(revTree);
-                treeWalk.setRecursive(false);
-                while (treeWalk.next()) {
-                    rootDirectory.add(new RepositoryFileVO(treeWalk.getNameString(), treeWalk.isSubtree()));
+    private RepositoryFileDetailVO getPathContent(Git git, String ref, String path) throws Exception {
+        logger.debug("Get path content: {}/{}", ref, path);
+        var repository = git.getRepository();
+        var commitId = repository.resolve(ref);
+        if (commitId == null) {
+            logger.info("Ref {} in repo {} not found", ref, repository.getDirectory());
+            throw new GenericException(ErrorCodeEnum.REPOSITORY_REF_NOT_FOUND, ref);
+        }
+        try (var revWalk = new RevWalk(repository)) {
+            var commit = revWalk.parseCommit(commitId);
+            final TreeWalk treeWalk = ".".equals(path) ? new TreeWalk(repository) : TreeWalk.forPath(repository, path, commit.getTree());
+            if (treeWalk == null) {
+                logger.info("Path {} in ref {} of repo {} not found", path, ref, repository.getDirectory());
+                throw new GenericException(ErrorCodeEnum.REPOSITORY_PATH_NOT_FOUND, path);
+            }
+            try (treeWalk) {
+                var directory = new LinkedList<RepositoryFileVO>();
+                if (".".equals(path)) {
+                    logger.debug("Path {} in ref {} of repo {} is the root", path, ref, repository.getDirectory());
+                    treeWalk.addTree(commit.getTree());
+                    treeWalk.setRecursive(false);
+                    return traverseDirectoryTree(treeWalk, repository, directory);
+                } else if (treeWalk.isSubtree()) {
+                    logger.debug("Path {} in ref {} of repo {} is a directory", path, ref, repository.getDirectory());
+                    try (var dirWalk = new TreeWalk(repository)) {
+                        dirWalk.addTree(treeWalk.getObjectId(0));
+                        dirWalk.setRecursive(false);
+                        return traverseDirectoryTree(dirWalk, repository, directory);
+                    }
+                } else {
+                    logger.debug("Path {} in ref {} of repo {} is a file", path, ref, repository.getDirectory());
+                    return new RepositoryFileDetailVO(
+                        false,
+                        new String(repository.open(treeWalk.getObjectId(0)).getBytes()),
+                        "",
+                        "",
+                        List.of()
+                    );
                 }
             }
         }
-        return rootDirectory;
+    }
+    private RepositoryFileDetailVO traverseDirectoryTree(TreeWalk dirTree, Repository repository,
+        List<RepositoryFileVO> directory
+    ) throws Exception {
+        String readmeContent = "";
+        String licenseContent = "";
+        while (dirTree.next()) {
+            directory.add(new RepositoryFileVO(dirTree.getNameString(), dirTree.isSubtree()));
+            if (dirTree.isSubtree()) {
+                continue;
+            }
+            var name = dirTree.getNameString();
+            if ("README.md".equals(name)) {
+                readmeContent = new String(repository.open(dirTree.getObjectId(0)).getBytes());
+                logger.debug("README.md content: {}", readmeContent.substring(0, Math.min(100, readmeContent.length())));
+            } else if ("LICENSE".equals(name)) {
+                licenseContent = new String(repository.open(dirTree.getObjectId(0)).getBytes());
+                logger.debug("LICENSE content: {}", licenseContent.substring(0, Math.min(100, licenseContent.length())));
+            }
+        }
+        return new RepositoryFileDetailVO(
+            true,
+            "",
+            readmeContent,
+            licenseContent,
+            directory
+        );
     }
 }
