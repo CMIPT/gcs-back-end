@@ -45,11 +45,13 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -757,36 +759,45 @@ public class RepositoryController {
     }
 
     private RepositoryFileDetailVO getPathContent(Git git, String ref, String path) throws Exception {
-        logger.debug("Get path content: {}/{}", ref, path);
+        logger.debug("Get path content: '{}/{}'", ref, path);
         var repository = git.getRepository();
-        var commitId = repository.resolve(ref);
+        ObjectId commitId = null;
+        try {
+            commitId = repository.resolve(ref);
+        } catch (IOException e) {
+            logger.error("Failed to resolve ref '{}' in repo '{}'", ref, repository.getDirectory());
+            throw new RuntimeException(e);
+        } catch (Exception e) {
+            // this happens for invalid ref such as 'invalid ref'
+            commitId = null;
+        }
         if (commitId == null) {
-            logger.info("Ref {} in repo {} not found", ref, repository.getDirectory());
+            logger.info("Ref '{}' in repo '{}' not found", ref, repository.getDirectory());
             throw new GenericException(ErrorCodeEnum.REPOSITORY_REF_NOT_FOUND, ref);
         }
         try (var revWalk = new RevWalk(repository)) {
             var commit = revWalk.parseCommit(commitId);
             final TreeWalk treeWalk = ".".equals(path) ? new TreeWalk(repository) : TreeWalk.forPath(repository, path, commit.getTree());
             if (treeWalk == null) {
-                logger.info("Path {} in ref {} of repo {} not found", path, ref, repository.getDirectory());
+                logger.info("Path '{}' in ref '{}' of repo '{}' not found", path, ref, repository.getDirectory());
                 throw new GenericException(ErrorCodeEnum.REPOSITORY_PATH_NOT_FOUND, path);
             }
             try (treeWalk) {
                 var directory = new LinkedList<RepositoryFileVO>();
                 if (".".equals(path)) {
-                    logger.debug("Path {} in ref {} of repo {} is the root", path, ref, repository.getDirectory());
+                    logger.debug("Path '{}' in ref '{}' of repo '{}' is the root", path, ref, repository.getDirectory());
                     treeWalk.addTree(commit.getTree());
                     treeWalk.setRecursive(false);
                     return traverseDirectoryTree(treeWalk, repository, directory);
                 } else if (treeWalk.isSubtree()) {
-                    logger.debug("Path {} in ref {} of repo {} is a directory", path, ref, repository.getDirectory());
+                    logger.debug("Path '{}' in ref '{}' of repo '{}' is a directory", path, ref, repository.getDirectory());
                     try (var dirWalk = new TreeWalk(repository)) {
                         dirWalk.addTree(treeWalk.getObjectId(0));
                         dirWalk.setRecursive(false);
                         return traverseDirectoryTree(dirWalk, repository, directory);
                     }
                 } else {
-                    logger.debug("Path {} in ref {} of repo {} is a file", path, ref, repository.getDirectory());
+                    logger.debug("Path '{}' in ref '{}' of repo '{}' is a file", path, ref, repository.getDirectory());
                     return new RepositoryFileDetailVO(
                         false,
                         new String(repository.open(treeWalk.getObjectId(0)).getBytes()),
