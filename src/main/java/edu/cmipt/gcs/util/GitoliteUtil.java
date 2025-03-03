@@ -389,7 +389,7 @@ public class GitoliteUtil {
             git.push().call();
         } catch (Exception e) {
             logger.error("Failed to commit and push: ", e);
-            logger.error("Trying to reset the repository");
+            logger.info("Trying to reset the repository");
             // reset the state of the repository
             try {
                 git.reset().setMode(ResetType.HARD).setRef("HEAD^").call();
