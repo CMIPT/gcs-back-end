@@ -54,19 +54,13 @@ WORKDIR "$JAVA_WORKING_DIRECTORY"
 
 RUN mkdir -p .output
 COPY "$TARGET_JAR_PATH" .output* .output
+COPY ./start.sh .
 
-RUN echo "\
-    chown -R $GIT_USER_NAME:$GIT_USER_MAIN_GROUP $GIT_USER_HOME/repositories && \
-    if [ -f $JAVA_WORKING_DIRECTORY/.output/gcs-back-end.jar ]; then mv $JAVA_WORKING_DIRECTORY/.output/gcs-back-end.jar $JAVA_WORKING_DIRECTORY/gcs-back-end.jar; fi && \
-    service ssh restart && \
-    git -C $GITOLITE_ADMIN_REPOSITORY fetch && \
-    git -C $GITOLITE_ADMIN_REPOSITORY reset --hard origin/master && \
-    cp ~/.ssh/id_rsa.pub $GITOLITE_ADMIN_REPOSITORY/keydir/root.pub && \
-    (git -C $GITOLITE_ADMIN_REPOSITORY commit -am 'Update root.pub' && git -C $GITOLITE_ADMIN_REPOSITORY push -f || true) && \
-    if [ -f $JAVA_WORKING_DIRECTORY/.output/server/index.mjs ]; then node /gcs/.output/server/index.mjs & fi && \
-    java -jar gcs-back-end.jar" \
-    > \
-    "start.sh"
+ENV JAVA_WORKING_DIRECTORY="$JAVA_WORKING_DIRECTORY"
+ENV GIT_USER_NAME="$GIT_USER_NAME"
+ENV GIT_USER_MAIN_GROUP="$GIT_USER_MAIN_GROUP"
+ENV GIT_USER_HOME="$GIT_USER_HOME"
+ENV GITOLITE_ADMIN_REPOSITORY="$GITOLITE_ADMIN_REPOSITORY"
 
 ENTRYPOINT ["bash", "start.sh"]
 

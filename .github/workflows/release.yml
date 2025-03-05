@@ -22,7 +22,7 @@ jobs:
         run: mvn clean package -Dmaven.test.skip=true
 
       - name: Tar as a gcs-back-end.tar.gz
-        run: tar -czf gcs-back-end.tar.gz target/gcs-back-end.jar .env Dockerfile docker-compose.yml 3rdparty/gitolite database/init nginx
+        run: tar -czf gcs-back-end.tar.gz target/gcs-back-end.jar .env Dockerfile docker-compose.yml 3rdparty/gitolite database/init nginx start.sh
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
