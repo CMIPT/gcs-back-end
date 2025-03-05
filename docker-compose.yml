@@ -4,12 +4,14 @@ services:
     container_name: gcs-nginx
     restart: always
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/templates:/etc/nginx/templates
       - ./nginx/ssl:/etc/nginx/ssl
     ports:
       - ${FRONT_END_REVERSE_PROXY_PORT}:443
     depends_on:
       - gcs
+    environment:
+      FRONT_END_REVERSE_PROXY_PORT: ${FRONT_END_REVERSE_PROXY_PORT}
   gcs-postgres:
     image: postgres:14
     container_name: gcs-postgres
