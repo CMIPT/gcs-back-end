@@ -2,6 +2,8 @@ FROM ubuntu:latest
 
 RUN apt-get update && apt-get install -y sudo openssh-server git openjdk-17-jre-headless nodejs
 
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
 ARG GIT_USER_NAME=git
 ARG GIT_USER_MAIN_GROUP="$GIT_USER_NAME"
 ARG GIT_USER_PASSWORD="$GIT_USER_NAME"
@@ -22,12 +24,14 @@ COPY "$GITOLITE_PATH" "$GITOLITE_REPOSITORY"
 RUN chown -R "$GIT_USER_NAME:$GIT_USER_MAIN_GROUP" "$GITOLITE_REPOSITORY" && \
     sudo -u "$GIT_USER_NAME" mkdir -p "$GITOLITE_INSTALLATION_DIR" && \
     sudo -u "$GIT_USER_NAME" "$GITOLITE_REPOSITORY/install" -to "$GITOLITE_INSTALLATION_DIR" && \
+    git config --global user.name "$GITOLITE_ADMIN_REPOSITORY_USER_NAME" && \
+    git config --global user.email "$GITOLITE_ADMIN_REPOSITORY_USER_EMAIL"
+
+RUN service ssh restart && \
     ssh-keygen -t rsa -b 4096 -f /root/.ssh/id_rsa -N "" && \
     cp /root/.ssh/id_rsa.pub "$GIT_USER_HOME/root.pub" && \
     chown "$GIT_USER_NAME:$GIT_USER_MAIN_GROUP" "$GIT_USER_HOME/root.pub" && \
-    sudo -u "$GIT_USER_NAME" "$GITOLITE_INSTALLATION_DIR/gitolite" setup -pk "$GIT_USER_HOME/root.pub"
-
-RUN service ssh restart && \
+    sudo -u "$GIT_USER_NAME" "$GITOLITE_INSTALLATION_DIR/gitolite" setup -pk "$GIT_USER_HOME/root.pub" && \
     ssh-keyscan -p 22 localhost >> /root/.ssh/known_hosts && \
     git clone "$GIT_USER_NAME@localhost:gitolite-admin" "$GITOLITE_ADMIN_REPOSITORY" && \
     mkdir -p "$GITOLITE_ADMIN_REPOSITORY/conf/gitolite.d/user" && \
@@ -41,12 +45,8 @@ include \"gitolite.d/repository/*.conf\"\n\
 @all_public_repo = testing\n\
 repo @all_public_repo\n\
     R = @all" > "$GITOLITE_ADMIN_REPOSITORY/conf/gitolite.conf" && \
-    git config --global user.name "$GITOLITE_ADMIN_REPOSITORY_USER_NAME" && \
-    git config --global user.email "$GITOLITE_ADMIN_REPOSITORY_USER_EMAIL" && \
     git -C "$GITOLITE_ADMIN_REPOSITORY" commit -am "Init the gitolite-admin" && \
     git -C "$GITOLITE_ADMIN_REPOSITORY" push
-
-RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
 EXPOSE 22 8080 3000
 
