@@ -2,7 +2,11 @@ FROM ubuntu:latest
 
 RUN apt-get update && apt-get install -y sudo openssh-server git openjdk-17-jre-headless nodejs
 
-RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+RUN apt-get install -y locales && \
+    ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+ENV LANG=C.UTF-8 \
+    LANGUAGE=C.UTF-8 \
+    LC_ALL=C.UTF-8
 
 ARG GIT_USER_NAME=git
 ARG GIT_USER_MAIN_GROUP="$GIT_USER_NAME"
@@ -56,11 +60,11 @@ RUN mkdir -p .output
 COPY "$TARGET_JAR_PATH" .output* .output
 COPY ./start.sh .
 
-ENV JAVA_WORKING_DIRECTORY="$JAVA_WORKING_DIRECTORY"
-ENV GIT_USER_NAME="$GIT_USER_NAME"
-ENV GIT_USER_MAIN_GROUP="$GIT_USER_MAIN_GROUP"
-ENV GIT_USER_HOME="$GIT_USER_HOME"
-ENV GITOLITE_ADMIN_REPOSITORY="$GITOLITE_ADMIN_REPOSITORY"
+ENV JAVA_WORKING_DIRECTORY="$JAVA_WORKING_DIRECTORY" \
+    GIT_USER_NAME="$GIT_USER_NAME" \
+    GIT_USER_MAIN_GROUP="$GIT_USER_MAIN_GROUP" \
+    GIT_USER_HOME="$GIT_USER_HOME" \
+    GITOLITE_ADMIN_REPOSITORY="$GITOLITE_ADMIN_REPOSITORY" \
 
 ENTRYPOINT ["bash", "start.sh"]
 
