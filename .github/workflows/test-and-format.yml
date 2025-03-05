@@ -115,7 +115,7 @@ jobs:
       - name: Format
         uses: axel-op/googlejavaformat-action@v4
         with:
-          args: "--replace --aosp"
+          args: "--replace"
           skip-commit: true
 
       - name: Commit changes

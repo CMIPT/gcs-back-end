@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 public class GcsApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(GcsApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(GcsApplication.class, args);
+  }
 }

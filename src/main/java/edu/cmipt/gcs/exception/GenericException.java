@@ -2,7 +2,6 @@ package edu.cmipt.gcs.exception;
 
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.util.MessageSourceUtil;
-
 import lombok.Getter;
 
 /**
@@ -17,14 +16,14 @@ import lombok.Getter;
  */
 @Getter
 public class GenericException extends RuntimeException {
-    private ErrorCodeEnum code;
+  private ErrorCodeEnum code;
 
-    public GenericException(String message) {
-        super(message);
-    }
+  public GenericException(String message) {
+    super(message);
+  }
 
-    public GenericException(ErrorCodeEnum code, Object... args) {
-        super(MessageSourceUtil.getMessage(code, args));
-        this.code = code;
-    }
+  public GenericException(ErrorCodeEnum code, Object... args) {
+    super(MessageSourceUtil.getMessage(code, args));
+    this.code = code;
+  }
 }
