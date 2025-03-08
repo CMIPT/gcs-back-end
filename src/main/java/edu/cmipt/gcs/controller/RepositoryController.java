@@ -12,6 +12,7 @@ import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.enumeration.RepositoryOrderByEnum;
 import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.exception.GenericException;
+import edu.cmipt.gcs.pojo.collaboration.CollaboratorVO;
 import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
@@ -22,7 +23,6 @@ import edu.cmipt.gcs.pojo.repository.RepositoryFileVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
 import edu.cmipt.gcs.pojo.user.UserPO;
-import edu.cmipt.gcs.pojo.user.UserVO;
 import edu.cmipt.gcs.service.RepositoryService;
 import edu.cmipt.gcs.service.UserCollaborateRepositoryService;
 import edu.cmipt.gcs.service.UserService;
@@ -181,7 +181,10 @@ public class RepositoryController {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage);
     }
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    checkVisibility(repositoryPO, idInToken, notFoundMessage);
+    checkVisibility(
+        repositoryPO,
+        idInToken,
+        new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage));
     id = repositoryPO.getId();
     username = userService.getById(repositoryPO.getUserId()).getUsername();
     repositoryName = repositoryPO.getRepositoryName();
@@ -227,7 +230,8 @@ public class RepositoryController {
     if (!idInToken.equals(userId)) {
       logger.info(
           "User[{}] tried to update repository of user[{}]", userId, repositoryPO.getUserId());
-      checkVisibility(repositoryPO, idInToken, id.toString());
+      checkVisibility(
+          repositoryPO, idInToken, new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, id));
       throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
     }
     if (repository.repositoryName() != null) {
@@ -307,7 +311,10 @@ public class RepositoryController {
           idInToken,
           repositoryId,
           repositoryUserId);
-      checkVisibility(repositoryPO, idInToken, repositoryId.toString());
+      checkVisibility(
+          repositoryPO,
+          idInToken,
+          new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId));
       throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
     }
     if (collaboratorId.equals(repositoryUserId)) {
@@ -335,7 +342,7 @@ public class RepositoryController {
   @DeleteMapping(ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH)
   @Operation(
       summary = "Remove a collaboration relationship",
-      description = "Remove a collaboration relationship between a collaborator and a repository",
+      description = "Remove a collaboration with the given collaboration id",
       tags = {"Repository", "Delete Method"})
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Relationship removed successfully"),
@@ -344,45 +351,29 @@ public class RepositoryController {
         content = @Content(schema = @Schema(implementation = ErrorVO.class))),
   })
   public void removeCollaboration(
-      @RequestParam("repositoryId") Long repositoryId,
-      @RequestParam("collaboratorId") Long collaboratorId,
+      @RequestParam("id") Long id,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    var userPO = userService.getById(collaboratorId);
-    if (userPO == null) {
-      throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, collaboratorId);
+    var collaboration = userCollaborateRepositoryService.getById(id);
+    if (collaboration == null) {
+      throw new GenericException(ErrorCodeEnum.COLLABORATION_NOT_FOUND, id);
     }
+    Long repositoryId = collaboration.getRepositoryId();
     var repositoryPO = repositoryService.getById(repositoryId);
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    // return NOT_FOUND to make sure the user can't know the repository exists
-    // if the repository is private
-    if (repositoryPO == null
-        || repositoryPO.getIsPrivate()
-            && !idInToken.equals(repositoryPO.getUserId())
-            && userCollaborateRepositoryService.getOne(
-                    new QueryWrapper<UserCollaborateRepositoryPO>()
-                        .eq("collaborator_id", idInToken)
-                        .eq("repository_id", repositoryId))
-                == null) {
-      throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
-    }
-    Long repositoryUserId = repositoryService.getById(repositoryId).getUserId();
-    if (!idInToken.equals(repositoryUserId)) {
+    if (!idInToken.equals(repositoryPO.getUserId())) {
       logger.info(
-          "User[{}] tried to remove collaborator from repository[{}] whose creator is" + " [{}]",
+          "User[{}] tried to remove collaborator from repository[{}] whose creator is [{}]",
           idInToken,
           repositoryId,
-          repositoryUserId);
+          repositoryPO.getUserId());
+      checkVisibility(
+          repositoryPO,
+          idInToken,
+          new GenericException(ErrorCodeEnum.COLLABORATION_NOT_FOUND, id));
       throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
     }
-    var queryWrapper = new QueryWrapper<UserCollaborateRepositoryPO>();
-    queryWrapper.eq("collaborator_id", collaboratorId);
-    queryWrapper.eq("repository_id", repositoryId);
-    var userCollaborateRepositoryPO = userCollaborateRepositoryService.getOne(queryWrapper);
-    if (userCollaborateRepositoryPO == null) {
-      throw new GenericException(
-          ErrorCodeEnum.COLLABORATION_NOT_FOUND, collaboratorId, repositoryId);
-    }
-    if (!userCollaborateRepositoryService.removeById(userCollaborateRepositoryPO.getId())) {
+    if (!userCollaborateRepositoryService.removeById(id)) {
+      Long collaboratorId = collaboration.getCollaboratorId();
       logger.error(
           "Failed to remove collaborator[{}] from repository[{}]", collaboratorId, repositoryId);
       throw new GenericException(
@@ -401,7 +392,7 @@ public class RepositoryController {
         description = "Collaborators page failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
-  public PageVO<UserVO> pageCollaborator(
+  public PageVO<CollaboratorVO> pageCollaborator(
       @RequestParam("repositoryId") Long repositoryId,
       @RequestParam("page") Integer page,
       @RequestParam("size") Integer size,
@@ -413,11 +404,15 @@ public class RepositoryController {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
     }
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    checkVisibility(repository, idInToken, repositoryId.toString());
+    checkVisibility(
+        repository,
+        idInToken,
+        new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId));
     var iPage =
         userCollaborateRepositoryService.pageCollaboratorsByRepositoryId(
             repositoryId, new Page<>(page, size), orderBy, isAsc);
-    return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(UserVO::new).toList());
+    return new PageVO<>(
+        iPage.getTotal(), iPage.getRecords().stream().map(CollaboratorVO::new).toList());
   }
 
   @GetMapping(ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH)
@@ -633,7 +628,7 @@ public class RepositoryController {
    * @throws GenericException if the repository is private and the user is not the creator or is not
    *     one of collaborators
    */
-  private void checkVisibility(RepositoryPO repositoryPO, Long userId, String notFoundMessage) {
+  private void checkVisibility(RepositoryPO repositoryPO, Long userId, GenericException e) {
     // If the repository is private, we return NOT_FOUND to make sure the user can't know
     // the repository exists
     if (repositoryPO.getIsPrivate()
@@ -642,8 +637,9 @@ public class RepositoryController {
                     .eq("collaborator_id", userId)
                     .eq("repository_id", repositoryPO.getId()))
             == null) {
-      logger.info("User[{}] tried to get private repository of user[{}]", userId, repositoryPO.getUserId());
-      throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage);
+      logger.info(
+          "User[{}] tried to get private repository of user[{}]", userId, repositoryPO.getUserId());
+      throw e;
     }
   }
 }

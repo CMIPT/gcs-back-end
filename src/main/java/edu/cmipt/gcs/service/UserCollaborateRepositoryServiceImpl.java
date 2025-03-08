@@ -1,6 +1,5 @@
 package edu.cmipt.gcs.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yulichang.toolkit.JoinWrappers;
@@ -9,6 +8,7 @@ import edu.cmipt.gcs.dao.UserMapper;
 import edu.cmipt.gcs.enumeration.CollaboratorOrderByEnum;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.exception.GenericException;
+import edu.cmipt.gcs.pojo.collaboration.CollaboratorDTO;
 import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.util.GitoliteUtil;
@@ -67,11 +67,17 @@ public class UserCollaborateRepositoryServiceImpl
   }
 
   @Override
-  public IPage<UserPO> pageCollaboratorsByRepositoryId(
-      Long repositoryId, Page<UserPO> page, CollaboratorOrderByEnum orderBy, Boolean isAsc) {
+  public Page<CollaboratorDTO> pageCollaboratorsByRepositoryId(
+      Long repositoryId,
+      Page<CollaboratorDTO> page,
+      CollaboratorOrderByEnum orderBy,
+      Boolean isAsc) {
     var queryWrapper =
         JoinWrappers.lambda(UserPO.class)
-            .selectAll()
+            .selectAsClass(UserCollaborateRepositoryPO.class, CollaboratorDTO.class)
+            .selectAs(UserPO::getUsername, CollaboratorDTO::getUsername)
+            .selectAs(UserPO::getEmail, CollaboratorDTO::getEmail)
+            .selectAs(UserPO::getAvatarUrl, CollaboratorDTO::getAvatarUrl)
             .innerJoin(
                 UserCollaborateRepositoryPO.class,
                 UserCollaborateRepositoryPO::getCollaboratorId,
@@ -88,6 +94,6 @@ public class UserCollaborateRepositoryServiceImpl
         queryWrapper.orderBy(true, isAsc, UserCollaborateRepositoryPO::getGmtCreated);
         break;
     }
-    return userMapper.selectJoinPage(page, queryWrapper);
+    return userMapper.selectJoinPage(page, CollaboratorDTO.class, queryWrapper);
   }
 }
