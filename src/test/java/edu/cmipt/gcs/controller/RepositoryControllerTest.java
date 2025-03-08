@@ -216,15 +216,7 @@ public class RepositoryControllerTest {
                     }
                     """
                         .formatted(TestConstant.REPOSITORY_ID, newDescription)))
-        .andExpectAll(
-            status().isOk(),
-            jsonPath("$.id").value(TestConstant.REPOSITORY_ID),
-            jsonPath("$.repositoryName").value(TestConstant.REPOSITORY_NAME),
-            jsonPath("$.repositoryDescription").value(newDescription),
-            jsonPath("$.userId").value(TestConstant.ID),
-            jsonPath("$.star").value(0),
-            jsonPath("$.fork").value(0),
-            jsonPath("$.watcher").value(0));
+        .andExpectAll(status().isOk());
   }
 
   @Test

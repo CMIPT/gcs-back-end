@@ -33,7 +33,6 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -143,7 +142,7 @@ public class UserController {
       required = true,
       in = ParameterIn.HEADER,
       schema = @Schema(implementation = String.class))
-  public ResponseEntity<UserVO> updateUser(
+  public void updateUser(
       @Validated @RequestBody UserUpdateDTO user,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     if (user.username() != null) {
@@ -154,8 +153,6 @@ public class UserController {
     if (!userService.updateById(new UserPO(user, idInToken))) {
       throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user);
     }
-    var userVO = new UserVO(userService.getById(idInToken));
-    return ResponseEntity.ok().body(userVO);
   }
 
   @PostMapping(ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH)

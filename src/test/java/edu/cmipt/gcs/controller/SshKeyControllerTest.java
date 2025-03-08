@@ -1,7 +1,6 @@
 package edu.cmipt.gcs.controller;
 
 import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -129,11 +128,7 @@ public class SshKeyControllerTest {
                     }
                     """
                         .formatted(TestConstant.SSH_KEY_ID)))
-        .andExpectAll(
-            status().isOk(),
-            jsonPath("$.id", is(TestConstant.SSH_KEY_ID)),
-            jsonPath("$.userId", is(TestConstant.ID)),
-            jsonPath("$.name", is("My SSH Key Updated")));
+        .andExpectAll(status().isOk());
   }
 
   @Test

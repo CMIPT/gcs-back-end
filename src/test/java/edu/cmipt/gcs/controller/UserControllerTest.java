@@ -93,10 +93,7 @@ public class UserControllerTest {
                     }
                     """
                         .formatted(TestConstant.AVATAR_URL)))
-        .andExpectAll(
-            status().isOk(),
-            jsonPath("$.avatarUrl", is(TestConstant.AVATAR_URL)),
-            jsonPath("$.id").isString());
+        .andExpectAll(status().isOk());
   }
 
   @Test

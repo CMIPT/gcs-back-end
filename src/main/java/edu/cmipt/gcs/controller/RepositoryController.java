@@ -54,7 +54,6 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -264,7 +263,7 @@ public class RepositoryController {
     @ApiResponse(responseCode = "404", description = "Repository not found"),
     @ApiResponse(responseCode = "501", description = "Update repository name is not implemented")
   })
-  public ResponseEntity<RepositoryVO> updateRepository(
+  public void updateRepository(
       @Validated(UpdateGroup.class) @RequestBody RepositoryDTO repository,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long id = null;
@@ -290,11 +289,6 @@ public class RepositoryController {
     if (!repositoryService.updateById(new RepositoryPO(repository))) {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_UPDATE_FAILED, repository);
     }
-    var userPO = userService.getById(userId);
-    return ResponseEntity.ok()
-        .body(
-            new RepositoryVO(
-                repositoryService.getById(id), userPO.getUsername(), userPO.getAvatarUrl()));
   }
 
   @GetMapping(ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH)
