@@ -30,9 +30,6 @@ import edu.cmipt.gcs.util.JwtUtil;
 import edu.cmipt.gcs.validation.group.CreateGroup;
 import edu.cmipt.gcs.validation.group.UpdateGroup;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -47,6 +44,9 @@ import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.errors.AmbiguousObjectException;
+import org.eclipse.jgit.errors.IncorrectObjectTypeException;
+import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
@@ -131,20 +131,6 @@ public class RepositoryController {
       summary = "Get a repository",
       description = "Get a repository with the given id or username and repository name",
       tags = {"Repository", "Get Method"})
-  @Parameters({
-    @Parameter(
-        name = "ref",
-        description = "Ref, default to the default ref",
-        required = false,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
-        name = "path",
-        description = "Path, default to '.' (root directory)",
-        required = false,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = String.class)),
-  })
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Repository got successfully"),
     @ApiResponse(
@@ -155,48 +141,46 @@ public class RepositoryController {
       @RequestParam(value = "id", required = false) Long id,
       @RequestParam(value = "username", required = false) String username,
       @RequestParam(value = "repositoryName", required = false) String repositoryName,
-      @RequestParam(value = "ref", required = false) String ref,
-      @RequestParam(value = "path", required = false) String path,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    RepositoryPO repositoryPO;
-    if (id == null) {
-      if (username == null || repositoryName == null) {
-        throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-      }
-      var repositoryQueryWrapper = new QueryWrapper<RepositoryPO>();
-      var userQueryWrapper = new QueryWrapper<UserPO>();
-      userQueryWrapper.apply("LOWER(username) = LOWER({0})", username);
-      var userPO = userService.getOne(userQueryWrapper);
-      if (userPO == null) {
-        throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, username);
-      }
-      repositoryQueryWrapper.eq("user_id", userPO.getId());
-      repositoryQueryWrapper.apply("LOWER(repository_name) = LOWER({0})", repositoryName);
-      repositoryPO = repositoryService.getOne(repositoryQueryWrapper);
-    } else {
-      repositoryPO = repositoryService.getById(id);
-    }
-    String notFoundMessage = id != null ? id.toString() : username + "/" + repositoryName;
-    if (repositoryPO == null) {
-      throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage);
-    }
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    checkVisibility(
-        repositoryPO,
-        idInToken,
-        new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage));
+    var repositoryPO = getRepositoryPO(id, username, repositoryName, accessToken);
     id = repositoryPO.getId();
     username = userService.getById(repositoryPO.getUserId()).getUsername();
     repositoryName = repositoryPO.getRepositoryName();
-    // The server's domain or port may be updated, every query we try to update the url
-    if (repositoryPO.generateUrl(username)) {
-      repositoryService.updateById(repositoryPO);
+    tryUpdateUrl(repositoryPO, username);
+    try (var jGitRepository = createJGitRepository(username, repositoryName)) {
+      var git = new Git(jGitRepository);
+      return fetchRepositoryDetails(git, repositoryPO);
     }
-    var userPO = userService.getById(repositoryPO.getUserId());
-    var repositoryVO = new RepositoryVO(repositoryPO, userPO.getUsername(), userPO.getAvatarUrl());
-    try (var repository = createJGitRepository(username, repositoryName)) {
-      var git = new Git(repository);
-      return fetchRepositoryDetails(git, repositoryVO, ref, path);
+  }
+
+  @GetMapping(ApiPathConstant.REPOSITORY_GET_REPOSITORY_PATH_WITH_REF_API_PATH)
+  @Operation(
+      summary = "Get a repository's path with ref",
+      description =
+          "Get a repository path information with the given path and ref, path is relative to the"
+              + " repository root directory, ref is the branch, tag name or hash",
+      tags = {"Repository", "Get Method"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Failure",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public RepositoryFileDetailVO getRepositoryPathWithRef(
+      @RequestParam(value = "id", required = false) Long id,
+      @RequestParam(value = "username", required = false) String username,
+      @RequestParam(value = "repositoryName", required = false) String repositoryName,
+      @RequestParam("ref") String ref,
+      @RequestParam("path") String path,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    var repositoryPO = getRepositoryPO(id, username, repositoryName, accessToken);
+    id = repositoryPO.getId();
+    username = userService.getById(repositoryPO.getUserId()).getUsername();
+    repositoryName = repositoryPO.getRepositoryName();
+    tryUpdateUrl(repositoryPO, username);
+    try (var jGitRepository = createJGitRepository(username, repositoryName)) {
+      var git = new Git(jGitRepository);
+      return fetchRepositoryPathWithRef(git, repositoryPO, ref, path);
     }
   }
 
@@ -293,8 +277,7 @@ public class RepositoryController {
       @RequestParam("collaborator") String collaborator,
       @RequestParam("collaboratorType") AddCollaboratorTypeEnum collaboratorType,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    var userQueryWrapper = collaboratorType.getQueryWrapper(collaborator);
-    var userPO = userService.getOne(userQueryWrapper);
+    var userPO = userService.getOne(collaboratorType.getQueryWrapper(collaborator));
     if (userPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, collaborator);
     }
@@ -367,9 +350,7 @@ public class RepositoryController {
           repositoryId,
           repositoryPO.getUserId());
       checkVisibility(
-          repositoryPO,
-          idInToken,
-          new GenericException(ErrorCodeEnum.COLLABORATION_NOT_FOUND, id));
+          repositoryPO, idInToken, new GenericException(ErrorCodeEnum.COLLABORATION_NOT_FOUND, id));
       throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
     }
     if (!userCollaborateRepositoryService.removeById(id)) {
@@ -436,8 +417,7 @@ public class RepositoryController {
       @RequestParam("orderBy") RepositoryOrderByEnum orderBy,
       @RequestParam("isAsc") Boolean isAsc,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    var userQueryWrapper = userType.getQueryWrapper(user);
-    var userPO = userService.getOne(userQueryWrapper);
+    var userPO = userService.getOne(userType.getQueryWrapper(user));
     if (userPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user);
     }
@@ -456,17 +436,20 @@ public class RepositoryController {
         iPage.getRecords().stream()
             .map(
                 (RepositoryPO repositoryPO) -> {
-                  // The server's domain or port may be updated,
-                  // every query we try to update the url
-                  if (repositoryPO.generateUrl(userPO.getUsername())) {
-                    repositoryService.updateById(repositoryPO);
-                  }
+                  tryUpdateUrl(repositoryPO, userPO.getUsername());
                   return new RepositoryVO(
                       repositoryPO, userPO.getUsername(), userPO.getAvatarUrl());
                 })
             .toList());
   }
 
+  /**
+   * Create a JGit repository with the given username and repository name
+   *
+   * @param username the username
+   * @param repositoryName the repository name
+   * @return the JGit repository
+   */
   private Repository createJGitRepository(String username, String repositoryName) {
     try {
       var repositoryGitPath =
@@ -483,8 +466,39 @@ public class RepositoryController {
     }
   }
 
-  private RepositoryDetailVO fetchRepositoryDetails(
-      Git git, RepositoryVO repositoryVO, String ref, String path) {
+  /**
+   * Fetch the repository details
+   *
+   * @param git the git object
+   * @param repositoryPO the repository PO
+   */
+  private RepositoryDetailVO fetchRepositoryDetails(Git git, RepositoryPO repositoryPO) {
+    try {
+      String defaultRef = git.getRepository().getFullBranch();
+      var userPO = userService.getById(repositoryPO.getUserId());
+      String username = userPO.getUsername();
+      String avatarUrl = userPO.getAvatarUrl();
+      List<String> branchList = List.of();
+      List<String> tagList = List.of();
+      // not an empty repository
+      if (!git.getRepository().getAllRefsByPeeledObjectId().isEmpty()) {
+        branchList = git.branchList().call().stream().map(Ref::getName).toList();
+        tagList = git.tagList().call().stream().map(Ref::getName).toList();
+      }
+      return new RepositoryDetailVO(
+          repositoryPO, username, avatarUrl, branchList, tagList, defaultRef);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Normalize the path, remove leading '/' and './', when the path is null or blank, default to '.'
+   *
+   * @param path the path
+   * @return the normalized path
+   */
+  private String normalizePath(String path) {
     // remove leading '/'
     while (path != null && path.startsWith("/")) {
       path = path.substring(1);
@@ -497,32 +511,94 @@ public class RepositoryController {
     if (path == null || path.isBlank()) {
       path = ".";
     }
+    return path;
+  }
+
+  /**
+   * Fetch the repository path with ref
+   *
+   * @param git the git object
+   * @param repositoryPO the repository PO
+   * @param ref the ref
+   * @param path the path
+   * @return the repository file detail VO
+   */
+  private RepositoryFileDetailVO fetchRepositoryPathWithRef(
+      Git git, RepositoryPO repositoryPO, String ref, String path) {
+    path = normalizePath(path);
     try {
-      String defaultRef = git.getRepository().getFullBranch();
-      if (ref == null || ref.isBlank()) {
-        ref = defaultRef;
-      }
       // empty repository
       if (git.getRepository().getAllRefsByPeeledObjectId().isEmpty()) {
-        if (ref.equals(defaultRef)) {
+        if (ref.isBlank()) {
           if (".".equals(path)) {
-            return new RepositoryDetailVO(
-                repositoryVO,
-                List.of(),
-                List.of(),
-                "",
-                new RepositoryFileDetailVO(true, "", "", "", List.of()));
+            return new RepositoryFileDetailVO(true, "", "", "", List.of());
           }
           throw new GenericException(ErrorCodeEnum.REPOSITORY_PATH_NOT_FOUND, path);
         }
         throw new GenericException(ErrorCodeEnum.REPOSITORY_REF_NOT_FOUND, ref);
       }
-      return new RepositoryDetailVO(
-          repositoryVO,
-          git.branchList().call().stream().map(Ref::getName).toList(),
-          git.tagList().call().stream().map(Ref::getName).toList(),
-          defaultRef,
-          getPathContent(git, ref, path));
+      logger.debug("Get path content: '{}/{}'", ref, path);
+      var repository = git.getRepository();
+      ObjectId commitId = null;
+      try {
+        commitId = repository.resolve(ref);
+      } catch (AmbiguousObjectException
+          | IncorrectObjectTypeException
+          | RevisionSyntaxException e) {
+        // this happens for invalid ref such as 'invalid ref'
+        logger.info("Ref '{}' in repo '{}' not found", ref, repository.getDirectory());
+        throw new GenericException(ErrorCodeEnum.REPOSITORY_REF_NOT_FOUND, ref);
+      } catch (IOException e) {
+        logger.error("Failed to resolve ref '{}' in repo '{}'", ref, repository.getDirectory());
+        throw e;
+      }
+      try (var revWalk = new RevWalk(repository)) {
+        var commit = revWalk.parseCommit(commitId);
+        final TreeWalk treeWalk =
+            ".".equals(path)
+                ? new TreeWalk(repository)
+                : TreeWalk.forPath(repository, path, commit.getTree());
+        if (treeWalk == null) {
+          logger.info(
+              "Path '{}' in ref '{}' of repo '{}' not found", path, ref, repository.getDirectory());
+          throw new GenericException(ErrorCodeEnum.REPOSITORY_PATH_NOT_FOUND, path);
+        }
+        try (treeWalk) {
+          if (".".equals(path)) {
+            logger.debug(
+                "Path '{}' in ref '{}' of repo '{}' is the root",
+                path,
+                ref,
+                repository.getDirectory());
+            treeWalk.addTree(commit.getTree());
+            treeWalk.setRecursive(false);
+            return traverseDirectoryTree(treeWalk, repository);
+          } else if (treeWalk.isSubtree()) {
+            logger.debug(
+                "Path '{}' in ref '{}' of repo '{}' is a directory",
+                path,
+                ref,
+                repository.getDirectory());
+            try (var dirWalk = new TreeWalk(repository)) {
+              dirWalk.addTree(treeWalk.getObjectId(0));
+              dirWalk.setRecursive(false);
+              return traverseDirectoryTree(dirWalk, repository);
+            }
+          } else {
+            logger.debug(
+                "Path '{}' in ref '{}' of repo '{}' is a file",
+                path,
+                ref,
+                repository.getDirectory());
+            return new RepositoryFileDetailVO(
+                false,
+                new String(repository.open(treeWalk.getObjectId(0)).getBytes()),
+                "",
+                "",
+                List.of());
+          }
+        }
+      }
     } catch (GenericException e) {
       throw e;
     } catch (Exception e) {
@@ -530,72 +606,9 @@ public class RepositoryController {
     }
   }
 
-  private RepositoryFileDetailVO getPathContent(Git git, String ref, String path) throws Exception {
-    logger.debug("Get path content: '{}/{}'", ref, path);
-    var repository = git.getRepository();
-    ObjectId commitId = null;
-    try {
-      commitId = repository.resolve(ref);
-    } catch (IOException e) {
-      logger.error("Failed to resolve ref '{}' in repo '{}'", ref, repository.getDirectory());
-      throw new RuntimeException(e);
-    } catch (Exception e) {
-      // this happens for invalid ref such as 'invalid ref'
-      commitId = null;
-    }
-    if (commitId == null) {
-      logger.info("Ref '{}' in repo '{}' not found", ref, repository.getDirectory());
-      throw new GenericException(ErrorCodeEnum.REPOSITORY_REF_NOT_FOUND, ref);
-    }
-    try (var revWalk = new RevWalk(repository)) {
-      var commit = revWalk.parseCommit(commitId);
-      final TreeWalk treeWalk =
-          ".".equals(path)
-              ? new TreeWalk(repository)
-              : TreeWalk.forPath(repository, path, commit.getTree());
-      if (treeWalk == null) {
-        logger.info(
-            "Path '{}' in ref '{}' of repo '{}' not found", path, ref, repository.getDirectory());
-        throw new GenericException(ErrorCodeEnum.REPOSITORY_PATH_NOT_FOUND, path);
-      }
-      try (treeWalk) {
-        var directory = new LinkedList<RepositoryFileVO>();
-        if (".".equals(path)) {
-          logger.debug(
-              "Path '{}' in ref '{}' of repo '{}' is the root",
-              path,
-              ref,
-              repository.getDirectory());
-          treeWalk.addTree(commit.getTree());
-          treeWalk.setRecursive(false);
-          return traverseDirectoryTree(treeWalk, repository, directory);
-        } else if (treeWalk.isSubtree()) {
-          logger.debug(
-              "Path '{}' in ref '{}' of repo '{}' is a directory",
-              path,
-              ref,
-              repository.getDirectory());
-          try (var dirWalk = new TreeWalk(repository)) {
-            dirWalk.addTree(treeWalk.getObjectId(0));
-            dirWalk.setRecursive(false);
-            return traverseDirectoryTree(dirWalk, repository, directory);
-          }
-        } else {
-          logger.debug(
-              "Path '{}' in ref '{}' of repo '{}' is a file", path, ref, repository.getDirectory());
-          return new RepositoryFileDetailVO(
-              false,
-              new String(repository.open(treeWalk.getObjectId(0)).getBytes()),
-              "",
-              "",
-              List.of());
-        }
-      }
-    }
-  }
-
-  private RepositoryFileDetailVO traverseDirectoryTree(
-      TreeWalk dirTree, Repository repository, List<RepositoryFileVO> directory) throws Exception {
+  private RepositoryFileDetailVO traverseDirectoryTree(TreeWalk dirTree, Repository repository)
+      throws Exception {
+    var directory = new LinkedList<RepositoryFileVO>();
     String readmeContent = "";
     String licenseContent = "";
     while (dirTree.next()) {
@@ -617,6 +630,61 @@ public class RepositoryController {
       }
     }
     return new RepositoryFileDetailVO(true, "", readmeContent, licenseContent, directory);
+  }
+
+  /**
+   * Get the repository PO by id or username and repository's name
+   *
+   * @param id the repository id
+   * @param username the username
+   * @param repositoryName the repository's name
+   * @param accessToken the access token
+   * @return the repository PO
+   * @throws GenericException if the repository is not found, or the parameters are invalid
+   */
+  private RepositoryPO getRepositoryPO(
+      Long id, String username, String repositoryName, String accessToken) {
+    RepositoryPO repositoryPO;
+    if (id == null) {
+      if (username == null || repositoryName == null) {
+        throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+      }
+      var repositoryQueryWrapper = new QueryWrapper<RepositoryPO>();
+      var userQueryWrapper = new QueryWrapper<UserPO>();
+      userQueryWrapper.apply("LOWER(username) = LOWER({0})", username);
+      var userPO = userService.getOne(userQueryWrapper);
+      if (userPO == null) {
+        throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, username);
+      }
+      repositoryQueryWrapper.eq("user_id", userPO.getId());
+      repositoryQueryWrapper.apply("LOWER(repository_name) = LOWER({0})", repositoryName);
+      repositoryPO = repositoryService.getOne(repositoryQueryWrapper);
+    } else {
+      repositoryPO = repositoryService.getById(id);
+    }
+    String notFoundMessage = id != null ? id.toString() : username + "/" + repositoryName;
+    if (repositoryPO == null) {
+      throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage);
+    }
+    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    checkVisibility(
+        repositoryPO,
+        idInToken,
+        new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage));
+    return repositoryPO;
+  }
+
+  /**
+   * Try to update the repository's url
+   *
+   * @param repositoryPO the repository
+   * @param username the username
+   */
+  private void tryUpdateUrl(RepositoryPO repositoryPO, String username) {
+    // The server's domain or port may be updated, every query we try to update the url
+    if (repositoryPO.generateUrl(username)) {
+      repositoryService.updateById(repositoryPO);
+    }
   }
 
   /**

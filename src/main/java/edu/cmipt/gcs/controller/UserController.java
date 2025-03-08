@@ -93,8 +93,7 @@ public class UserController {
       @RequestParam("user") String user,
       @RequestParam("userType") UserQueryTypeEnum userType,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    var wrapper = userType.getQueryWrapper(user);
-    var userPO = userService.getOne(wrapper);
+    var userPO = userService.getOne(userType.getQueryWrapper(user));
     if (userPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user != null ? user : accessToken);
     }
