@@ -16,9 +16,7 @@ import edu.cmipt.gcs.util.JwtUtil;
 import edu.cmipt.gcs.util.MD5Converter;
 import edu.cmipt.gcs.util.MessageSourceUtil;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -61,14 +59,6 @@ public class AuthenticationController {
       summary = "Send email verification code",
       description = "Send email verification code to the given email",
       tags = {"Authentication", "Get Method"})
-  @Parameters({
-    @Parameter(
-        name = "email",
-        description = "Email",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = String.class))
-  })
   @ApiResponse(responseCode = "200", description = "Email verification code sent successfully")
   public void sendEmailVerificationCode(
       @RequestParam("email")
@@ -102,12 +92,18 @@ public class AuthenticationController {
     @ApiResponse(
         responseCode = "200",
         description = "User signed in successfully",
-        content = @Content(schema = @Schema(implementation = UserVO.class))),
+        content = @Content(schema = @Schema(implementation = UserVO.class)),
+        headers = {
+          @Header(
+              name = HeaderParameter.ACCESS_TOKEN,
+              schema = @Schema(implementation = String.class)),
+          @Header(
+              name = HeaderParameter.REFRESH_TOKEN,
+              schema = @Schema(implementation = String.class))
+        }),
     @ApiResponse(
-        responseCode = "400",
         description = "User sign in failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class))),
-    @ApiResponse(responseCode = "500", description = "Internal server error")
   })
   public ResponseEntity<UserVO> signIn(@Validated @RequestBody UserSignInDTO user) {
     if (user.username() == null && user.email() == null) {
@@ -134,14 +130,6 @@ public class AuthenticationController {
       description = "Sign out with the given token",
       tags = {"Authentication", "Delete Method"})
   @ApiResponse(responseCode = "200", description = "User signed out successfully")
-  @Parameters({
-    @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class))
-  })
   public void signOut(@RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     JwtUtil.blacklistToken(JwtUtil.getId(accessToken));
   }
@@ -151,19 +139,15 @@ public class AuthenticationController {
       summary = "Refresh token",
       description = "Return an access token with given refresh token",
       tags = {"Authentication", "Get Method"})
-  @Parameters({
-    @Parameter(
-        name = HeaderParameter.REFRESH_TOKEN,
-        description = "Refresh token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class))
-  })
   @ApiResponses({
     @ApiResponse(
         responseCode = "200",
         description = "Token refreshed successfully",
-        content = @Content(schema = @Schema(implementation = String.class))),
+        headers = {
+          @Header(
+              name = HeaderParameter.ACCESS_TOKEN,
+              schema = @Schema(implementation = String.class))
+        }),
     @ApiResponse(responseCode = "500", description = "Internal server error")
   })
   public ResponseEntity<Void> refreshToken(

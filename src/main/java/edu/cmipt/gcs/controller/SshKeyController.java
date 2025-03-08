@@ -17,9 +17,6 @@ import edu.cmipt.gcs.util.JwtUtil;
 import edu.cmipt.gcs.validation.group.CreateGroup;
 import edu.cmipt.gcs.validation.group.UpdateGroup;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -54,21 +51,11 @@ public class SshKeyController {
       summary = "Upload SSH key",
       description = "Upload SSH key with the given information",
       tags = {"SSH", "Post Method"})
-  @Parameters({
-    @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class))
-  })
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "SSH key uploaded successfully"),
     @ApiResponse(
-        responseCode = "400",
         description = "SSH key upload failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class))),
-    @ApiResponse(responseCode = "500", description = "Internal server error")
   })
   public void uploadSshKey(
       @Validated(CreateGroup.class) @RequestBody SshKeyDTO sshKeyDTO,
@@ -85,21 +72,12 @@ public class SshKeyController {
       summary = "Delete SSH key",
       description = "Delete SSH key with the given information",
       tags = {"SSH", "Delete Method"})
-  @Parameters({
-    @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
-        name = "id",
-        description = "SSH key ID",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = Long.class))
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "SSH key deleted successfully"),
+    @ApiResponse(
+        description = "SSH key deletion failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
-  @ApiResponse(responseCode = "200", description = "SSH key deleted successfully")
   public void deleteSshKey(
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
       @RequestParam("id") Long id) {
@@ -122,18 +100,9 @@ public class SshKeyController {
       summary = "Update SSH key",
       description = "Update SSH key with the given information",
       tags = {"SSH", "Post Method"})
-  @Parameters({
-    @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class))
-  })
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "SSH key updated successfully"),
     @ApiResponse(
-        responseCode = "400",
         description = "SSH key update failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
@@ -172,29 +141,12 @@ public class SshKeyController {
       summary = "Page SSH key",
       description = "Page SSH key with the given access token",
       tags = {"SSH", "Get Method"})
-  @Parameters({
-    @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
-        name = "page",
-        description = "Page number",
-        example = "1",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = Integer.class)),
-    @Parameter(
-        name = "size",
-        description = "Page size",
-        example = "10",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = Integer.class))
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "SSH key paged successfully"),
+    @ApiResponse(
+        description = "SSH key page failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
-  @ApiResponse(responseCode = "200", description = "SSH key paged successfully")
   public PageVO<SshKeyVO> pageSshKey(
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
       @RequestParam("page") Integer page,
@@ -211,20 +163,6 @@ public class SshKeyController {
       summary = "Check SSH key name validity",
       description = "Check SSH key name validity with the given information",
       tags = {"SSH", "Get Method"})
-  @Parameters({
-    @Parameter(
-        name = "name",
-        description = "SSH key name",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class)),
-  })
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "SSH key name is valid"),
     @ApiResponse(
@@ -255,20 +193,6 @@ public class SshKeyController {
       summary = "Check SSH key public key validity",
       description = "Check SSH key public key validity with the given information",
       tags = {"SSH", "Get Method"})
-  @Parameters({
-    @Parameter(
-        name = "publicKey",
-        description = "SSH key public key",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class)),
-  })
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "SSH key public key is valid"),
     @ApiResponse(

@@ -85,12 +85,6 @@ public class UserController {
       tags = {"User", "Get Method"})
   @Parameters({
     @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
         name = "user",
         description = "User's Information",
         example = "admin",
@@ -99,7 +93,7 @@ public class UserController {
         schema = @Schema(implementation = String.class)),
     @Parameter(
         name = "userType",
-        description = "User's Type. The value can be 'ID', 'USERNAME', 'EMAIL', or 'TOKEN'",
+        description = "User's Type",
         example = "USERNAME",
         required = true,
         in = ParameterIn.QUERY,
@@ -108,8 +102,7 @@ public class UserController {
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "User information returned successfully"),
     @ApiResponse(
-        responseCode = "404",
-        description = "User not found",
+        description = "User information get failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public UserVO getUser(
@@ -132,16 +125,9 @@ public class UserController {
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "User information updated successfully"),
     @ApiResponse(
-        responseCode = "400",
         description = "User information update failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
-  @Parameter(
-      name = HeaderParameter.ACCESS_TOKEN,
-      description = "Access token",
-      required = true,
-      in = ParameterIn.HEADER,
-      schema = @Schema(implementation = String.class))
   public void updateUser(
       @Validated @RequestBody UserUpdateDTO user,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
@@ -160,16 +146,9 @@ public class UserController {
       summary = "Update user password",
       description = "Update user password",
       tags = {"User", "Post Method"})
-  @Parameter(
-      name = HeaderParameter.ACCESS_TOKEN,
-      description = "Access token",
-      required = true,
-      in = ParameterIn.HEADER,
-      schema = @Schema(implementation = String.class))
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "User password updated successfully"),
     @ApiResponse(
-        responseCode = "400",
         description = "User password update failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
@@ -199,7 +178,6 @@ public class UserController {
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "User password updated successfully"),
     @ApiResponse(
-        responseCode = "400",
         description = "User password update failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
@@ -226,17 +204,10 @@ public class UserController {
       summary = "Delete user",
       description = "Delete user by id",
       tags = {"User", "Delete Method"})
-  @Parameter(
-      name = HeaderParameter.ACCESS_TOKEN,
-      description = "Access token",
-      required = true,
-      in = ParameterIn.HEADER,
-      schema = @Schema(implementation = String.class))
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "User deleted successfully"),
     @ApiResponse(
-        responseCode = "404",
-        description = "User not found",
+        description = "User deletion failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public void deleteUser() {
@@ -256,13 +227,6 @@ public class UserController {
       summary = "Check email validity",
       description = "Check if the email is valid",
       tags = {"User", "Get Method"})
-  @Parameter(
-      name = "email",
-      description = "Email",
-      example = "admin@cmipt.edu",
-      required = true,
-      in = ParameterIn.QUERY,
-      schema = @Schema(implementation = String.class))
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Email validity checked successfully"),
     @ApiResponse(
@@ -285,13 +249,6 @@ public class UserController {
       summary = "Check username validity",
       description = "Check if the username is valid",
       tags = {"User", "Get Method"})
-  @Parameter(
-      name = "username",
-      description = "User name",
-      example = "admin",
-      required = true,
-      in = ParameterIn.QUERY,
-      schema = @Schema(implementation = String.class))
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Username validity checked successfully"),
     @ApiResponse(
@@ -323,13 +280,6 @@ public class UserController {
       summary = "Check password validity",
       description = "Check if the password is valid",
       tags = {"User", "Get Method"})
-  @Parameter(
-      name = "userPassword",
-      description = "User's Password",
-      example = "123456",
-      required = true,
-      in = ParameterIn.QUERY,
-      schema = @Schema(implementation = String.class))
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Password validity checked successfully"),
     @ApiResponse(

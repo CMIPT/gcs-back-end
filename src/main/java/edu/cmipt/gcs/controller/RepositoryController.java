@@ -77,15 +77,12 @@ public class RepositoryController {
       summary = "Create a repository",
       description = "Create a repository with the given information",
       tags = {"Repository", "Post Method"})
-  @Parameters({
-    @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class))
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Repository created successfully"),
+    @ApiResponse(
+        description = "Repository create failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
-  @ApiResponse(responseCode = "200", description = "Repository created successfully")
   public void createRepository(
       @Validated(CreateGroup.class) @RequestBody RepositoryDTO repository,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
@@ -103,24 +100,11 @@ public class RepositoryController {
       summary = "Delete a repository",
       description = "Delete a repository with the given id",
       tags = {"Repository", "Delete Method"})
-  @Parameters({
-    @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
-        name = "id",
-        description = "Repository id",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = Long.class))
-  })
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Repository deleted successfully"),
-    @ApiResponse(responseCode = "403", description = "Access denied"),
-    @ApiResponse(responseCode = "404", description = "Repository not found")
+    @ApiResponse(
+        description = "Repository delete failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public void deleteRepository(
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
@@ -147,30 +131,6 @@ public class RepositoryController {
       tags = {"Repository", "Get Method"})
   @Parameters({
     @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
-        name = "id",
-        description = "Repository Id",
-        required = false,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
-        name = "username",
-        description = "Username",
-        required = false,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
-        name = "repositoryName",
-        description = "Repository Name",
-        required = false,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
         name = "ref",
         description = "Ref, default to the default ref",
         required = false,
@@ -186,8 +146,7 @@ public class RepositoryController {
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Repository got successfully"),
     @ApiResponse(
-        responseCode = "404",
-        description = "Repository not found",
+        description = "Repository get failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public RepositoryDetailVO getRepositoryDetails(
@@ -251,17 +210,11 @@ public class RepositoryController {
       summary = "Update a repository",
       description = "Update a repository with the given information",
       tags = {"Repository", "Post Method"})
-  @Parameter(
-      name = HeaderParameter.ACCESS_TOKEN,
-      description = "Access token",
-      required = true,
-      in = ParameterIn.HEADER,
-      schema = @Schema(implementation = String.class))
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Repository updated successfully"),
-    @ApiResponse(responseCode = "403", description = "Access denied"),
-    @ApiResponse(responseCode = "404", description = "Repository not found"),
-    @ApiResponse(responseCode = "501", description = "Update repository name is not implemented")
+    @ApiResponse(
+        description = "Update repository failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class))),
   })
   public void updateRepository(
       @Validated(UpdateGroup.class) @RequestBody RepositoryDTO repository,
@@ -296,23 +249,12 @@ public class RepositoryController {
       summary = "Check repository name validity",
       description = "Check if the repository name is valid",
       tags = {"Repository", "Get Method"})
-  @Parameters({
-    @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
-        name = "repositoryName",
-        description = "Repository name",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = String.class))
-  })
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Repository name is valid"),
-    @ApiResponse(responseCode = "400", description = "Repository name is invalid")
+    @ApiResponse(
+        responseCode = "400",
+        description = "Repository name is invalid",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public void checkRepositoryNameValidity(
       @RequestParam("repositoryName")
@@ -344,27 +286,15 @@ public class RepositoryController {
       tags = {"Repository", "Post Method"})
   @Parameters({
     @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
-        name = "repositoryId",
-        description = "Repository ID",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = Long.class)),
-    @Parameter(
         name = "collaborator",
         description = "Collaborator's Information",
         example = "admin",
         required = true,
         in = ParameterIn.QUERY,
-        schema = @Schema(implementation = Long.class)),
+        schema = @Schema(implementation = String.class)),
     @Parameter(
         name = "collaboratorType",
-        description = "Collaborator's Type. The value can be 'ID', 'USERNAME' or 'EMAIL'",
+        description = "Collaborator's Type",
         example = "USERNAME",
         required = true,
         in = ParameterIn.QUERY,
@@ -372,8 +302,9 @@ public class RepositoryController {
   })
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Collaborator added successfully"),
-    @ApiResponse(responseCode = "403", description = "Access denied"),
-    @ApiResponse(responseCode = "404", description = "Collaborator or repository not found")
+    @ApiResponse(
+        description = "Collaborator add failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public void addCollaborator(
       @RequestParam("repositoryId") Long repositoryId,
@@ -437,30 +368,11 @@ public class RepositoryController {
       summary = "Remove a collaboration relationship",
       description = "Remove a collaboration relationship between a collaborator and a repository",
       tags = {"Repository", "Delete Method"})
-  @Parameters({
-    @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
-        name = "repositoryId",
-        description = "Repository's ID",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = Long.class)),
-    @Parameter(
-        name = "collaboratorId",
-        description = "Collaborator's ID",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = Long.class))
-  })
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Relationship removed successfully"),
-    @ApiResponse(responseCode = "404", description = "Collaboration not found"),
-    @ApiResponse(responseCode = "403", description = "Access denied"),
+    @ApiResponse(
+        description = "Collaboration remove failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class))),
   })
   public void removeCollaboration(
       @RequestParam("repositoryId") Long repositoryId,
@@ -514,35 +426,11 @@ public class RepositoryController {
       summary = "Page collaborators",
       description = "Page collaborators of the repository",
       tags = {"Repository", "Get Method"})
-  @Parameters({
-    @Parameter(
-        name = "repositoryId",
-        description = "Repository ID",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = Long.class)),
-    @Parameter(
-        name = "page",
-        description = "Page number",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = Integer.class)),
-    @Parameter(
-        name = "size",
-        description = "Page size",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = Integer.class)),
-    @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class))
-  })
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Collaborators paged successfully"),
-    @ApiResponse(responseCode = "404", description = "Repository not found")
+    @ApiResponse(
+        description = "Collaborators page failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public PageVO<UserVO> pageCollaborator(
       @RequestParam("repositoryId") Long repositoryId,
@@ -580,18 +468,12 @@ public class RepositoryController {
 
   @GetMapping(ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH)
   @Operation(
-      summary = "Page user repositories",
+      summary = "Page a user's repositories",
       description =
-          "Page user repositories. If the given token is trying to get other's"
-              + " repositories, only public repositories will be shown",
+          "Page a user's repositories. If the given token is trying to get other's"
+              + " repositories, only public repositories will be returned",
       tags = {"Repository", "Get Method"})
   @Parameters({
-    @Parameter(
-        name = HeaderParameter.ACCESS_TOKEN,
-        description = "Access token",
-        required = true,
-        in = ParameterIn.HEADER,
-        schema = @Schema(implementation = String.class)),
     @Parameter(
         name = "user",
         description = "User's Information",
@@ -601,37 +483,28 @@ public class RepositoryController {
         schema = @Schema(implementation = String.class)),
     @Parameter(
         name = "userType",
-        description = "User's Type. The value can be 'ID', 'USERNAME', 'EMAIL', or 'TOKEN'",
+        description = "User's Type",
         example = "USERNAME",
         required = true,
         in = ParameterIn.QUERY,
         schema = @Schema(implementation = UserQueryTypeEnum.class)),
-    @Parameter(
-        name = "page",
-        description = "Page number",
-        example = "1",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = Integer.class)),
-    @Parameter(
-        name = "size",
-        description = "Page size",
-        example = "10",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = Integer.class))
   })
-  @ApiResponse(responseCode = "200", description = "User repositories paged successfully")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "User repositories paged successfully"),
+    @ApiResponse(
+        description = "User repositories page failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
   public PageVO<RepositoryVO> pageRepository(
-      @RequestParam(name = "user", required = false) String user,
-      @RequestParam(name = "userType") UserQueryTypeEnum userType,
+      @RequestParam("user") String user,
+      @RequestParam("userType") UserQueryTypeEnum userType,
       @RequestParam("page") Integer page,
       @RequestParam("size") Integer size,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     var userQueryWrapper = userType.getQueryWrapper(user, accessToken);
     var userPO = userService.getOne(userQueryWrapper);
     if (userPO == null) {
-      throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user != null ? user : accessToken);
+      throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user);
     }
     Long userId = userPO.getId();
     String idInToken = JwtUtil.getId(accessToken);
