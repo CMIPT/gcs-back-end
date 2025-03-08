@@ -276,22 +276,6 @@ public class RepositoryController {
       summary = "Add a collaborator",
       description = "Add a collaborator to the repository",
       tags = {"Repository", "Post Method"})
-  @Parameters({
-    @Parameter(
-        name = "collaborator",
-        description = "Collaborator's Information",
-        example = "admin",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
-        name = "collaboratorType",
-        description = "Collaborator's Type",
-        example = "USERNAME",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = AddCollaboratorTypeEnum.class))
-  })
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Collaborator added successfully"),
     @ApiResponse(
@@ -439,22 +423,6 @@ public class RepositoryController {
           "Page a user's repositories. If the given token is trying to get other's"
               + " repositories, only public repositories will be returned",
       tags = {"Repository", "Get Method"})
-  @Parameters({
-    @Parameter(
-        name = "user",
-        description = "User's Information",
-        example = "admin",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
-        name = "userType",
-        description = "User's Type",
-        example = "USERNAME",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = UserQueryTypeEnum.class)),
-  })
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "User repositories paged successfully"),
     @ApiResponse(

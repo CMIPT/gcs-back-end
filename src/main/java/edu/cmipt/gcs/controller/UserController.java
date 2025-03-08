@@ -83,20 +83,6 @@ public class UserController {
       summary = "Get a user",
       description = "Get a user's information",
       tags = {"User", "Get Method"})
-  @Parameters({
-    @Parameter(
-        name = "user",
-        description = "User's Information",
-        example = "admin",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = String.class)),
-    @Parameter(
-        name = "userType",
-        required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = UserQueryTypeEnum.class))
-  })
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "User information returned successfully"),
     @ApiResponse(
@@ -104,7 +90,7 @@ public class UserController {
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public UserVO getUser(
-      @RequestParam(name = "user") String user,
+      @RequestParam("user") String user,
       @RequestParam("userType") UserQueryTypeEnum userType,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     var wrapper = userType.getQueryWrapper(user);
