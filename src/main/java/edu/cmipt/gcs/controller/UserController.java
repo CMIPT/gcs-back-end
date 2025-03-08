@@ -88,13 +88,11 @@ public class UserController {
         name = "user",
         description = "User's Information",
         example = "admin",
-        required = false,
+        required = true,
         in = ParameterIn.QUERY,
         schema = @Schema(implementation = String.class)),
     @Parameter(
         name = "userType",
-        description = "User's Type",
-        example = "USERNAME",
         required = true,
         in = ParameterIn.QUERY,
         schema = @Schema(implementation = UserQueryTypeEnum.class))
@@ -106,10 +104,10 @@ public class UserController {
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public UserVO getUser(
-      @RequestParam(name = "user", required = false) String user,
+      @RequestParam(name = "user") String user,
       @RequestParam("userType") UserQueryTypeEnum userType,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    var wrapper = userType.getQueryWrapper(user, accessToken);
+    var wrapper = userType.getQueryWrapper(user);
     var userPO = userService.getOne(wrapper);
     if (userPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user != null ? user : accessToken);

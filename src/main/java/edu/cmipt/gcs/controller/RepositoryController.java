@@ -478,7 +478,7 @@ public class RepositoryController {
         name = "user",
         description = "User's Information",
         example = "admin",
-        required = false,
+        required = true,
         in = ParameterIn.QUERY,
         schema = @Schema(implementation = String.class)),
     @Parameter(
@@ -501,7 +501,7 @@ public class RepositoryController {
       @RequestParam("page") Integer page,
       @RequestParam("size") Integer size,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    var userQueryWrapper = userType.getQueryWrapper(user, accessToken);
+    var userQueryWrapper = userType.getQueryWrapper(user);
     var userPO = userService.getOne(userQueryWrapper);
     if (userPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user);

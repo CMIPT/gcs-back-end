@@ -11,7 +11,7 @@ public enum UserQueryTypeEnum {
   ID,
   TOKEN;
 
-  public QueryWrapper<UserPO> getQueryWrapper(String user, String accessToken) {
+  public QueryWrapper<UserPO> getQueryWrapper(String user) {
     QueryWrapper<UserPO> wrapper = new QueryWrapper<>();
     switch (this) {
       case ID:
@@ -26,7 +26,7 @@ public enum UserQueryTypeEnum {
         }
         break;
       case TOKEN:
-        Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+        Long idInToken = Long.valueOf(JwtUtil.getId(user));
         wrapper.eq("id", idInToken);
         break;
       case USERNAME, EMAIL:
