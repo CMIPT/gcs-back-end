@@ -91,7 +91,7 @@ public class RepositoryController {
       @Validated(CreateGroup.class) @RequestBody RepositoryDTO repository,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long userId = Long.valueOf(JwtUtil.getId(accessToken));
-    checkRepositoryNameValidity(repository.repositoryName(), userId);
+    checkRepositoryNameValidity(repository.repositoryName(), accessToken);
     String username = userService.getById(userId).getUsername();
     var repositoryPO = new RepositoryPO(repository, userId.toString(), username, true);
     if (!repositoryService.save(repositoryPO)) {
@@ -304,11 +304,11 @@ public class RepositoryController {
       tags = {"Repository", "Get Method"})
   @Parameters({
     @Parameter(
-        name = "userId",
-        description = "User id",
+        name = HeaderParameter.ACCESS_TOKEN,
+        description = "Access token",
         required = true,
-        in = ParameterIn.QUERY,
-        schema = @Schema(implementation = Long.class)),
+        in = ParameterIn.HEADER,
+        schema = @Schema(implementation = String.class)),
     @Parameter(
         name = "repositoryName",
         description = "Repository name",
@@ -333,9 +333,10 @@ public class RepositoryController {
               regexp = ValidationConstant.REPOSITORY_NAME_PATTERN,
               message = "{Pattern.repositoryController#checkRepositoryNameValidity.repositoryName}")
           String repositoryName,
-      @RequestParam("userId") Long userId) {
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
     var queryWrapper = new QueryWrapper<RepositoryPO>();
-    queryWrapper.eq("user_id", userId);
+    queryWrapper.eq("user_id", idInToken);
     queryWrapper.apply("LOWER(repository_name) = LOWER({0})", repositoryName);
     if (repositoryService.exists(queryWrapper)) {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_ALREADY_EXISTS, repositoryName);

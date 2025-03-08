@@ -389,8 +389,7 @@ public class RepositoryControllerTest {
     mvc.perform(
             get(ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                .param("repositoryName", "test")
-                .param("userId", TestConstant.ID))
+                .param("repositoryName", "test"))
         .andExpect(status().isOk());
   }
 
