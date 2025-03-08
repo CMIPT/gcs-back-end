@@ -1,11 +1,12 @@
 package edu.cmipt.gcs.pojo.user;
 
+import java.sql.Timestamp;
+
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import edu.cmipt.gcs.util.MD5Converter;
-import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,12 +23,12 @@ public class UserPO {
   private String avatarUrl;
 
   @TableField(fill = FieldFill.INSERT)
-  private LocalDateTime gmtCreated;
+  private Timestamp gmtCreated;
 
   @TableField(fill = FieldFill.INSERT_UPDATE)
-  private LocalDateTime gmtUpdated;
+  private Timestamp gmtUpdated;
 
-  @TableLogic private LocalDateTime gmtDeleted;
+  @TableLogic private Timestamp gmtDeleted;
 
   public UserPO(UserCreateDTO user) {
     this.username = user.username();

@@ -47,7 +47,7 @@ mybatis-plus:
   global-config:
     db-config:
       logic-delete-field: gmt_deleted
-      logic-delete-value: now()
+      logic-delete-value: CURRENT_TIMESTAMP
       logic-not-delete-value: "null"
 
 logging:
