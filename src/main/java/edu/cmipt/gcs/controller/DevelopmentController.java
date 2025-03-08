@@ -186,7 +186,8 @@ public class DevelopmentController {
     } else if (javaType instanceof TypeVariable) {
       return ((TypeVariable<?>) javaType).getName();
     } else {
-      return javaType.getTypeName();
+      var splitedName = javaType.getTypeName().split("\\.");
+      return splitedName[splitedName.length - 1];
     }
   }
 }
