@@ -580,8 +580,7 @@ public class RepositoryController {
     var iPage =
         userCollaborateRepositoryService.pageCollaboratorsByRepositoryId(
             repositoryId, new Page<>(page, size));
-    return new PageVO<>(
-        iPage.getPages(), iPage.getTotal(), iPage.getRecords().stream().map(UserVO::new).toList());
+    return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(UserVO::new).toList());
   }
 
   @GetMapping(ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH)
@@ -649,7 +648,6 @@ public class RepositoryController {
     wrapper.eq("user_id", userId);
     var iPage = repositoryService.page(new Page<>(page, size), wrapper);
     return new PageVO<>(
-        iPage.getPages(),
         iPage.getTotal(),
         iPage.getRecords().stream()
             .map(

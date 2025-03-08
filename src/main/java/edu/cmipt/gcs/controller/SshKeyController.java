@@ -206,10 +206,7 @@ public class SshKeyController {
     var wrapper = new QueryWrapper<SshKeyPO>();
     wrapper.eq("user_id", idInToken);
     var iPage = sshKeyService.page(new Page<>(page, size), wrapper);
-    return new PageVO<>(
-        iPage.getPages(),
-        iPage.getTotal(),
-        iPage.getRecords().stream().map(SshKeyVO::new).toList());
+    return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(SshKeyVO::new).toList());
   }
 
   @GetMapping(ApiPathConstant.SSH_KEY_CHECK_SSH_KEY_NAME_VALIDITY_API_PATH)

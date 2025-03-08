@@ -77,7 +77,6 @@ public class RepositoryControllerTest {
                             .param("size", TestConstant.REPOSITORY_SIZE.toString()))
                     .andExpectAll(
                         status().isOk(),
-                        jsonPath("$.pages").value(greaterThan(0)),
                         jsonPath("$.total").value(greaterThan(0)),
                         jsonPath("$.records").isArray(),
                         jsonPath("$.records.length()").value(TestConstant.REPOSITORY_SIZE))
@@ -288,7 +287,6 @@ public class RepositoryControllerTest {
                 .param("size", "10"))
         .andExpectAll(
             status().isOk(),
-            jsonPath("$.pages").value(greaterThan(0)),
             jsonPath("$.total").value(greaterThan(0)),
             jsonPath("$.records").isArray(),
             jsonPath("$.records.length()").value(1),
@@ -381,7 +379,6 @@ public class RepositoryControllerTest {
                 .param("size", TestConstant.REPOSITORY_SIZE.toString()))
         .andExpectAll(
             status().isOk(),
-            jsonPath("$.pages").value(greaterThan(0)),
             jsonPath("$.total").value(greaterThan(0)),
             jsonPath("$.records").isArray(),
             jsonPath("$.records.length()").value(TestConstant.REPOSITORY_SIZE / 2));
