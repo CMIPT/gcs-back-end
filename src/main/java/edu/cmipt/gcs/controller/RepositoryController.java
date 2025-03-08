@@ -7,7 +7,9 @@ import edu.cmipt.gcs.constant.GitConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.ValidationConstant;
 import edu.cmipt.gcs.enumeration.AddCollaboratorTypeEnum;
+import edu.cmipt.gcs.enumeration.CollaboratorOrderByEnum;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+import edu.cmipt.gcs.enumeration.RepositoryOrderByEnum;
 import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
@@ -403,6 +405,8 @@ public class RepositoryController {
       @RequestParam("repositoryId") Long repositoryId,
       @RequestParam("page") Integer page,
       @RequestParam("size") Integer size,
+      @RequestParam("orderBy") CollaboratorOrderByEnum orderBy,
+      @RequestParam("isAsc") Boolean isAsc,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     var repository = repositoryService.getById(repositoryId);
     if (repository == null) {
@@ -412,7 +416,7 @@ public class RepositoryController {
     checkVisibility(repository, idInToken, repositoryId.toString());
     var iPage =
         userCollaborateRepositoryService.pageCollaboratorsByRepositoryId(
-            repositoryId, new Page<>(page, size));
+            repositoryId, new Page<>(page, size), orderBy, isAsc);
     return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(UserVO::new).toList());
   }
 
@@ -434,6 +438,8 @@ public class RepositoryController {
       @RequestParam("userType") UserQueryTypeEnum userType,
       @RequestParam("page") Integer page,
       @RequestParam("size") Integer size,
+      @RequestParam("orderBy") RepositoryOrderByEnum orderBy,
+      @RequestParam("isAsc") Boolean isAsc,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     var userQueryWrapper = userType.getQueryWrapper(user);
     var userPO = userService.getOne(userQueryWrapper);
@@ -448,6 +454,7 @@ public class RepositoryController {
       wrapper.eq("is_private", false);
     }
     wrapper.eq("user_id", userId);
+    wrapper.orderBy(true, isAsc, orderBy.getFieldName());
     var iPage = repositoryService.page(new Page<>(page, size), wrapper);
     return new PageVO<>(
         iPage.getTotal(),

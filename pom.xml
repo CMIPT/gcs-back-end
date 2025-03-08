@@ -153,7 +153,11 @@
             <artifactId>org.eclipse.jgit.ssh.apache</artifactId>
             <version>7.1.0.202411261347-r</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.github.yulichang</groupId>
+            <artifactId>mybatis-plus-join-boot-starter</artifactId>
+            <version>1.5.2</version>
+        </dependency>
     </dependencies>
 
     <build>

@@ -63,7 +63,7 @@ public class UserControllerTest {
             get(ApiPathConstant.USER_GET_USER_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("user", invalidUsername)
-                .param("userType", "USERNAME"))
+                .param("userType", UserQueryTypeEnum.USERNAME.name()))
         .andExpectAll(
             status().isNotFound(),
             content()

@@ -13,6 +13,7 @@ import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
+import edu.cmipt.gcs.enumeration.SshKeyOrderByEnum;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.ssh.SshKeyVO;
 import java.nio.file.Files;
@@ -99,7 +100,9 @@ public class SshKeyControllerTest {
                 get(ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH)
                     .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                     .param("page", "1")
-                    .param("size", TestConstant.SSH_KEY_SIZE.toString()))
+                    .param("size", TestConstant.SSH_KEY_SIZE.toString())
+                    .param("orderBy", SshKeyOrderByEnum.GMT_CREATED.name())
+                    .param("isAsc", "false"))
             .andExpectAll(
                 status().isOk(),
                 jsonPath("$.total").value(greaterThan(0)),

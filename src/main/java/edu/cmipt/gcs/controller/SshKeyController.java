@@ -6,6 +6,7 @@ import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.ValidationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+import edu.cmipt.gcs.enumeration.SshKeyOrderByEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
@@ -150,10 +151,13 @@ public class SshKeyController {
   public PageVO<SshKeyVO> pageSshKey(
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
       @RequestParam("page") Integer page,
-      @RequestParam("size") Integer size) {
+      @RequestParam("size") Integer size,
+      @RequestParam("orderBy") SshKeyOrderByEnum orderBy,
+      @RequestParam("isAsc") Boolean isAsc) {
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
     var wrapper = new QueryWrapper<SshKeyPO>();
     wrapper.eq("user_id", idInToken);
+    wrapper.orderBy(true, isAsc, orderBy.getFieldName());
     var iPage = sshKeyService.page(new Page<>(page, size), wrapper);
     return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(SshKeyVO::new).toList());
   }

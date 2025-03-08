@@ -14,6 +14,8 @@ import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
 import edu.cmipt.gcs.enumeration.AddCollaboratorTypeEnum;
+import edu.cmipt.gcs.enumeration.CollaboratorOrderByEnum;
+import edu.cmipt.gcs.enumeration.RepositoryOrderByEnum;
 import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
@@ -74,7 +76,9 @@ public class RepositoryControllerTest {
                             .param("user", userID)
                             .param("userType", UserQueryTypeEnum.ID.name())
                             .param("page", "1")
-                            .param("size", TestConstant.REPOSITORY_SIZE.toString()))
+                            .param("size", TestConstant.REPOSITORY_SIZE.toString())
+                            .param("orderBy", RepositoryOrderByEnum.GMT_CREATED.name())
+                            .param("isAsc", "false"))
                     .andExpectAll(
                         status().isOk(),
                         jsonPath("$.total").value(greaterThan(0)),
@@ -86,10 +90,20 @@ public class RepositoryControllerTest {
             var pageVO =
                 objectMapper.readValue(content, new TypeReference<PageVO<RepositoryVO>>() {});
             if (userID.equals(TestConstant.ID)) {
-              TestConstant.REPOSITORY_ID = pageVO.records().get(0).id();
-              TestConstant.REPOSITORY_NAME = pageVO.records().get(0).repositoryName();
+              var firstNonPrivateRepository =
+                  pageVO.records().stream()
+                      .filter(r -> !r.isPrivate())
+                      .findFirst()
+                      .orElse(null);
+              TestConstant.REPOSITORY_ID = firstNonPrivateRepository.id();
+              TestConstant.REPOSITORY_NAME = firstNonPrivateRepository.repositoryName();
             } else {
-              TestConstant.OTHER_REPOSITORY_ID = pageVO.records().get(0).id();
+              TestConstant.OTHER_REPOSITORY_ID =
+                  pageVO.records().stream()
+                      .filter(r -> !r.isPrivate())
+                      .findFirst()
+                      .map(RepositoryVO::id)
+                      .orElse(null);
               TestConstant.OTHER_PRIVATE_REPOSITORY_ID =
                   pageVO.records().stream()
                       .filter(RepositoryVO::isPrivate)
@@ -276,7 +290,9 @@ public class RepositoryControllerTest {
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("repositoryId", TestConstant.REPOSITORY_ID)
                 .param("page", "1")
-                .param("size", "10"))
+                .param("size", "10")
+                .param("orderBy", CollaboratorOrderByEnum.GMT_CREATED.name())
+                .param("isAsc", "false"))
         .andExpectAll(
             status().isOk(),
             jsonPath("$.total").value(greaterThan(0)),
@@ -294,7 +310,9 @@ public class RepositoryControllerTest {
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("repositoryId", TestConstant.OTHER_PRIVATE_REPOSITORY_ID)
                 .param("page", "1")
-                .param("size", "10"))
+                .param("size", "10")
+                .param("orderBy", CollaboratorOrderByEnum.GMT_CREATED.name())
+                .param("isAsc", "false"))
         .andExpect(status().isNotFound());
   }
 
@@ -368,7 +386,9 @@ public class RepositoryControllerTest {
                 .param("user", TestConstant.ID)
                 .param("userType", UserQueryTypeEnum.ID.name())
                 .param("page", "1")
-                .param("size", TestConstant.REPOSITORY_SIZE.toString()))
+                .param("size", TestConstant.REPOSITORY_SIZE.toString())
+                .param("orderBy", RepositoryOrderByEnum.GMT_CREATED.name())
+                .param("isAsc", "false"))
         .andExpectAll(
             status().isOk(),
             jsonPath("$.total").value(greaterThan(0)),
