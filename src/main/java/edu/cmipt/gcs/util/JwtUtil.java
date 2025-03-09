@@ -6,10 +6,16 @@ import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.enumeration.TokenTypeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -23,12 +29,25 @@ import org.springframework.stereotype.Component;
 public class JwtUtil {
   private static final String TOKEN_TYPE_CLAIM = "tokenType";
   private static final String ID_CLAIM = "id";
-  private static final SecretKey SECRET_KEY = Jwts.SIG.HS256.key().build();
+  private static SecretKey SECRET_KEY;
+
+  @Value("${jwt.secret}")
+  private String secret;
 
   private static RedisTemplate<String, Object> redisTemplate;
 
   public JwtUtil(RedisTemplate<String, Object> redisTemplate) {
     JwtUtil.redisTemplate = redisTemplate;
+  }
+
+  @PostConstruct
+  public void init() {
+    if (secret == null || secret.isEmpty()) {
+      SECRET_KEY = Jwts.SIG.HS256.key().build();
+      return;
+    }
+    byte[] secretBytes = Decoders.BASE64.decode(secret);
+    SECRET_KEY = Keys.hmacShaKeyFor(secretBytes);
   }
 
   /**

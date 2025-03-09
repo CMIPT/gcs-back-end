@@ -92,6 +92,7 @@ jobs:
           SPRING_MAIL_PROTOCOL: smtps
           SPRING_MAIL_DEFAULT_ENCODING: UTF-8
           MD5_SALT: neverused
+          JWT_SECRET: SVL5ueyNbYLolnoK0Uo3zuIGJ3idJv6GSXiMZYufLGc=
 
   google-java-format:
     name: Format with Google Java Style
