@@ -1,5 +1,6 @@
 package edu.cmipt.gcs.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import edu.cmipt.gcs.dao.SshKeyMapper;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
@@ -20,6 +21,17 @@ public class SshKeyServiceImpl extends ServiceImpl<SshKeyMapper, SshKeyPO>
   @Override
   public SshKeyPO getById(Serializable id) {
     return super.getById(id);
+  }
+
+  @Override
+  public SshKeyPO getOneByUserIdAndName(Long userId, String name) {
+    return super.getOne(new QueryWrapper<SshKeyPO>().eq("user_id", userId).eq("name", name));
+  }
+
+  @Override
+  public SshKeyPO getOneByUserIdAndPublicKey(Long userId, String publicKey) {
+    return super.getOne(
+        new QueryWrapper<SshKeyPO>().eq("user_id", userId).eq("public_key", publicKey));
   }
 
   @Transactional

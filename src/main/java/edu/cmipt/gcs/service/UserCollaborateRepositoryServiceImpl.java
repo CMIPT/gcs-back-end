@@ -36,8 +36,9 @@ public class UserCollaborateRepositoryServiceImpl
   }
 
   @Override
-  public boolean existsByCollaboratorIdAndRepositoryId(Long collaboratorId, Long repositoryId) {
-    return super.exists(
+  public UserCollaborateRepositoryPO getOneByCollaboratorIdAndRepositoryId(
+      Long collaboratorId, Long repositoryId) {
+    return super.getOne(
         new QueryWrapper<UserCollaborateRepositoryPO>()
             .eq("collaborator_id", collaboratorId)
             .eq("repository_id", repositoryId));

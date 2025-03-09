@@ -252,10 +252,7 @@ public class RepositoryController {
           String repositoryName,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    var queryWrapper = new QueryWrapper<RepositoryPO>();
-    queryWrapper.eq("user_id", idInToken);
-    queryWrapper.apply("LOWER(repository_name) = LOWER({0})", repositoryName);
-    if (repositoryService.exists(queryWrapper)) {
+    if (repositoryService.getOneByUserIdAndRepositoryName(idInToken, repositoryName) != null) {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_ALREADY_EXISTS, repositoryName);
     }
   }
@@ -303,10 +300,9 @@ public class RepositoryController {
       logger.info("User[{}] tried to add himself to repository[{}]", collaboratorId, repositoryId);
       throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
     }
-    var collaborationQueryWrapper = new QueryWrapper<UserCollaborateRepositoryPO>();
-    collaborationQueryWrapper.eq("collaborator_id", collaboratorId);
-    collaborationQueryWrapper.eq("repository_id", repositoryId);
-    if (userCollaborateRepositoryService.exists(collaborationQueryWrapper)) {
+    if (userCollaborateRepositoryService.getOneByCollaboratorIdAndRepositoryId(
+            collaboratorId, repositoryId)
+        != null) {
       logger.info(
           "Collaborator[{}] already exists in repository[{}]", collaboratorId, repositoryId);
       throw new GenericException(
@@ -695,8 +691,9 @@ public class RepositoryController {
     // If the repository is private, we return NOT_FOUND to make sure the user can't know
     // the repository exists
     if (repositoryPO.getIsPrivate()
-        && !userCollaborateRepositoryService.existsByCollaboratorIdAndRepositoryId(
-            userId, repositoryPO.getId())) {
+        && userCollaborateRepositoryService.getOneByCollaboratorIdAndRepositoryId(
+                userId, repositoryPO.getId())
+            == null) {
       logger.info(
           "User[{}] tried to get private repository of user[{}]", userId, repositoryPO.getUserId());
       throw e;

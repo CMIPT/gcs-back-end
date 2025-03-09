@@ -135,16 +135,15 @@ public class UserController {
   public void updateUserPassword(
       @Validated @RequestBody UserUpdatePasswordDTO user,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    var wrapper = new UpdateWrapper<UserPO>();
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    wrapper.eq("id", idInToken);
-    wrapper.eq("user_password", MD5Converter.convertToMD5(user.oldPassword()));
-    if (!userService.exists(wrapper)) {
+    var userPO = userService.getById(idInToken);
+    if (userPO == null
+        || !userPO.getUserPassword().equals(MD5Converter.convertToMD5(user.oldPassword()))) {
       throw new GenericException(ErrorCodeEnum.WRONG_UPDATE_PASSWORD_INFORMATION);
     }
     checkPasswordValidity(user.newPassword());
-    wrapper.set("user_password", MD5Converter.convertToMD5(user.newPassword()));
-    if (!userService.update(wrapper)) {
+    userPO.setUserPassword(MD5Converter.convertToMD5(user.newPassword()));
+    if (!userService.updateById(userPO)) {
       throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user);
     }
     JwtUtil.blacklistToken(idInToken);
@@ -220,7 +219,7 @@ public class UserController {
           @Email(message = "{Email.userController#checkEmailValidity.email}")
           @NotBlank(message = "{NotBlank.userController#checkEmailValidity.email}")
           String email) {
-    if (userService.emailExists(email)) {
+    if (userService.getOneByEmail(email) != null) {
       throw new GenericException(ErrorCodeEnum.EMAIL_ALREADY_EXISTS, email);
     }
   }
@@ -251,7 +250,7 @@ public class UserController {
     if (reservedUsernames.contains(username)) {
       throw new GenericException(ErrorCodeEnum.USERNAME_RESERVED, username);
     }
-    if (userService.usernameExists(username)) {
+    if (userService.getOneByUsername(username) != null) {
       throw new GenericException(ErrorCodeEnum.USERNAME_ALREADY_EXISTS, username);
     }
   }

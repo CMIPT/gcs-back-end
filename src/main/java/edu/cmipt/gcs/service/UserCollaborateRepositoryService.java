@@ -13,5 +13,6 @@ public interface UserCollaborateRepositoryService extends IService<UserCollabora
       CollaboratorOrderByEnum orderBy,
       Boolean isAsc);
 
-  boolean existsByCollaboratorIdAndRepositoryId(Long collaboratorId, Long repositoryId);
+  UserCollaborateRepositoryPO getOneByCollaboratorIdAndRepositoryId(
+      Long collaboratorId, Long repositoryId);
 }
