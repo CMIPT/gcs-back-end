@@ -17,6 +17,11 @@ public class SshKeyServiceImpl extends ServiceImpl<SshKeyMapper, SshKeyPO>
     implements SshKeyService {
   private static final Logger logger = LoggerFactory.getLogger(SshKeyServiceImpl.class);
 
+  @Override
+  public SshKeyPO getById(Serializable id) {
+    return super.getById(id);
+  }
+
   @Transactional
   @Override
   public boolean save(SshKeyPO sshKeyPO) {

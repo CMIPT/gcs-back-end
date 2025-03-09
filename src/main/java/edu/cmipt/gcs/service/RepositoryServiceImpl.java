@@ -20,6 +20,11 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
 
   @Autowired private UserService userService;
 
+  @Override
+  public RepositoryPO getById(Serializable id) {
+    return super.getById(id);
+  }
+
   /**
    * Save a repository and initialize a git repository in the file system.
    *

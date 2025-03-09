@@ -30,6 +30,11 @@ public class UserCollaborateRepositoryServiceImpl
   @Autowired UserMapper userMapper;
 
   @Override
+  public UserCollaborateRepositoryPO getById(Serializable id) {
+    return super.getById(id);
+  }
+
+  @Override
   @Transactional
   public boolean save(UserCollaborateRepositoryPO userCollaborateRepository) {
     if (!super.save(userCollaborateRepository)) {

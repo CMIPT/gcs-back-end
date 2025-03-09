@@ -22,6 +22,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserPO> implements 
   @Autowired SshKeyService sshKeyService;
 
   @Override
+  public UserPO getById(Serializable id) {
+    return super.getById(id);
+  }
+
+  @Override
   @Transactional
   public boolean removeById(Serializable id) {
     if (!super.removeById(id)) {
