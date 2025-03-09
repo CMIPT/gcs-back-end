@@ -27,6 +27,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserPO> implements 
   }
 
   @Override
+  public boolean updateById(UserPO user) {
+    return super.updateById(user);
+  }
+
+  @Override
   public UserPO getOneByUsername(String username) {
     QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
     wrapper.apply("LOWER(username) = LOWER({0})", username);

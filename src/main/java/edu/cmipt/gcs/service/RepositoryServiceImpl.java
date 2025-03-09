@@ -7,10 +7,13 @@ import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.util.GitoliteUtil;
+import edu.cmipt.gcs.util.RedisUtil;
+
 import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +23,16 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
   private static final Logger logger = LoggerFactory.getLogger(RepositoryServiceImpl.class);
 
   @Autowired private UserService userService;
+  @Autowired private RedisTemplate<String, Object> redisTemplate;
 
   @Override
   public RepositoryPO getById(Serializable id) {
     return super.getById(id);
+  }
+
+  @Override
+  public boolean updateById(RepositoryPO repository) {
+    return super.updateById(repository);
   }
 
   @Override
@@ -62,8 +71,11 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
   @Override
   @Transactional
   public boolean removeById(Serializable id) {
-    RepositoryPO repositoryPO = super.getById(id);
-    assert repositoryPO != null;
+    var repositoryPO =
+        (RepositoryPO) redisTemplate.opsForValue().get(RedisUtil.generateKey(this, id.toString()));
+    if (repositoryPO == null) {
+      repositoryPO = super.getById(id);
+    }
     if (!super.removeById(id)) {
       logger.error("Failed to remove repository from database");
       return false;

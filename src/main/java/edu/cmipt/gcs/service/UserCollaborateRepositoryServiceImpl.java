@@ -13,10 +13,12 @@ import edu.cmipt.gcs.pojo.collaboration.CollaboratorDTO;
 import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.util.GitoliteUtil;
+import edu.cmipt.gcs.util.RedisUtil;
 import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,7 @@ public class UserCollaborateRepositoryServiceImpl
   private static final Logger logger =
       LoggerFactory.getLogger(UserCollaborateRepositoryServiceImpl.class);
 
+  @Autowired private RedisTemplate<String, Object> redisTemplate;
   @Autowired RepositoryService repositoryService;
   @Autowired UserMapper userMapper;
 
@@ -65,7 +68,12 @@ public class UserCollaborateRepositoryServiceImpl
   @Override
   @Transactional
   public boolean removeById(Serializable id) {
-    var userCollaborateRepository = super.getById(id);
+    var userCollaborateRepository =
+        (UserCollaborateRepositoryPO)
+            redisTemplate.opsForValue().get(RedisUtil.generateKey(this, id.toString()));
+    if (userCollaborateRepository == null) {
+      userCollaborateRepository = super.getById(id);
+    }
     Long repositoryId = userCollaborateRepository.getRepositoryId();
     Long collaboratorId = userCollaborateRepository.getCollaboratorId();
     Long repositoryUserId = repositoryService.getById(repositoryId).getUserId();

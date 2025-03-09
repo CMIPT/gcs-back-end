@@ -8,4 +8,5 @@ public class ApplicationConstant {
   public static final long REFRESH_TOKEN_EXPIRATION = 30 * 24 * 60 * 60 * 1000L; // 30 days
   public static final long EMAIL_VERIFICATION_CODE_EXPIRATION = 5 * 60 * 1000L; // 5 minutes
   public static final long EMAIL_VERIFICATION_CODE_LENGTH = 6L;
+  public static final Long SERVICE_CACHE_EXPIRATION = 24 * 60 * 60 * 1000L; // 24 hours
 }

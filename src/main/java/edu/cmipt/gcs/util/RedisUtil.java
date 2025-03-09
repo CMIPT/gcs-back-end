@@ -1,37 +1,32 @@
 package edu.cmipt.gcs.util;
 
-import java.util.concurrent.TimeUnit;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Component
 public class RedisUtil {
-  private static RedisTemplate<String, Object> redisTemplate;
+  private static final Logger logger = LoggerFactory.getLogger(RedisUtil.class);
 
-  public RedisUtil(RedisTemplate<String, Object> redisTemplate) {
-    RedisUtil.redisTemplate = redisTemplate;
-  }
-
-  public static Object get(String key) {
-    return redisTemplate.opsForValue().get(key);
+  /**
+   * Generate a key for Redis.
+   *
+   * @param target the target object
+   * @param key the key of the object
+   * @return the generated key
+   */
+  public static String generateKey(Object target, String key) {
+    logger.debug("Generate key: {}#{}", target.getClass().getSimpleName(), key);
+    return String.format("%s#%s", target.getClass().getSimpleName(), key);
   }
 
   /**
-   * @param key key
-   * @param value object to be stored
-   * @param expireTime time to live in milliseconds
+   * Generate a key for Redis.
+   *
+   * @param target the target class
+   * @param key the key of the object
+   * @return the generated key
    */
-  public static void set(String key, Object value, Long expireTime) {
-    redisTemplate.opsForValue().set(key, value, expireTime, TimeUnit.MILLISECONDS);
-  }
-
-  public static void del(String... keys) {
-    for (String key : keys) {
-      redisTemplate.delete(key);
-    }
-  }
-
-  public static boolean hasKey(String key) {
-    return redisTemplate.hasKey(key);
+  public static String generateKey(Class<?> target, String key) {
+    logger.debug("Generate key: {}#{}", target.getSimpleName(), key);
+    return String.format("%s#%s", target.getSimpleName(), key);
   }
 }

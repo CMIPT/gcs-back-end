@@ -7,9 +7,12 @@ import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.ssh.SshKeyPO;
 import edu.cmipt.gcs.util.GitoliteUtil;
+import edu.cmipt.gcs.util.RedisUtil;
 import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class SshKeyServiceImpl extends ServiceImpl<SshKeyMapper, SshKeyPO>
     implements SshKeyService {
   private static final Logger logger = LoggerFactory.getLogger(SshKeyServiceImpl.class);
+
+  @Autowired private RedisTemplate<String, Object> redisTemplate;
 
   @Override
   public SshKeyPO getById(Serializable id) {
@@ -51,8 +56,11 @@ public class SshKeyServiceImpl extends ServiceImpl<SshKeyMapper, SshKeyPO>
   @Transactional
   @Override
   public boolean removeById(Serializable id) {
-    SshKeyPO sshKeyPO = super.getById(id);
-    assert sshKeyPO != null;
+    var sshKeyPO =
+        (SshKeyPO) redisTemplate.opsForValue().get(RedisUtil.generateKey(this, id.toString()));
+    if (sshKeyPO == null) {
+      sshKeyPO = super.getById(id);
+    }
     if (!super.removeById(id)) {
       logger.error("Failed to remove SSH key from database");
       return false;
@@ -67,15 +75,9 @@ public class SshKeyServiceImpl extends ServiceImpl<SshKeyMapper, SshKeyPO>
   @Transactional
   @Override
   public boolean updateById(SshKeyPO sshKeyPO) {
-    String originSshKey = super.getById(sshKeyPO.getId()).getPublicKey();
-    assert originSshKey != null;
     if (!super.updateById(sshKeyPO)) {
       logger.error("Failed to update SSH key in database");
       return false;
-    }
-    // no need to update file, we just return true
-    if (sshKeyPO.getPublicKey() == null || originSshKey.equals(sshKeyPO.getPublicKey())) {
-      return true;
     }
     GitoliteUtil.updateSshKey(sshKeyPO.getId(), sshKeyPO.getPublicKey());
     return true;

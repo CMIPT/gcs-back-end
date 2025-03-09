@@ -1,5 +1,7 @@
 package edu.cmipt.gcs.aop;
 
+import edu.cmipt.gcs.constant.ApplicationConstant;
+import edu.cmipt.gcs.util.RedisUtil;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -24,14 +26,12 @@ import org.springframework.stereotype.Component;
 public class CacheAspect {
   private static final Logger logger = LoggerFactory.getLogger(CacheAspect.class);
 
-  private static final Long CACHE_EXPIRE_TIME = 24 * 60 * 60 * 1000L; // 24 hours
-
   @Autowired RedisTemplate<String, Object> redisTemplate;
 
   @Around("execution(* edu.cmipt.gcs.service.*ServiceImpl.getById(java.io.Serializable))")
   public Object getByIdAdvice(ProceedingJoinPoint joinPoint) throws Throwable {
     String id = joinPoint.getArgs()[0].toString();
-    String cacheKey = generateCacheKey(joinPoint, id);
+    String cacheKey = RedisUtil.generateKey(joinPoint.getTarget(), id);
     Object cacheValue = redisTemplate.opsForValue().get(cacheKey);
     if (cacheValue == null) {
       logger.info("Cache miss, key: {}", cacheKey);
@@ -39,7 +39,13 @@ public class CacheAspect {
     } else {
       logger.debug("Cache hit, key: {}, value: {}", cacheKey, cacheValue);
     }
-    redisTemplate.opsForValue().set(cacheKey, cacheValue, CACHE_EXPIRE_TIME, TimeUnit.MILLISECONDS);
+    redisTemplate
+        .opsForValue()
+        .set(
+            cacheKey,
+            cacheValue,
+            ApplicationConstant.SERVICE_CACHE_EXPIRATION,
+            TimeUnit.MILLISECONDS);
     return cacheValue;
   }
 
@@ -49,7 +55,7 @@ public class CacheAspect {
     String cacheKey = null;
     Object cacheValue = null;
     String argsId = String.valueOf(Arrays.deepHashCode(joinPoint.getArgs()));
-    String argsIdKey = generateCacheKey(joinPoint, argsId);
+    String argsIdKey = RedisUtil.generateKey(joinPoint.getTarget(), argsId);
     Object argsIdValue = redisTemplate.opsForValue().get(argsIdKey);
     if (argsIdValue == null) {
       logger.info("Cache miss, key: {}", argsIdKey);
@@ -65,8 +71,12 @@ public class CacheAspect {
     // Cache the argsId to PO id
     redisTemplate
         .opsForValue()
-        .set(argsIdKey, argsIdValue, CACHE_EXPIRE_TIME, TimeUnit.MILLISECONDS);
-    cacheKey = generateCacheKey(joinPoint, argsIdValue.toString());
+        .set(
+            argsIdKey,
+            argsIdValue,
+            ApplicationConstant.SERVICE_CACHE_EXPIRATION,
+            TimeUnit.MILLISECONDS);
+    cacheKey = RedisUtil.generateKey(joinPoint.getTarget(), argsIdValue.toString());
     if (cacheValue == null) {
       cacheValue = redisTemplate.opsForValue().get(cacheKey);
       if (cacheValue == null) {
@@ -81,19 +91,33 @@ public class CacheAspect {
       }
     }
     // Cache id of PO to the PO
-    redisTemplate.opsForValue().set(cacheKey, cacheValue, CACHE_EXPIRE_TIME, TimeUnit.MILLISECONDS);
+    redisTemplate
+        .opsForValue()
+        .set(
+            cacheKey,
+            cacheValue,
+            ApplicationConstant.SERVICE_CACHE_EXPIRATION,
+            TimeUnit.MILLISECONDS);
     return cacheValue;
   }
 
-  /**
-   * Generate cache key
-   *
-   * <p>Warning: there may be hash collision
-   *
-   * @param joinPoint join point
-   * @return cache key
-   */
-  private String generateCacheKey(ProceedingJoinPoint joinPoint, String id) {
-    return String.format("%s#%s", joinPoint.getTarget().getClass().getSimpleName(), id);
+  @Around(
+      "execution(* edu.cmipt.gcs.service.*ServiceImpl.updateById(..)) || "
+          + "execution(* edu.cmipt.gcs.service.*ServiceImpl.removeById(java.io.Serializable))")
+  public Object updateOrRemoveAdvice(ProceedingJoinPoint joinPoint) throws Throwable {
+    boolean result = (boolean) joinPoint.proceed();
+    if (result) {
+      String id;
+      if (joinPoint.getSignature().getName().equals("removeById")) {
+        id = joinPoint.getArgs()[0].toString();
+      } else {
+        var po = joinPoint.getArgs()[0];
+        id = po.getClass().getMethod("getId").invoke(po).toString();
+      }
+      String cacheKey = RedisUtil.generateKey(joinPoint.getTarget(), id);
+      redisTemplate.delete(cacheKey);
+      logger.info("Cache delete, key: {}", cacheKey);
+    }
+    return result;
   }
 }

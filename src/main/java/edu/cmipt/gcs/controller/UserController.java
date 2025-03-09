@@ -1,6 +1,5 @@
 package edu.cmipt.gcs.controller;
 
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.ValidationConstant;
@@ -170,10 +169,8 @@ public class UserController {
     if (userPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user.email());
     }
-    var wrapper = new UpdateWrapper<UserPO>();
-    wrapper.apply("LOWER(email) = LOWER({0})", user.email());
-    wrapper.set("user_password", MD5Converter.convertToMD5(user.newPassword()));
-    if (!userService.update(wrapper)) {
+    userPO.setUserPassword(MD5Converter.convertToMD5(user.newPassword()));
+    if (!userService.updateById(userPO)) {
       throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user.email());
     }
     JwtUtil.blacklistToken(userPO.getId());
