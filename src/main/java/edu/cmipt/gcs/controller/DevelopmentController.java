@@ -4,8 +4,6 @@ import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.PostConstruct;
@@ -24,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -120,23 +117,9 @@ public class DevelopmentController {
       summary = "Get VO as TypeScript",
       description = "Get VO as TypeScript in the application",
       tags = {"Development", "Get Method"})
-  @Parameter(
-      name = "voName",
-      description = "Value Object Name, when not provided, all VOs will be returned",
-      required = false,
-      example = "PageVO",
-      schema = @Schema(implementation = String.class))
   @ApiResponse(responseCode = "200", description = "VO as TypeScript retrieved successfully")
-  public String getVOAsTS(@RequestParam(required = false) String voName) {
-    if (voName == null) {
-      return voAsTS.values().stream().reduce("", (a, b) -> a + "\n" + b);
-    } else {
-      if (voAsTS.containsKey(voName)) {
-        return voAsTS.get(voName);
-      } else {
-        return "No such VO found";
-      }
-    }
+  public String getVOAsTS() {
+    return voAsTS.values().stream().reduce("", (a, b) -> a + "\n" + b);
   }
 
   private List<Class<?>> findVOClasses() {
@@ -203,7 +186,8 @@ public class DevelopmentController {
     } else if (javaType instanceof TypeVariable) {
       return ((TypeVariable<?>) javaType).getName();
     } else {
-      return "any"; // Default to 'any' for complex types
+      var splitedName = javaType.getTypeName().split("\\.");
+      return splitedName[splitedName.length - 1];
     }
   }
 }

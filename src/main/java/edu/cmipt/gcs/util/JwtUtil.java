@@ -6,19 +6,46 @@ import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
 import edu.cmipt.gcs.enumeration.TokenTypeEnum;
 import edu.cmipt.gcs.exception.GenericException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import javax.crypto.SecretKey;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Component;
 
 /**
  * JwtUtil
  *
  * @author Kaiser
  */
+@Component
 public class JwtUtil {
   private static final String TOKEN_TYPE_CLAIM = "tokenType";
   private static final String ID_CLAIM = "id";
-  private static final SecretKey SECRET_KEY = Jwts.SIG.HS256.key().build();
+  private static SecretKey SECRET_KEY;
+
+  @Value("${jwt.secret}")
+  private String secret;
+
+  private static RedisTemplate<String, Object> redisTemplate;
+
+  public JwtUtil(RedisTemplate<String, Object> redisTemplate) {
+    JwtUtil.redisTemplate = redisTemplate;
+  }
+
+  @PostConstruct
+  public void init() {
+    if (secret == null || secret.isEmpty()) {
+      SECRET_KEY = Jwts.SIG.HS256.key().build();
+      return;
+    }
+    byte[] secretBytes = Decoders.BASE64.decode(secret);
+    SECRET_KEY = Keys.hmacShaKeyFor(secretBytes);
+  }
 
   /**
    * Generate a token
@@ -44,7 +71,7 @@ public class JwtUtil {
   }
 
   public static String getId(String token) {
-    if (!RedisUtil.hasKey(generateRedisKey(token))) {
+    if (!redisTemplate.hasKey(generateRedisKey(token))) {
       throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
     }
     try {
@@ -61,7 +88,7 @@ public class JwtUtil {
   }
 
   public static TokenTypeEnum getTokenType(String token) {
-    if (!RedisUtil.hasKey(generateRedisKey(token))) {
+    if (!redisTemplate.hasKey(generateRedisKey(token))) {
       throw new GenericException(ErrorCodeEnum.INVALID_TOKEN, token);
     }
     try {
@@ -97,8 +124,8 @@ public class JwtUtil {
    * @param tokens
    */
   public static void blacklistToken(Long id) {
-    RedisUtil.del(generateRedisKey(id, TokenTypeEnum.ACCESS_TOKEN));
-    RedisUtil.del(generateRedisKey(id, TokenTypeEnum.REFRESH_TOKEN));
+    redisTemplate.delete(generateRedisKey(id, TokenTypeEnum.ACCESS_TOKEN));
+    redisTemplate.delete(generateRedisKey(id, TokenTypeEnum.REFRESH_TOKEN));
   }
 
   public static void blacklistToken(String id) {
@@ -106,7 +133,7 @@ public class JwtUtil {
   }
 
   private static String generateRedisKey(Long id, TokenTypeEnum tokenType) {
-    return "id:tokenType#" + id + ":" + tokenType.name();
+    return RedisUtil.generateKey(JwtUtil.class, id + tokenType.name());
   }
 
   public static void refreshToken(String token) {
@@ -114,12 +141,15 @@ public class JwtUtil {
   }
 
   private static void setTokenInRedis(String token, TokenTypeEnum tokenType) {
-    RedisUtil.set(
-        generateRedisKey(token),
-        token,
-        (tokenType == TokenTypeEnum.ACCESS_TOKEN
-            ? ApplicationConstant.ACCESS_TOKEN_EXPIRATION
-            : ApplicationConstant.REFRESH_TOKEN_EXPIRATION));
+    redisTemplate
+        .opsForValue()
+        .set(
+            generateRedisKey(token),
+            token,
+            (tokenType == TokenTypeEnum.ACCESS_TOKEN
+                ? ApplicationConstant.ACCESS_TOKEN_EXPIRATION
+                : ApplicationConstant.REFRESH_TOKEN_EXPIRATION),
+            TimeUnit.MILLISECONDS);
   }
 
   private static String generateRedisKey(String token) {

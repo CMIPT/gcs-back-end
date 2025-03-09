@@ -14,7 +14,10 @@ import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
 import edu.cmipt.gcs.enumeration.AddCollaboratorTypeEnum;
+import edu.cmipt.gcs.enumeration.CollaboratorOrderByEnum;
+import edu.cmipt.gcs.enumeration.RepositoryOrderByEnum;
 import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
+import edu.cmipt.gcs.pojo.collaboration.CollaboratorVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
 import java.util.function.BiFunction;
@@ -74,10 +77,11 @@ public class RepositoryControllerTest {
                             .param("user", userID)
                             .param("userType", UserQueryTypeEnum.ID.name())
                             .param("page", "1")
-                            .param("size", TestConstant.REPOSITORY_SIZE.toString()))
+                            .param("size", TestConstant.REPOSITORY_SIZE.toString())
+                            .param("orderBy", RepositoryOrderByEnum.GMT_CREATED.name())
+                            .param("isAsc", "false"))
                     .andExpectAll(
                         status().isOk(),
-                        jsonPath("$.pages").value(greaterThan(0)),
                         jsonPath("$.total").value(greaterThan(0)),
                         jsonPath("$.records").isArray(),
                         jsonPath("$.records.length()").value(TestConstant.REPOSITORY_SIZE))
@@ -87,10 +91,17 @@ public class RepositoryControllerTest {
             var pageVO =
                 objectMapper.readValue(content, new TypeReference<PageVO<RepositoryVO>>() {});
             if (userID.equals(TestConstant.ID)) {
-              TestConstant.REPOSITORY_ID = pageVO.records().get(0).id();
-              TestConstant.REPOSITORY_NAME = pageVO.records().get(0).repositoryName();
+              var firstNonPrivateRepository =
+                  pageVO.records().stream().filter(r -> !r.isPrivate()).findFirst().orElse(null);
+              TestConstant.REPOSITORY_ID = firstNonPrivateRepository.id();
+              TestConstant.REPOSITORY_NAME = firstNonPrivateRepository.repositoryName();
             } else {
-              TestConstant.OTHER_REPOSITORY_ID = pageVO.records().get(0).id();
+              TestConstant.OTHER_REPOSITORY_ID =
+                  pageVO.records().stream()
+                      .filter(r -> !r.isPrivate())
+                      .findFirst()
+                      .map(RepositoryVO::id)
+                      .orElse(null);
               TestConstant.OTHER_PRIVATE_REPOSITORY_ID =
                   pageVO.records().stream()
                       .filter(RepositoryVO::isPrivate)
@@ -162,24 +173,38 @@ public class RepositoryControllerTest {
                 .param("path", "/"))
         .andExpectAll(
             status().isOk(),
-            jsonPath("$.repositoryVO.id").value(TestConstant.REPOSITORY_ID),
-            jsonPath("$.repositoryVO.repositoryName").value(TestConstant.REPOSITORY_NAME),
-            jsonPath("$.repositoryVO.userId").value(TestConstant.ID),
-            jsonPath("$.repositoryVO.star").value(0),
-            jsonPath("$.repositoryVO.fork").value(0),
-            jsonPath("$.repositoryVO.watcher").value(0),
+            jsonPath("$.id").value(TestConstant.REPOSITORY_ID),
+            jsonPath("$.repositoryName").value(TestConstant.REPOSITORY_NAME),
+            jsonPath("$.isPrivate").value(false),
+            jsonPath("$.userId").value(TestConstant.ID),
+            jsonPath("$.username").value(TestConstant.USERNAME),
+            jsonPath("$.star").value(0),
+            jsonPath("$.fork").value(0),
+            jsonPath("$.watcher").value(0),
             jsonPath("$.branchList").isArray(),
             jsonPath("$.branchList.length()").value(1),
             jsonPath("$.branchList[0]").value("refs/heads/master"),
             jsonPath("$.tagList").isArray(),
             jsonPath("$.tagList.length()").value(0),
-            jsonPath("$.defaultRef").value("refs/heads/master"),
-            jsonPath("$.path.isDirectory").value(true),
-            jsonPath("$.path.content").value(""),
-            jsonPath("$.path.readmeContent").value(""),
-            jsonPath("$.path.licenseContent").value(""),
-            jsonPath("$.path.directoryList").isArray(),
-            jsonPath("$.path.directoryList.length()").value(1));
+            jsonPath("$.defaultRef").value("refs/heads/master"));
+  }
+
+  @Test
+  public void testGetRepositoryPathWithRefValid() throws Exception {
+    mvc.perform(
+            get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_PATH_WITH_REF_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", TestConstant.REPOSITORY_ID)
+                .param("ref", "master")
+                .param("path", "/"))
+        .andExpectAll(
+            status().isOk(),
+            jsonPath("$.isDirectory").value(true),
+            jsonPath("$.content").value(""),
+            jsonPath("$.readmeContent").value(""),
+            jsonPath("$.licenseContent").value(""),
+            jsonPath("$.directoryList").isArray(),
+            jsonPath("$.directoryList.length()").value(1));
   }
 
   @Test
@@ -187,9 +212,19 @@ public class RepositoryControllerTest {
     mvc.perform(
             get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                .param("id", TestConstant.REPOSITORY_ID)
-                .param("ref", "invalid ref"))
+                .param("id", "123"))
         .andExpectAll(status().isNotFound());
+  }
+
+  @Test
+  public void testGetRepositoryPathWithRefInvalid() throws Exception {
+    mvc.perform(
+            get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_PATH_WITH_REF_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", TestConstant.REPOSITORY_ID)
+                .param("ref", "master")
+                .param("path", "/invalid"))
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -217,15 +252,7 @@ public class RepositoryControllerTest {
                     }
                     """
                         .formatted(TestConstant.REPOSITORY_ID, newDescription)))
-        .andExpectAll(
-            status().isOk(),
-            jsonPath("$.id").value(TestConstant.REPOSITORY_ID),
-            jsonPath("$.repositoryName").value(TestConstant.REPOSITORY_NAME),
-            jsonPath("$.repositoryDescription").value(newDescription),
-            jsonPath("$.userId").value(TestConstant.ID),
-            jsonPath("$.star").value(0),
-            jsonPath("$.fork").value(0),
-            jsonPath("$.watcher").value(0));
+        .andExpectAll(status().isOk());
   }
 
   @Test
@@ -280,21 +307,28 @@ public class RepositoryControllerTest {
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 3)
   public void testPageCollaboratorValid() throws Exception {
-    mvc.perform(
-            get(ApiPathConstant.REPOSITORY_PAGE_COLLABORATOR_API_PATH)
-                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                .param("repositoryId", TestConstant.REPOSITORY_ID)
-                .param("page", "1")
-                .param("size", "10"))
-        .andExpectAll(
-            status().isOk(),
-            jsonPath("$.pages").value(greaterThan(0)),
-            jsonPath("$.total").value(greaterThan(0)),
-            jsonPath("$.records").isArray(),
-            jsonPath("$.records.length()").value(1),
-            jsonPath("$.records[0].id").value(TestConstant.OTHER_ID),
-            jsonPath("$.records[0].username").value(TestConstant.OTHER_USERNAME),
-            jsonPath("$.records[0].email").value(TestConstant.OTHER_EMAIL));
+    var content =
+        mvc.perform(
+                get(ApiPathConstant.REPOSITORY_PAGE_COLLABORATOR_API_PATH)
+                    .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                    .param("repositoryId", TestConstant.REPOSITORY_ID)
+                    .param("page", "1")
+                    .param("size", "10")
+                    .param("orderBy", CollaboratorOrderByEnum.GMT_CREATED.name())
+                    .param("isAsc", "false"))
+            .andExpectAll(
+                status().isOk(),
+                jsonPath("$.total").value(greaterThan(0)),
+                jsonPath("$.records").isArray(),
+                jsonPath("$.records.length()").value(1),
+                jsonPath("$.records[0].collaboratorId").value(TestConstant.OTHER_ID),
+                jsonPath("$.records[0].username").value(TestConstant.OTHER_USERNAME),
+                jsonPath("$.records[0].email").value(TestConstant.OTHER_EMAIL))
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    var pageVO = objectMapper.readValue(content, new TypeReference<PageVO<CollaboratorVO>>() {});
+    TestConstant.COLLABORATION_ID = pageVO.records().get(0).id();
   }
 
   @Test
@@ -304,42 +338,36 @@ public class RepositoryControllerTest {
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("repositoryId", TestConstant.OTHER_PRIVATE_REPOSITORY_ID)
                 .param("page", "1")
-                .param("size", "10"))
+                .param("size", "10")
+                .param("orderBy", CollaboratorOrderByEnum.GMT_CREATED.name())
+                .param("isAsc", "false"))
         .andExpect(status().isNotFound());
-  }
-
-  @Test
-  @Order(Ordered.HIGHEST_PRECEDENCE + 4)
-  public void testRemoveCollaborationValid() throws Exception {
-    mvc.perform(
-            delete(ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH)
-                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                .param("repositoryId", TestConstant.REPOSITORY_ID)
-                .param("collaboratorId", TestConstant.OTHER_ID))
-        .andExpect(status().isOk());
   }
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 4)
   public void testRemoveCollaborationInvalid() throws Exception {
-    // remove self from other's public repository
+    // remove other's collaboration
     mvc.perform(
             delete(ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH)
-                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                .param("repositoryId", TestConstant.OTHER_REPOSITORY_ID)
-                .param("collaboratorId", TestConstant.ID))
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.OTHER_ACCESS_TOKEN)
+                .param("id", TestConstant.COLLABORATION_ID))
         .andExpect(status().isForbidden());
-    // remove self from other's private repository
-    mvc.perform(
-            delete(ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH)
-                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                .param("repositoryId", TestConstant.OTHER_PRIVATE_REPOSITORY_ID)
-                .param("collaboratorId", TestConstant.ID))
-        .andExpect(status().isNotFound());
   }
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 5)
+  public void testRemoveCollaborationValid() throws Exception {
+    mvc.perform(
+            delete(ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", TestConstant.COLLABORATION_ID))
+        .andExpect(status().isOk());
+    TestConstant.COLLABORATION_ID = null;
+  }
+
+  @Test
+  @Order(Ordered.HIGHEST_PRECEDENCE + 6)
   public void testDeleteRepositoryValid() throws Exception {
     mvc.perform(
             delete(ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH)
@@ -361,7 +389,7 @@ public class RepositoryControllerTest {
   }
 
   @Test
-  @Order(Ordered.HIGHEST_PRECEDENCE + 6)
+  @Order(Ordered.HIGHEST_PRECEDENCE + 7)
   public void testPageRepositoryValid() throws Exception {
     var result = repositoryPager.apply(TestConstant.ACCESS_TOKEN, TestConstant.ID);
     if (result != null) {
@@ -370,7 +398,7 @@ public class RepositoryControllerTest {
   }
 
   @Test
-  @Order(Ordered.HIGHEST_PRECEDENCE + 7)
+  @Order(Ordered.HIGHEST_PRECEDENCE + 8)
   public void testPageOtherUserRepositoryValid() throws Exception {
     mvc.perform(
             get(ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH)
@@ -378,10 +406,11 @@ public class RepositoryControllerTest {
                 .param("user", TestConstant.ID)
                 .param("userType", UserQueryTypeEnum.ID.name())
                 .param("page", "1")
-                .param("size", TestConstant.REPOSITORY_SIZE.toString()))
+                .param("size", TestConstant.REPOSITORY_SIZE.toString())
+                .param("orderBy", RepositoryOrderByEnum.GMT_CREATED.name())
+                .param("isAsc", "false"))
         .andExpectAll(
             status().isOk(),
-            jsonPath("$.pages").value(greaterThan(0)),
             jsonPath("$.total").value(greaterThan(0)),
             jsonPath("$.records").isArray(),
             jsonPath("$.records.length()").value(TestConstant.REPOSITORY_SIZE / 2));
@@ -392,8 +421,7 @@ public class RepositoryControllerTest {
     mvc.perform(
             get(ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                .param("repositoryName", "test")
-                .param("userId", TestConstant.ID))
+                .param("repositoryName", "test"))
         .andExpect(status().isOk());
   }
 

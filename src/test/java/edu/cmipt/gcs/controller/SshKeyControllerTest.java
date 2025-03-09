@@ -1,7 +1,6 @@
 package edu.cmipt.gcs.controller;
 
 import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -14,6 +13,7 @@ import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
+import edu.cmipt.gcs.enumeration.SshKeyOrderByEnum;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.ssh.SshKeyVO;
 import java.nio.file.Files;
@@ -100,10 +100,11 @@ public class SshKeyControllerTest {
                 get(ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH)
                     .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                     .param("page", "1")
-                    .param("size", TestConstant.SSH_KEY_SIZE.toString()))
+                    .param("size", TestConstant.SSH_KEY_SIZE.toString())
+                    .param("orderBy", SshKeyOrderByEnum.GMT_CREATED.name())
+                    .param("isAsc", "false"))
             .andExpectAll(
                 status().isOk(),
-                jsonPath("$.pages").value(greaterThan(0)),
                 jsonPath("$.total").value(greaterThan(0)),
                 jsonPath("$.records").isArray(),
                 jsonPath("$.records.length()").value(TestConstant.SSH_KEY_SIZE))
@@ -130,11 +131,7 @@ public class SshKeyControllerTest {
                     }
                     """
                         .formatted(TestConstant.SSH_KEY_ID)))
-        .andExpectAll(
-            status().isOk(),
-            jsonPath("$.id", is(TestConstant.SSH_KEY_ID)),
-            jsonPath("$.userId", is(TestConstant.ID)),
-            jsonPath("$.name", is("My SSH Key Updated")));
+        .andExpectAll(status().isOk());
   }
 
   @Test

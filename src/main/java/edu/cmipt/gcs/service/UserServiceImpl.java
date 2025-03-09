@@ -22,6 +22,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserPO> implements 
   @Autowired SshKeyService sshKeyService;
 
   @Override
+  public UserPO getById(Serializable id) {
+    return super.getById(id);
+  }
+
+  @Override
+  public boolean updateById(UserPO user) {
+    return super.updateById(user);
+  }
+
+  @Override
+  public UserPO getOneByUsername(String username) {
+    QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
+    wrapper.apply("LOWER(username) = LOWER({0})", username);
+    return super.getOne(wrapper);
+  }
+
+  @Override
+  public UserPO getOneByEmail(String email) {
+    QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
+    wrapper.apply("LOWER(email) = LOWER({0})", email);
+    return super.getOne(wrapper);
+  }
+
+  @Override
   @Transactional
   public boolean removeById(Serializable id) {
     if (!super.removeById(id)) {
@@ -51,19 +75,5 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserPO> implements 
       throw new GenericException(ErrorCodeEnum.USER_CREATE_FAILED, user);
     }
     return true;
-  }
-
-  @Override
-  public boolean usernameExists(String username) {
-    QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
-    wrapper.apply("LOWER(username) = LOWER({0})", username);
-    return super.exists(wrapper);
-  }
-
-  @Override
-  public boolean emailExists(String email) {
-    QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
-    wrapper.apply("LOWER(email) = LOWER({0})", email);
-    return super.exists(wrapper);
   }
 }

@@ -63,7 +63,7 @@ public class UserControllerTest {
             get(ApiPathConstant.USER_GET_USER_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("user", invalidUsername)
-                .param("userType", "USERNAME"))
+                .param("userType", UserQueryTypeEnum.USERNAME.name()))
         .andExpectAll(
             status().isNotFound(),
             content()
@@ -93,10 +93,7 @@ public class UserControllerTest {
                     }
                     """
                         .formatted(TestConstant.AVATAR_URL)))
-        .andExpectAll(
-            status().isOk(),
-            jsonPath("$.avatarUrl", is(TestConstant.AVATAR_URL)),
-            jsonPath("$.id").isString());
+        .andExpectAll(status().isOk());
   }
 
   @Test

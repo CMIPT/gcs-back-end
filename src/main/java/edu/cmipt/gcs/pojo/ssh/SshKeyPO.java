@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,12 +20,12 @@ public class SshKeyPO {
   private String publicKey;
 
   @TableField(fill = FieldFill.INSERT)
-  private LocalDateTime gmtCreated;
+  private Timestamp gmtCreated;
 
   @TableField(fill = FieldFill.INSERT_UPDATE)
-  private LocalDateTime gmtUpdated;
+  private Timestamp gmtUpdated;
 
-  @TableLogic private LocalDateTime gmtDeleted;
+  @TableLogic private Timestamp gmtDeleted;
 
   public SshKeyPO(SshKeyDTO sshKeyDTO, String userId) {
     try {
