@@ -1,5 +1,6 @@
 package edu.cmipt.gcs.aop;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -36,8 +37,50 @@ public class CacheAspect {
       logger.info("Cache miss, key: {}", cacheKey);
       cacheValue = joinPoint.proceed();
     } else {
-      logger.info("Cache hit, key: {}, value: {}", cacheKey, cacheValue);
+      logger.debug("Cache hit, key: {}, value: {}", cacheKey, cacheValue);
     }
+    redisTemplate.opsForValue().set(cacheKey, cacheValue, CACHE_EXPIRE_TIME, TimeUnit.MILLISECONDS);
+    return cacheValue;
+  }
+
+  @Around("execution(* edu.cmipt.gcs.service.*ServiceImpl.getOneBy*(..))")
+  public Object getOneAdvice(ProceedingJoinPoint joinPoint) throws Throwable {
+    // We first cache the parameters hash code as the cache key, the value is the result PO's id
+    String cacheKey = null;
+    Object cacheValue = null;
+    String argsId = String.valueOf(Arrays.deepHashCode(joinPoint.getArgs()));
+    String argsIdKey = generateCacheKey(joinPoint, argsId);
+    Object argsIdValue = redisTemplate.opsForValue().get(argsIdKey);
+    if (argsIdValue == null) {
+      logger.info("Cache miss, key: {}", argsIdKey);
+      cacheValue = joinPoint.proceed();
+      if (cacheValue == null) {
+        logger.info("PO not found in getOne method, return null");
+        return null;
+      }
+      argsIdValue = cacheValue.getClass().getMethod("getId").invoke(cacheValue);
+    } else {
+      logger.debug("Cache hit, key: {}, value: {}", argsIdKey, argsIdValue);
+    }
+    // Cache the argsId to PO id
+    redisTemplate
+        .opsForValue()
+        .set(argsIdKey, argsIdValue, CACHE_EXPIRE_TIME, TimeUnit.MILLISECONDS);
+    cacheKey = generateCacheKey(joinPoint, argsIdValue.toString());
+    if (cacheValue == null) {
+      cacheValue = redisTemplate.opsForValue().get(cacheKey);
+      if (cacheValue == null) {
+        logger.info("Cache miss, key: {}", cacheKey);
+        cacheValue = joinPoint.proceed();
+        if (cacheValue == null) {
+          logger.info("PO not found in getOne method, return null");
+          return null;
+        }
+      } else {
+        logger.debug("Cache hit, key: {}, value: {}", cacheKey, cacheValue);
+      }
+    }
+    // Cache id of PO to the PO
     redisTemplate.opsForValue().set(cacheKey, cacheValue, CACHE_EXPIRE_TIME, TimeUnit.MILLISECONDS);
     return cacheValue;
   }

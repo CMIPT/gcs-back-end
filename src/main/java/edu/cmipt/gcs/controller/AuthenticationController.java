@@ -1,6 +1,5 @@
 package edu.cmipt.gcs.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
@@ -109,17 +108,17 @@ public class AuthenticationController {
     if (user.username() == null && user.email() == null) {
       throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
     }
-    var wrapper = new QueryWrapper<UserPO>();
+    UserPO userPO;
     if (user.username() != null) {
-      wrapper.apply("LOWER(username) = LOWER({0})", user.username());
+      userPO = userService.getOneByUsername(user.username());
     } else {
-      wrapper.apply("LOWER(email) = LOWER({0})", user.email());
+      userPO = userService.getOneByEmail(user.email());
     }
-    wrapper.eq("user_password", MD5Converter.convertToMD5(user.userPassword()));
-    if (!userService.exists(wrapper)) {
+    if (userPO == null
+        || !userPO.getUserPassword().equals(MD5Converter.convertToMD5(user.userPassword()))) {
       throw new GenericException(ErrorCodeEnum.WRONG_SIGN_IN_INFORMATION);
     }
-    var userVO = new UserVO(userService.getOne(wrapper));
+    var userVO = new UserVO(userPO);
     var headers = JwtUtil.generateHeaders(userVO.id());
     return ResponseEntity.ok().headers(headers).body(userVO);
   }

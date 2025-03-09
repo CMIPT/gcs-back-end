@@ -1,5 +1,6 @@
 package edu.cmipt.gcs.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yulichang.toolkit.JoinWrappers;
@@ -32,6 +33,14 @@ public class UserCollaborateRepositoryServiceImpl
   @Override
   public UserCollaborateRepositoryPO getById(Serializable id) {
     return super.getById(id);
+  }
+
+  @Override
+  public boolean existsByCollaboratorIdAndRepositoryId(Long collaboratorId, Long repositoryId) {
+    return super.exists(
+        new QueryWrapper<UserCollaborateRepositoryPO>()
+            .eq("collaborator_id", collaboratorId)
+            .eq("repository_id", repositoryId));
   }
 
   @Override

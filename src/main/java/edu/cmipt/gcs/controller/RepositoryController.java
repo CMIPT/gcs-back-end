@@ -22,7 +22,6 @@ import edu.cmipt.gcs.pojo.repository.RepositoryFileDetailVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryFileVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
-import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.service.RepositoryService;
 import edu.cmipt.gcs.service.UserCollaborateRepositoryService;
 import edu.cmipt.gcs.service.UserService;
@@ -277,7 +276,7 @@ public class RepositoryController {
       @RequestParam("collaborator") String collaborator,
       @RequestParam("collaboratorType") AddCollaboratorTypeEnum collaboratorType,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    var userPO = userService.getOne(collaboratorType.getQueryWrapper(collaborator));
+    var userPO = collaboratorType.getOne(userService, collaborator);
     if (userPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, collaborator);
     }
@@ -417,7 +416,7 @@ public class RepositoryController {
       @RequestParam("orderBy") RepositoryOrderByEnum orderBy,
       @RequestParam("isAsc") Boolean isAsc,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    var userPO = userService.getOne(userType.getQueryWrapper(user));
+    var userPO = userType.getOne(userService, user);
     if (userPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user);
     }
@@ -649,16 +648,12 @@ public class RepositoryController {
       if (username == null || repositoryName == null) {
         throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
       }
-      var repositoryQueryWrapper = new QueryWrapper<RepositoryPO>();
-      var userQueryWrapper = new QueryWrapper<UserPO>();
-      userQueryWrapper.apply("LOWER(username) = LOWER({0})", username);
-      var userPO = userService.getOne(userQueryWrapper);
+      var userPO = userService.getOneByUsername(username);
       if (userPO == null) {
         throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, username);
       }
-      repositoryQueryWrapper.eq("user_id", userPO.getId());
-      repositoryQueryWrapper.apply("LOWER(repository_name) = LOWER({0})", repositoryName);
-      repositoryPO = repositoryService.getOne(repositoryQueryWrapper);
+      repositoryPO =
+          repositoryService.getOneByUserIdAndRepositoryName(userPO.getId(), repositoryName);
     } else {
       repositoryPO = repositoryService.getById(id);
     }
@@ -700,11 +695,8 @@ public class RepositoryController {
     // If the repository is private, we return NOT_FOUND to make sure the user can't know
     // the repository exists
     if (repositoryPO.getIsPrivate()
-        && userCollaborateRepositoryService.getOne(
-                new QueryWrapper<UserCollaborateRepositoryPO>()
-                    .eq("collaborator_id", userId)
-                    .eq("repository_id", repositoryPO.getId()))
-            == null) {
+        && !userCollaborateRepositoryService.existsByCollaboratorIdAndRepositoryId(
+            userId, repositoryPO.getId())) {
       logger.info(
           "User[{}] tried to get private repository of user[{}]", userId, repositoryPO.getUserId());
       throw e;

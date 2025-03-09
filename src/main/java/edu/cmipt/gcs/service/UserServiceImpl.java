@@ -27,6 +27,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserPO> implements 
   }
 
   @Override
+  public UserPO getOneByUsername(String username) {
+    QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
+    wrapper.apply("LOWER(username) = LOWER({0})", username);
+    return super.getOne(wrapper);
+  }
+
+  @Override
+  public UserPO getOneByEmail(String email) {
+    QueryWrapper<UserPO> wrapper = new QueryWrapper<UserPO>();
+    wrapper.apply("LOWER(email) = LOWER({0})", email);
+    return super.getOne(wrapper);
+  }
+
+  @Override
   @Transactional
   public boolean removeById(Serializable id) {
     if (!super.removeById(id)) {

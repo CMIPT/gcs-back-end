@@ -1,35 +1,27 @@
 package edu.cmipt.gcs.enumeration;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.user.UserPO;
+import edu.cmipt.gcs.service.UserService;
 
 public enum AddCollaboratorTypeEnum {
   ID,
   EMAIL,
   USERNAME;
 
-  public QueryWrapper<UserPO> getQueryWrapper(String collaborator) {
-    QueryWrapper<UserPO> wrapper = new QueryWrapper<>();
+  public UserPO getOne(UserService service, String collaborator) {
     switch (this) {
       case ID:
-        if (collaborator == null) {
-          throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-        }
         try {
-          Long id = Long.valueOf(collaborator);
-          wrapper.eq("id", id);
+          return service.getById(Long.valueOf(collaborator));
         } catch (Exception e) {
           throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
         }
-        break;
-      case USERNAME, EMAIL:
-        if (collaborator == null) {
-          throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-        }
-        wrapper.apply("LOWER(" + this.name().toLowerCase() + ") = LOWER({0})", collaborator);
-        break;
+      case USERNAME:
+        return service.getOneByUsername(collaborator);
+      case EMAIL:
+        return service.getOneByEmail(collaborator);
     }
-    return wrapper;
+    return null;
   }
 }

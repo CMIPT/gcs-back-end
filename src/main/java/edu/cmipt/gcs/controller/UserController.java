@@ -90,7 +90,7 @@ public class UserController {
       @RequestParam("user") String user,
       @RequestParam("userType") UserQueryTypeEnum userType,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    var userPO = userService.getOne(userType.getQueryWrapper(user));
+    var userPO = userType.getOne(userService, user);
     if (userPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user != null ? user : accessToken);
     }
@@ -167,7 +167,8 @@ public class UserController {
       throw new GenericException(
           ErrorCodeEnum.INVALID_EMAIL_VERIFICATION_CODE, user.emailVerificationCode());
     }
-    if (!userService.emailExists(user.email())) {
+    var userPO = userService.getOneByEmail(user.email());
+    if (userPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user.email());
     }
     var wrapper = new UpdateWrapper<UserPO>();
@@ -176,7 +177,7 @@ public class UserController {
     if (!userService.update(wrapper)) {
       throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user.email());
     }
-    JwtUtil.blacklistToken(userService.getOne(wrapper).getId());
+    JwtUtil.blacklistToken(userPO.getId());
   }
 
   @DeleteMapping(ApiPathConstant.USER_DELETE_USER_API_PATH)

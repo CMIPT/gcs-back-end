@@ -1,5 +1,6 @@
 package edu.cmipt.gcs.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import edu.cmipt.gcs.dao.RepositoryMapper;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
@@ -23,6 +24,14 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
   @Override
   public RepositoryPO getById(Serializable id) {
     return super.getById(id);
+  }
+
+  @Override
+  public RepositoryPO getOneByUserIdAndRepositoryName(Long userId, String repositoryName) {
+    return super.getOne(
+        new QueryWrapper<RepositoryPO>()
+            .eq("user_id", userId)
+            .apply("LOWER(repository_name) = LOWER({0})", repositoryName));
   }
 
   /**

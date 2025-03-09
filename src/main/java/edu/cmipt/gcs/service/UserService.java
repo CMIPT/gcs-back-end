@@ -7,4 +7,8 @@ public interface UserService extends IService<UserPO> {
   boolean usernameExists(String username);
 
   boolean emailExists(String email);
+
+  UserPO getOneByUsername(String username);
+
+  UserPO getOneByEmail(String email);
 }
