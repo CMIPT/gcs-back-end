@@ -691,6 +691,7 @@ public class RepositoryController {
     // If the repository is private, we return NOT_FOUND to make sure the user can't know
     // the repository exists
     if (repositoryPO.getIsPrivate()
+        && !userId.equals(repositoryPO.getUserId())
         && userCollaborateRepositoryService.getOneByCollaboratorIdAndRepositoryId(
                 userId, repositoryPO.getId())
             == null) {
