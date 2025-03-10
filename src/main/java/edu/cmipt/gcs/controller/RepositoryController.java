@@ -3,6 +3,7 @@ package edu.cmipt.gcs.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import edu.cmipt.gcs.constant.ApiPathConstant;
+import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.GitConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.ValidationConstant;
@@ -26,6 +27,7 @@ import edu.cmipt.gcs.service.RepositoryService;
 import edu.cmipt.gcs.service.UserCollaborateRepositoryService;
 import edu.cmipt.gcs.service.UserService;
 import edu.cmipt.gcs.util.JwtUtil;
+import edu.cmipt.gcs.util.RedisUtil;
 import edu.cmipt.gcs.validation.group.CreateGroup;
 import edu.cmipt.gcs.validation.group.UpdateGroup;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,6 +44,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.errors.AmbiguousObjectException;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
@@ -55,6 +58,7 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -72,6 +76,7 @@ public class RepositoryController {
   @Autowired private RepositoryService repositoryService;
   @Autowired private UserService userService;
   @Autowired private UserCollaborateRepositoryService userCollaborateRepositoryService;
+  @Autowired private RedisTemplate<String, Object> redisTemplate;
 
   @PostMapping(ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH)
   @Operation(
@@ -79,9 +84,9 @@ public class RepositoryController {
       description = "Create a repository with the given information",
       tags = {"Repository", "Post Method"})
   @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Repository created successfully"),
+    @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
-        description = "Repository create failed",
+        description = "Failure",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public void createRepository(
@@ -102,7 +107,7 @@ public class RepositoryController {
       description = "Delete a repository with the given id",
       tags = {"Repository", "Delete Method"})
   @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Repository deleted successfully"),
+    @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
         description = "Repository delete failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
@@ -131,7 +136,7 @@ public class RepositoryController {
       description = "Get a repository with the given id or username and repository name",
       tags = {"Repository", "Get Method"})
   @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Repository got successfully"),
+    @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
         description = "Repository get failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
@@ -189,7 +194,7 @@ public class RepositoryController {
       description = "Update a repository with the given information",
       tags = {"Repository", "Post Method"})
   @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Repository updated successfully"),
+    @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
         description = "Update repository failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class))),
@@ -231,7 +236,7 @@ public class RepositoryController {
       description = "Check if the repository name is valid",
       tags = {"Repository", "Get Method"})
   @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Repository name is valid"),
+    @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
         responseCode = "400",
         description = "Repository name is invalid",
@@ -263,7 +268,7 @@ public class RepositoryController {
       description = "Add a collaborator to the repository",
       tags = {"Repository", "Post Method"})
   @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Collaborator added successfully"),
+    @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
         description = "Collaborator add failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
@@ -323,7 +328,7 @@ public class RepositoryController {
       description = "Remove a collaboration with the given collaboration id",
       tags = {"Repository", "Delete Method"})
   @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Relationship removed successfully"),
+    @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
         description = "Collaboration remove failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class))),
@@ -363,7 +368,7 @@ public class RepositoryController {
       description = "Page collaborators of the repository",
       tags = {"Repository", "Get Method"})
   @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Collaborators paged successfully"),
+    @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
         description = "Collaborators page failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
@@ -399,7 +404,7 @@ public class RepositoryController {
               + " repositories, only public repositories will be returned",
       tags = {"Repository", "Get Method"})
   @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "User repositories paged successfully"),
+    @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
         description = "User repositories page failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
@@ -534,9 +539,9 @@ public class RepositoryController {
       }
       logger.debug("Get path content: '{}/{}'", ref, path);
       var repository = git.getRepository();
-      ObjectId commitId = null;
+      ObjectId refId = null;
       try {
-        commitId = repository.resolve(ref);
+        refId = repository.resolve(ref);
       } catch (AmbiguousObjectException
           | IncorrectObjectTypeException
           | RevisionSyntaxException e) {
@@ -548,51 +553,72 @@ public class RepositoryController {
         throw e;
       }
       try (var revWalk = new RevWalk(repository)) {
-        var commit = revWalk.parseCommit(commitId);
-        final TreeWalk treeWalk =
-            ".".equals(path)
-                ? new TreeWalk(repository)
-                : TreeWalk.forPath(repository, path, commit.getTree());
-        if (treeWalk == null) {
-          logger.info(
-              "Path '{}' in ref '{}' of repo '{}' not found", path, ref, repository.getDirectory());
-          throw new GenericException(ErrorCodeEnum.REPOSITORY_PATH_NOT_FOUND, path);
-        }
-        try (treeWalk) {
-          if (".".equals(path)) {
-            logger.debug(
-                "Path '{}' in ref '{}' of repo '{}' is the root",
+        var commit = revWalk.parseCommit(refId);
+
+        var cacheKey = RedisUtil.generateKey(this, commit.getName() + path);
+        RepositoryFileDetailVO cacheValue =
+            (RepositoryFileDetailVO) redisTemplate.opsForValue().get(cacheKey);
+        if (cacheValue != null) {
+          logger.debug("Cache hit, key: {}, value: {}", cacheKey, cacheValue);
+        } else {
+          logger.info("Cache miss, key: {}", cacheKey);
+          final TreeWalk treeWalk =
+              ".".equals(path)
+                  ? new TreeWalk(repository)
+                  : TreeWalk.forPath(repository, path, commit.getTree());
+          if (treeWalk == null) {
+            logger.info(
+                "Path '{}' in ref '{}' of repo '{}' not found",
                 path,
                 ref,
                 repository.getDirectory());
-            treeWalk.addTree(commit.getTree());
-            treeWalk.setRecursive(false);
-            return traverseDirectoryTree(treeWalk, repository);
-          } else if (treeWalk.isSubtree()) {
-            logger.debug(
-                "Path '{}' in ref '{}' of repo '{}' is a directory",
-                path,
-                ref,
-                repository.getDirectory());
-            try (var dirWalk = new TreeWalk(repository)) {
-              dirWalk.addTree(treeWalk.getObjectId(0));
-              dirWalk.setRecursive(false);
-              return traverseDirectoryTree(dirWalk, repository);
+            throw new GenericException(ErrorCodeEnum.REPOSITORY_PATH_NOT_FOUND, path);
+          }
+          try (treeWalk) {
+            if (".".equals(path)) {
+              logger.debug(
+                  "Path '{}' in ref '{}' of repo '{}' is the root",
+                  path,
+                  ref,
+                  repository.getDirectory());
+              treeWalk.addTree(commit.getTree());
+              treeWalk.setRecursive(false);
+              cacheValue = traverseDirectoryTree(treeWalk, repository);
+            } else if (treeWalk.isSubtree()) {
+              logger.debug(
+                  "Path '{}' in ref '{}' of repo '{}' is a directory",
+                  path,
+                  ref,
+                  repository.getDirectory());
+              try (var dirWalk = new TreeWalk(repository)) {
+                dirWalk.addTree(treeWalk.getObjectId(0));
+                dirWalk.setRecursive(false);
+                cacheValue = traverseDirectoryTree(dirWalk, repository);
+              }
+            } else {
+              logger.debug(
+                  "Path '{}' in ref '{}' of repo '{}' is a file",
+                  path,
+                  ref,
+                  repository.getDirectory());
+              cacheValue =
+                  new RepositoryFileDetailVO(
+                      false,
+                      new String(repository.open(treeWalk.getObjectId(0)).getBytes()),
+                      "",
+                      "",
+                      List.of());
             }
-          } else {
-            logger.debug(
-                "Path '{}' in ref '{}' of repo '{}' is a file",
-                path,
-                ref,
-                repository.getDirectory());
-            return new RepositoryFileDetailVO(
-                false,
-                new String(repository.open(treeWalk.getObjectId(0)).getBytes()),
-                "",
-                "",
-                List.of());
           }
         }
+        redisTemplate
+            .opsForValue()
+            .set(
+                cacheKey,
+                cacheValue,
+                ApplicationConstant.SERVICE_CACHE_EXPIRATION,
+                TimeUnit.MILLISECONDS);
+        return cacheValue;
       }
     } catch (GenericException e) {
       throw e;
