@@ -62,6 +62,10 @@ public class ApiPathConstant {
       REPOSITORY_API_PREFIX + "/collaboration-validity";
   public static final String REPOSITORY_PAGE_COMMIT_WITH_REF_API_PATH =
       REPOSITORY_API_PREFIX + "/page/commit-with-ref";
+  public static final String REPOSITORY_DELETE_LABEL_API_PATH = REPOSITORY_API_PREFIX + "/delete-label";
+  public static final String REPOSITORY_CREATE_LABEL_API_PATH = REPOSITORY_API_PREFIX + "/create-label";
+  public static final String REPOSITORY_UPDATE_LABEL_API_PATH = REPOSITORY_API_PREFIX + "/update-label";
+  public static final String REPOSITORY_PAGE_LABEL_API_PATH = REPOSITORY_API_PREFIX + "/page-label";
 
   public static final String SSH_KEY_API_PREFIX = ALL_API_PREFIX + "/ssh";
   public static final String SSH_KEY_UPLOAD_SSH_KEY_API_PATH = SSH_KEY_API_PREFIX + "/upload";
@@ -72,4 +76,29 @@ public class ApiPathConstant {
       SSH_KEY_API_PREFIX + "/ssh-key-name";
   public static final String SSH_KEY_CHECK_SSH_KEY_PUBLIC_KEY_VALIDITY_API_PATH =
       SSH_KEY_API_PREFIX + "/ssh-key-publickey";
+
+  public static final String ACTIVITY_API_PREFIX = ALL_API_PREFIX + "/activity";
+  public static final String ACTIVITY_GET_ACTIVITY_API_PATH = ACTIVITY_API_PREFIX + "/get";
+  public static final String ACTIVITY_CREATE_ACTIVITY_API_PATH = ACTIVITY_API_PREFIX + "/create";
+  public static final String ACTIVITY_DELETE_ACTIVITY_API_PATH = ACTIVITY_API_PREFIX + "/delete";
+  public static final String ACTIVITY_UPDATE_ACTIVITY_API_PATH = ACTIVITY_API_PREFIX + "/update";
+  public static final String ACTIVITY_PAGE_ACTIVITY_API_PATH = ACTIVITY_API_PREFIX + "/page";
+
+  public static final String ACTIVITY_GET_COMMENT_API_PATH = ACTIVITY_API_PREFIX + "/get-comment";
+  public static final String ACTIVITY_CREATE_COMMENT_API_PATH = ACTIVITY_API_PREFIX + "/create-comment";
+  public static final String ACTIVITY_UPDATE_COMMENT_API_PATH = ACTIVITY_API_PREFIX + "/update-comment";
+  public static final String ACTIVITY_DELETE_COMMENT_API_PATH = ACTIVITY_API_PREFIX + "/delete-comment";
+  public static final String ACTIVITY_PAGE_COMMENT_API_PATH = ACTIVITY_API_PREFIX + "/page-comment";
+
+
+  public static final String ACTIVITY_ADD_ASSIGNEE_API_PATH = ACTIVITY_API_PREFIX + "/add-assignee";
+  public static final String ACTIVITY_DELETE_ASSIGNEE_API_PATH =
+      ACTIVITY_API_PREFIX + "/delete-assignee";
+  public static final String ACTIVITY_PAGE_ASSIGNEE_API_PATH = ACTIVITY_API_PREFIX + "/page-assignee";
+
+  public static final String ACTIVITY_DELETE_LABEL_API_PATH = ACTIVITY_API_PREFIX + "/delete-label";
+  public static final String ACTIVITY_ADD_LABEL_API_PATH = ACTIVITY_API_PREFIX + "/add-label";
+  public static final String ACTIVITY_PAGE_LABEL_API_PATH = ACTIVITY_API_PREFIX + "/page-label";
+
+
 }

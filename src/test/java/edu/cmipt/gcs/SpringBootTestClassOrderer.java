@@ -1,9 +1,7 @@
 package edu.cmipt.gcs;
 
-import edu.cmipt.gcs.controller.AuthenticationControllerTest;
-import edu.cmipt.gcs.controller.RepositoryControllerTest;
-import edu.cmipt.gcs.controller.SshKeyControllerTest;
-import edu.cmipt.gcs.controller.UserControllerTest;
+import edu.cmipt.gcs.controller.*;
+
 import java.util.Comparator;
 import org.junit.jupiter.api.ClassDescriptor;
 import org.junit.jupiter.api.ClassOrderer;
@@ -16,7 +14,8 @@ public class SpringBootTestClassOrderer implements ClassOrderer {
         AuthenticationControllerTest.class,
         SshKeyControllerTest.class,
         RepositoryControllerTest.class,
-        UserControllerTest.class
+        UserControllerTest.class,
+        ActivityControllerTest.class
       };
 
   @Override

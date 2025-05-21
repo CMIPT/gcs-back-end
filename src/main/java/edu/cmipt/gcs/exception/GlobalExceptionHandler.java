@@ -107,6 +107,11 @@ public class GlobalExceptionHandler {
       case REPOSITORY_REF_NOT_FOUND:
       case REPOSITORY_PATH_NOT_FOUND:
       case COLLABORATION_NOT_FOUND:
+      case ACTIVITY_NOT_FOUND:
+      case LABEL_NOT_FOUND:
+      case COMMENT_NOT_FOUND:
+      case ACTIVITY_LABEL_NOT_FOUND:
+      case ACTIVITY_ASSIGNEE_NOT_FOUND:
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(new ErrorVO(e.getCode(), e.getMessage()));
       case OPERATION_NOT_IMPLEMENTED:

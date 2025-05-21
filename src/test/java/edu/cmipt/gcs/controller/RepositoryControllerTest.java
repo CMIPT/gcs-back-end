@@ -11,27 +11,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
-import edu.cmipt.gcs.enumeration.AddCollaboratorTypeEnum;
-import edu.cmipt.gcs.enumeration.CollaboratorOrderByEnum;
-import edu.cmipt.gcs.enumeration.RepositoryOrderByEnum;
-import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
+import edu.cmipt.gcs.enumeration.*;
 import edu.cmipt.gcs.pojo.collaboration.CollaboratorVO;
+import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
+import edu.cmipt.gcs.pojo.label.LabelPO;
+import edu.cmipt.gcs.pojo.label.LabelVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryDetailVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
 import java.util.function.BiFunction;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestMethodOrder;
+
+import edu.cmipt.gcs.service.LabelService;
+import edu.cmipt.gcs.service.UserCollaborateRepositoryService;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -55,6 +54,10 @@ public class RepositoryControllerTest {
   @Autowired private MockMvc mvc;
   private BiFunction<String, String, Exception> repositoryCreator;
   private BiFunction<String, String, Exception> repositoryPager;
+    @Autowired
+    private LabelService labelService;
+    @Autowired
+    private UserCollaborateRepositoryService userCollaborateRepositoryService;
 
   @BeforeAll
   public void init() {
@@ -100,6 +103,10 @@ public class RepositoryControllerTest {
                   pageVO.records().stream().filter(r -> !r.isPrivate()).findFirst().orElse(null);
               TestConstant.REPOSITORY_ID = firstNonPrivateRepository.id();
               TestConstant.REPOSITORY_NAME = firstNonPrivateRepository.repositoryName();
+              var needDeleteNonPrivateRepository=  pageVO.records().stream()
+                      .filter(r -> !r.isPrivate() && !r.id().equals(TestConstant.REPOSITORY_ID))
+                          .findAny().orElse(null);
+              TestConstant.DELETE_REPOSITORY_ID = needDeleteNonPrivateRepository.id();
             } else {
               TestConstant.OTHER_REPOSITORY_ID =
                   pageVO.records().stream()
@@ -363,6 +370,15 @@ public class RepositoryControllerTest {
                 .param("collaborator", TestConstant.OTHER_ID)
                 .param("collaboratorType", AddCollaboratorTypeEnum.ID.name()))
         .andExpect(status().isOk());
+
+    // used to verify that the collaborator is removed when the repository is deleted
+    mvc.perform(
+            post(ApiPathConstant.REPOSITORY_ADD_COLLABORATOR_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("repositoryId", TestConstant.DELETE_REPOSITORY_ID)
+                .param("collaborator", TestConstant.OTHER_ID)
+                .param("collaboratorType", AddCollaboratorTypeEnum.ID.name()))
+        .andExpect(status().isOk());
   }
 
   @Test
@@ -448,16 +464,216 @@ public class RepositoryControllerTest {
   }
 
   @Test
+  @Order(Ordered.HIGHEST_PRECEDENCE + 6)
+  public void testCreateLabelValid() throws Exception {
+    for (int i = 0; i < TestConstant.LABEL_SIZE; i++) {
+      String labelDTO1 =
+          """
+          {
+              "repositoryId": "%s",
+              "name": "%s",
+              "hexColor": "%s"
+          }
+          """
+              .formatted(TestConstant.REPOSITORY_ID,  i, TestConstant.LABEL_HEX_COLOR.substring(0, 6) + i); // 标签名字和颜色不同
+      var result1 = mvc.perform(
+              post(ApiPathConstant.REPOSITORY_CREATE_LABEL_API_PATH)
+                  .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(labelDTO1))
+          .andExpect(status().isOk())
+          .andReturn()
+          .getResolvedException();
+
+      if (result1 != null) {
+        throw result1;
+      }
+
+      // used to verify that the label is removed when the repository is deleted
+      String labelDTO2 =
+              """
+              {
+                  "repositoryId": "%s",
+                  "name": "%s",
+                  "hexColor": "%s"
+              }
+              """
+                      .formatted(TestConstant.DELETE_REPOSITORY_ID, i, TestConstant.LABEL_HEX_COLOR.substring(0, 6) + i);
+      var result2 = mvc.perform(
+              post(ApiPathConstant.REPOSITORY_CREATE_LABEL_API_PATH)
+                      .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .content(labelDTO2))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResolvedException();
+
+      if (result2 != null) {
+          throw result2;
+      }
+    }
+  }
+
+  @Test
+  public void testCreateLabelInvalid() throws Exception {
+    // add label to other's public repository
+    mvc.perform(
+            post(ApiPathConstant.REPOSITORY_CREATE_LABEL_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                        "repositoryId": "%s",
+                        "name": "%s",
+                        "hexColor": "%s"
+                    }
+                    """
+                .formatted(TestConstant.OTHER_REPOSITORY_ID, TestConstant.LABEL_NAME, TestConstant.LABEL_HEX_COLOR)))
+        .andExpect(status().isForbidden());
+    // add label to other's private repository
+    mvc.perform(
+            post(ApiPathConstant.REPOSITORY_CREATE_LABEL_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                        "repositoryId": "%s",
+                        "name": "%s",
+                        "hexColor": "%s"
+                    }
+                    """
+                .formatted(TestConstant.OTHER_PRIVATE_REPOSITORY_ID, TestConstant.LABEL_NAME, TestConstant.LABEL_HEX_COLOR)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @Order(Ordered.HIGHEST_PRECEDENCE + 7)
+  public void testPageLabelValid() throws Exception {
+    var content =
+          mvc.perform(
+            get(ApiPathConstant.REPOSITORY_PAGE_LABEL_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("repositoryId", TestConstant.REPOSITORY_ID)
+                .param("page", "1")
+                .param("size", TestConstant.LABEL_SIZE.toString())
+                .param("orderBy", LabelOrderByEnum.GMT_CREATED.name())
+                .param("isAsc", "false"))
+        .andExpectAll(
+            status().isOk(),
+            jsonPath("$.total").value(greaterThan(0)),
+            jsonPath("$.records").isArray(),
+            jsonPath("$.records.length()").value(TestConstant.LABEL_SIZE))
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
+    var pageVO = objectMapper.readValue(content, new TypeReference<PageVO<LabelVO>>() {});
+    TestConstant.LABEL_ID = pageVO.records().get(0).id();
+    TestConstant.LABEL_NAME = pageVO.records().get(0).name();
+    TestConstant.LABEL_HEX_COLOR = pageVO.records().get(0).hexColor();
+    TestConstant.DELETE_LABEL_ID = pageVO.records().get(1).id();
+  }
+
+  @Test
+  public void testPageOtherLabelInvalid() throws Exception {
+    mvc.perform(
+            get(ApiPathConstant.REPOSITORY_PAGE_LABEL_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("repositoryId", TestConstant.OTHER_PRIVATE_REPOSITORY_ID)
+                .param("page", "1")
+                .param("size", TestConstant.LABEL_SIZE.toString())
+                .param("orderBy", LabelOrderByEnum.GMT_CREATED.name())
+                .param("isAsc", "false"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @Order(Ordered.HIGHEST_PRECEDENCE + 8)
+  public void testUpdateLabelInvalid() throws Exception {
+      // update label in other's public repository
+      mvc.perform(
+              post(ApiPathConstant.REPOSITORY_UPDATE_LABEL_API_PATH)
+                  .header(HeaderParameter.ACCESS_TOKEN, TestConstant.OTHER_ACCESS_TOKEN)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      """
+                      {
+                          "id": "%s",
+                          "name": "%s",
+                          "hexColor": "%s"
+                      }
+                      """
+                          .formatted(TestConstant.LABEL_ID, TestConstant.LABEL_NAME, TestConstant.LABEL_HEX_COLOR)))
+          .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @Order(Ordered.HIGHEST_PRECEDENCE + 9)
+  public void testUpdateLabelValid() throws Exception {
+    String newLabelName = TestConstant.LABEL_NAME + "new";
+    mvc.perform(
+            post(ApiPathConstant.REPOSITORY_UPDATE_LABEL_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                        "id": "%s",
+                        "name": "%s",
+                        "hexColor": "%s"
+                    }
+                    """
+                        .formatted(TestConstant.LABEL_ID, newLabelName, TestConstant.LABEL_HEX_COLOR)))
+        .andExpect(status().isOk());
+    TestConstant.LABEL_NAME = newLabelName;
+  }
+
+  @Test
+  @Order(Ordered.HIGHEST_PRECEDENCE + 10)
+  public void testRemoveLabelInvalid() throws Exception {
+    // remove label from other's public repository
+    mvc.perform(
+            delete(ApiPathConstant.REPOSITORY_DELETE_LABEL_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.OTHER_ACCESS_TOKEN)
+                .param("id", TestConstant.DELETE_LABEL_ID))
+        .andExpect(status().isForbidden());
+  }
+
+
+  @Test
+  @Order(Ordered.HIGHEST_PRECEDENCE + 11)
+  public void testRemoveLabelValid() throws Exception {
+    mvc.perform(
+            delete(ApiPathConstant.REPOSITORY_DELETE_LABEL_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", TestConstant.DELETE_LABEL_ID))
+        .andExpect(status().isOk());
+    TestConstant.DELETE_LABEL_ID = null;
+    TestConstant.LABEL_SIZE--;
+  }
+
+  @Test
   @Order(Ordered.LOWEST_PRECEDENCE)
   public void testDeleteRepositoryValid() throws Exception {
     mvc.perform(
             delete(ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                .param("id", TestConstant.REPOSITORY_ID))
+                .param("id", TestConstant.DELETE_REPOSITORY_ID))
         .andExpect(status().isOk());
-    TestConstant.REPOSITORY_ID = null;
-    TestConstant.REPOSITORY_NAME = null;
-    TestConstant.REPOSITORY_LATEST_COMMIT_HASH = null;
+
+    // verify that labels and collaborators are deleted when repository is deleted
+    long labelCnt = labelService.count(
+            new QueryWrapper<LabelPO>()
+                .eq("repository_id", Long.valueOf(TestConstant.DELETE_REPOSITORY_ID))
+    );
+    long collaboratorCnt = userCollaborateRepositoryService.count(
+            new QueryWrapper<UserCollaborateRepositoryPO>()
+                .eq("repository_id", Long.valueOf(TestConstant.DELETE_REPOSITORY_ID))
+    );
+    Assertions.assertEquals(0, labelCnt);
+    Assertions.assertEquals(0, collaboratorCnt);
+    TestConstant.DELETE_REPOSITORY_ID = null;
     TestConstant.REPOSITORY_SIZE--;
   }
 
@@ -471,7 +687,7 @@ public class RepositoryControllerTest {
   }
 
   @Test
-  @Order(Ordered.HIGHEST_PRECEDENCE + 7)
+  @Order(Ordered.HIGHEST_PRECEDENCE + 12)
   public void testPageRepositoryValid() throws Exception {
     var result = repositoryPager.apply(TestConstant.ACCESS_TOKEN, TestConstant.ID);
     if (result != null) {
@@ -480,7 +696,7 @@ public class RepositoryControllerTest {
   }
 
   @Test
-  @Order(Ordered.HIGHEST_PRECEDENCE + 8)
+  @Order(Ordered.HIGHEST_PRECEDENCE + 13)
   public void testPageOtherUserRepositoryValid() throws Exception {
     mvc.perform(
             get(ApiPathConstant.REPOSITORY_PAGE_REPOSITORY_API_PATH)

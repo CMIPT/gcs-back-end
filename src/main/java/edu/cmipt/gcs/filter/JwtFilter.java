@@ -67,7 +67,13 @@ public class JwtFilter extends OncePerRequestFilter {
                   ApiPathConstant.REPOSITORY_PAGE_COLLABORATOR_API_PATH,
                   ApiPathConstant.REPOSITORY_PAGE_COMMIT_WITH_REF_API_PATH,
                   ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH,
-                  ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH),
+                  ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH,
+                  ApiPathConstant.ACTIVITY_GET_ACTIVITY_API_PATH,
+                  ApiPathConstant.ACTIVITY_GET_COMMENT_API_PATH,
+                  ApiPathConstant.ACTIVITY_PAGE_COMMENT_API_PATH,
+                  ApiPathConstant.ACTIVITY_PAGE_LABEL_API_PATH,
+                  ApiPathConstant.ACTIVITY_PAGE_ASSIGNEE_API_PATH,
+                  ApiPathConstant.REPOSITORY_PAGE_LABEL_API_PATH),
           "POST",
               Set.of(
                   ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH,
@@ -76,14 +82,28 @@ public class JwtFilter extends OncePerRequestFilter {
                   ApiPathConstant.SSH_KEY_UPLOAD_SSH_KEY_API_PATH,
                   ApiPathConstant.SSH_KEY_UPDATE_SSH_KEY_API_PATH,
                   ApiPathConstant.USER_UPDATE_USER_API_PATH,
-                  ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH),
+                  ApiPathConstant.USER_UPDATE_USER_PASSWORD_WITH_OLD_PASSWORD_API_PATH,
+                  ApiPathConstant.ACTIVITY_CREATE_ACTIVITY_API_PATH,
+                  ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_API_PATH,
+                  ApiPathConstant.ACTIVITY_UPDATE_COMMENT_API_PATH,
+                  ApiPathConstant.ACTIVITY_CREATE_COMMENT_API_PATH,
+                  ApiPathConstant.ACTIVITY_PAGE_ACTIVITY_API_PATH,
+                  ApiPathConstant.ACTIVITY_ADD_LABEL_API_PATH,
+                  ApiPathConstant.ACTIVITY_ADD_ASSIGNEE_API_PATH,
+                  ApiPathConstant.REPOSITORY_CREATE_LABEL_API_PATH,
+                  ApiPathConstant.REPOSITORY_UPDATE_LABEL_API_PATH),
           "DELETE",
               Set.of(
                   ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH,
                   ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH,
                   ApiPathConstant.SSH_KEY_DELETE_SSH_KEY_API_PATH,
                   ApiPathConstant.AUTHENTICATION_SIGN_OUT_API_PATH,
-                  ApiPathConstant.USER_DELETE_USER_API_PATH));
+                  ApiPathConstant.USER_DELETE_USER_API_PATH,
+                  ApiPathConstant.ACTIVITY_DELETE_ACTIVITY_API_PATH,
+                  ApiPathConstant.ACTIVITY_DELETE_COMMENT_API_PATH,
+                  ApiPathConstant.ACTIVITY_DELETE_LABEL_API_PATH,
+                  ApiPathConstant.ACTIVITY_DELETE_ASSIGNEE_API_PATH,
+                  ApiPathConstant.REPOSITORY_DELETE_LABEL_API_PATH));
 
   @Override
   protected void doFilterInternal(

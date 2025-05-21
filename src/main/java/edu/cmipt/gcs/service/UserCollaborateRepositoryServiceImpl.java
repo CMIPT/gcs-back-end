@@ -29,9 +29,15 @@ public class UserCollaborateRepositoryServiceImpl
   private static final Logger logger =
       LoggerFactory.getLogger(UserCollaborateRepositoryServiceImpl.class);
 
-  @Autowired private RedisTemplate<String, Object> redisTemplate;
-  @Autowired RepositoryService repositoryService;
-  @Autowired UserMapper userMapper;
+  private final RedisTemplate<String, Object> redisTemplate;
+  final RepositoryService repositoryService;
+  final UserMapper userMapper;
+
+  public UserCollaborateRepositoryServiceImpl(RedisTemplate<String, Object> redisTemplate, RepositoryService repositoryService, UserMapper userMapper) {
+    this.redisTemplate = redisTemplate;
+    this.repositoryService = repositoryService;
+    this.userMapper = userMapper;
+  }
 
   @Override
   public UserCollaborateRepositoryPO getById(Serializable id) {
@@ -44,6 +50,13 @@ public class UserCollaborateRepositoryServiceImpl
     return super.getOne(
         new QueryWrapper<UserCollaborateRepositoryPO>()
             .eq("collaborator_id", collaboratorId)
+            .eq("repository_id", repositoryId));
+  }
+
+  @Override
+  public void removeByRepositoryId(Long repositoryId) {
+    super.remove(
+        new QueryWrapper<UserCollaborateRepositoryPO>()
             .eq("repository_id", repositoryId));
   }
 

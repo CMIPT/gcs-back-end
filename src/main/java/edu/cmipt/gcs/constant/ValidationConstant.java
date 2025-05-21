@@ -24,4 +24,12 @@ public class ValidationConstant {
 
   public static final int MIN_SSH_KEY_PUBLIC_KEY_LENGTH = 1;
   public static final int MAX_SSH_KEY_PUBLIC_KEY_LENGTH = 4096;
+
+  public static final int MIN_ACTIVITY_TITLE_LENGTH = 1;
+  public static final int MAX_ACTIVITY_TITLE_LENGTH = 255;
+  public static final int MIN_ACTIVITY_DESCRIPTION_LENGTH = 0;
+  public static final int MAX_ACTIVITY_DESCRIPTION_LENGTH = 65536;
+
+  public static final int MIN_COMMENT_NAME_LENGTH = 1;
+  public static final int MAX_COMMENT_NAME_LENGTH = 65536;
 }

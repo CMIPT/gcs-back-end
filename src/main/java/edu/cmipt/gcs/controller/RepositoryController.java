@@ -8,15 +8,14 @@ import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.GitConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.ValidationConstant;
-import edu.cmipt.gcs.enumeration.AddCollaboratorTypeEnum;
-import edu.cmipt.gcs.enumeration.CollaboratorOrderByEnum;
-import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
-import edu.cmipt.gcs.enumeration.RepositoryOrderByEnum;
-import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
+import edu.cmipt.gcs.enumeration.*;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.collaboration.CollaboratorVO;
 import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
+import edu.cmipt.gcs.pojo.label.LabelPO;
+import edu.cmipt.gcs.pojo.label.LabelVO;
+import edu.cmipt.gcs.pojo.label.LabelDTO;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.repository.CommitAuthorVO;
 import edu.cmipt.gcs.pojo.repository.CommitDetailVO;
@@ -27,9 +26,8 @@ import edu.cmipt.gcs.pojo.repository.RepositoryDetailVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryFileVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
-import edu.cmipt.gcs.service.RepositoryService;
-import edu.cmipt.gcs.service.UserCollaborateRepositoryService;
-import edu.cmipt.gcs.service.UserService;
+import edu.cmipt.gcs.service.*;
+import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.util.JwtUtil;
 import edu.cmipt.gcs.util.RedisUtil;
 import edu.cmipt.gcs.validation.group.CreateGroup;
@@ -96,6 +94,8 @@ public class RepositoryController {
   @Autowired private UserService userService;
   @Autowired private UserCollaborateRepositoryService userCollaborateRepositoryService;
   @Autowired private RedisTemplate<String, Object> redisTemplate;
+  @Autowired private LabelService labelService;
+  @Autowired private ActivityService activityService;
 
   @PostMapping(ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH)
   @Operation(
@@ -340,7 +340,7 @@ public class RepositoryController {
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
     if (!idInToken.equals(userId)) {
       logger.info(
-          "User[{}] tried to update repository of user[{}]", userId, repositoryPO.getUserId());
+          "User[{}] tried to update repository of user[{}]", idInToken, repositoryPO.getUserId());
       checkVisibility(
           repositoryPO, idInToken, new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, id));
       throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
@@ -565,6 +565,146 @@ public class RepositoryController {
                 })
             .toList());
   }
+
+  @PostMapping(ApiPathConstant.REPOSITORY_CREATE_LABEL_API_PATH)
+    @Operation(
+        summary = "Create a label",
+        description = "Create a label in the repository",
+        tags = {"Repository", "Post Method"})
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(
+            description = "Label create failed",
+            content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    })
+  public void createLabel(
+      @RequestBody LabelDTO label,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long repositoryId = null;
+    try {
+      repositoryId = Long.valueOf(label.repositoryId());
+    } catch (NumberFormatException e) {
+      logger.error(e.getMessage());
+      throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+    }
+    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    checkRepositoryOperationValidity(
+        repositoryId, idInToken, OperationTypeEnum.WRITE, new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND));
+    String labelName = label.name();
+    String labelHexColor = label.hexColor();
+    if( labelService.getOneByNameAndRepositoryId(labelName, repositoryId) != null) {
+      logger.info("Label[{}] already exists in repository[{}]", labelName, repositoryId);
+      throw new GenericException(ErrorCodeEnum.LABEL_NAME_ALREADY_EXISTS, labelName, repositoryId);
+    }
+    if( labelService.getOneByHexColorAndRepositoryId(labelHexColor, repositoryId) != null) {
+      logger.info("Label color[{}] already exists in repository[{}]", labelHexColor, repositoryId);
+      throw new GenericException(ErrorCodeEnum.LABEL_HEX_COLOR_ALREADY_EXISTS, labelHexColor, repositoryId);
+    }
+    if(!labelService.save(new LabelPO(idInToken, label)))
+    {
+        logger.error("Failed to create label in repository[{}]", repositoryId);
+        throw new GenericException(ErrorCodeEnum.LABEL_CREATE_FAILED, labelName,labelHexColor, repositoryId);
+    }
+  }
+
+
+  @PostMapping(ApiPathConstant.REPOSITORY_UPDATE_LABEL_API_PATH)
+  @Operation(
+      summary = "Update a label",
+      description = "Update a label in the repository",
+      tags = {"Repository", "Post Method"})
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Success"),
+      @ApiResponse(
+          description = "Label update failed",
+          content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public void updateLabel(
+    @RequestBody LabelDTO label,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long id = null;
+    try {
+      id = Long.valueOf(label.id());
+    } catch (NumberFormatException e) {
+      logger.error(e.getMessage());
+      throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+    }
+    var labelPO = labelService.getById(id);
+    if (labelPO == null) {
+      throw new GenericException(ErrorCodeEnum.LABEL_NOT_FOUND, id);
+    }
+    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    checkRepositoryOperationValidity(
+        labelPO.getRepositoryId(), idInToken, OperationTypeEnum.WRITE, new GenericException(ErrorCodeEnum.LABEL_NOT_FOUND, id));
+    if(!labelService.updateById(new LabelPO(idInToken,label)))
+    {
+      logger.error("Failed to update label[{}]", id);
+      throw new GenericException(ErrorCodeEnum.LABEL_UPDATE_FAILED, label);
+    }
+  }
+
+
+  @DeleteMapping(ApiPathConstant.REPOSITORY_DELETE_LABEL_API_PATH)
+  @Operation(
+      summary = "Delete a label",
+      description = "Delete a label in the repository",
+      tags = {"Repository", "Delete Method"})
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Success"),
+      @ApiResponse(
+          description = "Label delete failed",
+          content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public void deleteLabel(
+      @RequestParam("id") Long id,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+      var labelPO = labelService.getById(id);
+      if (labelPO == null) {
+      throw new GenericException(ErrorCodeEnum.LABEL_NOT_FOUND, id);
+      }
+      Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+      checkRepositoryOperationValidity(
+            labelPO.getRepositoryId(), idInToken, OperationTypeEnum.WRITE, new GenericException(ErrorCodeEnum.LABEL_NOT_FOUND, id));
+      if(!labelService.removeById(id))
+      {
+          logger.error("Failed to delete label[{}]", id);
+          throw new GenericException(ErrorCodeEnum.LABEL_DELETE_FAILED, id);
+      }
+  }
+
+
+    @GetMapping(ApiPathConstant.REPOSITORY_PAGE_LABEL_API_PATH)
+    @Operation(
+        summary = "Page label",
+        description = "Page labels of the repository",
+        tags = {"Repository", "Get Method"})
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(
+            description = "Label list get failed",
+            content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    })
+    public PageVO<LabelVO> pageLabel(
+        @RequestParam("repositoryId") Long repositoryId,
+        @RequestParam("page") @Min(1) Integer page,
+        @RequestParam("size") @Min(1) Integer size,
+        @RequestParam("orderBy") LabelOrderByEnum orderBy,
+        @RequestParam("isAsc") Boolean isAsc,
+        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+
+      Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+      checkRepositoryOperationValidity(
+          repositoryId, idInToken, OperationTypeEnum.READ, new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND));
+      var wrapper = new QueryWrapper<LabelPO>();
+      wrapper.eq("repository_id", repositoryId);
+      wrapper.orderBy(true, isAsc, orderBy.getFieldName());
+      var iPage = labelService.page(new Page<>(page, size), wrapper);
+      return new PageVO<>(
+          iPage.getTotal(),
+          iPage.getRecords().stream()
+              .map(LabelVO::new)
+              .toList());
+    }
 
   /**
    * Create a JGit repository with the given username and repository name
@@ -1079,6 +1219,27 @@ public class RepositoryController {
           "Collaborator[{}] already exists in repository[{}]", collaboratorId, repositoryId);
       throw new GenericException(
           ErrorCodeEnum.COLLABORATION_ALREADY_EXISTS, collaboratorId, repositoryId);
+    }
+  }
+
+  private void checkRepositoryOperationValidity(Long repositoryId, Long userId, OperationTypeEnum operationTypeEnum, GenericException e) {
+    // Check if the repository exists
+    var repositoryPO = repositoryService.getById(repositoryId);
+    if (repositoryPO == null) {
+      throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
+    }
+    // If the repository is private, we return NOT_FOUND to make sure the user can't know
+    if (!userId.equals(repositoryPO.getUserId())
+            && userCollaborateRepositoryService.getOneByCollaboratorIdAndRepositoryId(
+            userId, repositoryPO.getId())
+            == null) {
+      logger.debug(
+              "User[{}] tried to get repository of user[{}]", userId, repositoryPO.getUserId());
+      if(repositoryPO.getIsPrivate())
+        throw e;
+      else if(operationTypeEnum == OperationTypeEnum.WRITE) {
+        throw new GenericException(ErrorCodeEnum.ACCESS_DENIED, repositoryId);
+      }
     }
   }
 }
