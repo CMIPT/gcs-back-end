@@ -618,10 +618,13 @@ public class RepositoryController {
         var commit = revWalk.parseCommit(refId);
 
         var cacheKey = RedisUtil.generateKey(this, commit.getName() + path);
-        var tmp = redisTemplate.opsForList().range(cacheKey, 0, -1);
-        List<RepositoryFileVO> cacheValue =
-            tmp != null ? tmp.stream().map(obj -> (RepositoryFileVO) obj).toList() : null;
-        if (cacheValue != null) {
+        // In redis, when the key for list is not here, the empty list is returned.
+        // In this case, we can not cache the empty list
+        var cacheValue =
+            redisTemplate.opsForList().range(cacheKey, 0, -1).stream()
+                .map(obj -> (RepositoryFileVO) obj)
+                .toList();
+        if (!cacheValue.isEmpty()) {
           logger.debug("Cache hit, key: {}, value: {}", cacheKey, cacheValue);
         } else {
           logger.debug("Cache miss, key: {}", cacheKey);

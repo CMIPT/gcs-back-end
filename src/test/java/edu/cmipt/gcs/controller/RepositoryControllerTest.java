@@ -202,8 +202,7 @@ public class RepositoryControllerTest {
             jsonPath("$").isArray(),
             jsonPath("$.length()").value(1),
             jsonPath("$[0].name").value("README.md"),
-            jsonPath("$[0].isDirectory").value(false),
-            jsonPath("$.directoryList.length()").value(1));
+            jsonPath("$[0].isDirectory").value(false));
   }
 
   @Test
