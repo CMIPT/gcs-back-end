@@ -41,7 +41,6 @@ import jakarta.validation.constraints.Size;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -58,7 +57,6 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -70,6 +68,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @Validated
 @RestController
@@ -193,17 +192,20 @@ public class RepositoryController {
     }
   }
 
-  @GetMapping(ApiPathConstant.REPOSITORY_DOWNLOAD_REPOSITORY_FILE_WITH_REF_API_PATH)
+  @GetMapping(ApiPathConstant.REPOSITORY_GET_REPOSITORY_FILE_WITH_REF_API_PATH)
   @Operation(
-      summary = "Download a file with given ref",
+      summary = "Get a file with given ref",
       tags = {"Repository", "Get Method"})
   @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        responseCode = "200",
+        description = "Success",
+        content = @Content(schema = @Schema(implementation = String.class))),
     @ApiResponse(
         description = "Failure",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
-  public ResponseEntity<InputStreamResource> downloadFileWithRef(
+  public ResponseEntity<StreamingResponseBody> getFileWithRef(
       @RequestParam(value = "id", required = false) Long id,
       @RequestParam(value = "username", required = false) String username,
       @RequestParam(value = "repositoryName", required = false) String repositoryName,
@@ -549,7 +551,7 @@ public class RepositoryController {
     return path;
   }
 
-  private ResponseEntity<InputStreamResource> fetchRepositoryFileWithRef(
+  private ResponseEntity<StreamingResponseBody> fetchRepositoryFileWithRef(
       Git git, RepositoryPO repositoryPO, String ref, String path) {
     if (".".equals(path)) {
       throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
@@ -574,12 +576,17 @@ public class RepositoryController {
             // Do not use this api for directory
             throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
           }
-          return ResponseEntity.ok()
-              .contentType(MediaType.APPLICATION_OCTET_STREAM)
-              .header(
-                  "Content-Disposition",
-                  "attachment; filename=\"" + Paths.get(ref, path).toString() + "\"")
-              .body(new InputStreamResource(repository.open(treeWalk.getObjectId(0)).openStream()));
+          var inputStream = repository.open(treeWalk.getObjectId(0)).openStream();
+          StreamingResponseBody stream =
+              outputStream -> {
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                  outputStream.write(buffer, 0, bytesRead);
+                }
+                inputStream.close();
+              };
+          return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(stream);
         }
       }
     } catch (GenericException e) {
