@@ -190,20 +190,19 @@ public class RepositoryControllerTest {
   }
 
   @Test
-  public void testGetRepositoryPathWithRefValid() throws Exception {
+  public void testGetRepositoryDirectoryWithRefValid() throws Exception {
     mvc.perform(
-            get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_PATH_WITH_REF_API_PATH)
+            get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_DIRECTORY_WITH_REF_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("id", TestConstant.REPOSITORY_ID)
                 .param("ref", "master")
                 .param("path", "/"))
         .andExpectAll(
             status().isOk(),
-            jsonPath("$.isDirectory").value(true),
-            jsonPath("$.content").value(""),
-            jsonPath("$.readmeContent").value(""),
-            jsonPath("$.licenseContent").value(""),
-            jsonPath("$.directoryList").isArray(),
+            jsonPath("$").isArray(),
+            jsonPath("$.length()").value(1),
+            jsonPath("$[0].name").value("README.md"),
+            jsonPath("$[0].isDirectory").value(false),
             jsonPath("$.directoryList.length()").value(1));
   }
 
@@ -217,9 +216,9 @@ public class RepositoryControllerTest {
   }
 
   @Test
-  public void testGetRepositoryPathWithRefInvalid() throws Exception {
+  public void testGetRepositoryDirectoryWithRefInvalid() throws Exception {
     mvc.perform(
-            get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_PATH_WITH_REF_API_PATH)
+            get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_DIRECTORY_WITH_REF_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("id", TestConstant.REPOSITORY_ID)
                 .param("ref", "master")
