@@ -561,7 +561,7 @@ public class RepositoryController {
         if (cacheValue != null) {
           logger.debug("Cache hit, key: {}, value: {}", cacheKey, cacheValue);
         } else {
-          logger.info("Cache miss, key: {}", cacheKey);
+          logger.debug("Cache miss, key: {}", cacheKey);
           final TreeWalk treeWalk =
               ".".equals(path)
                   ? new TreeWalk(repository)
