@@ -675,7 +675,7 @@ public class RepositoryController {
                   ref,
                   repository.getDirectory());
               // Do not use this API to get the content of a file
-              throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
+              throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
             }
           }
         }
