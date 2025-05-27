@@ -19,7 +19,6 @@ import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryDTO;
 import edu.cmipt.gcs.pojo.repository.RepositoryDetailVO;
-import edu.cmipt.gcs.pojo.repository.RepositoryFileDetailVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryFileVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
@@ -59,6 +58,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -67,6 +68,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @Validated
 @RestController
@@ -157,7 +159,7 @@ public class RepositoryController {
     }
   }
 
-  @GetMapping(ApiPathConstant.REPOSITORY_GET_REPOSITORY_PATH_WITH_REF_API_PATH)
+  @GetMapping(ApiPathConstant.REPOSITORY_GET_REPOSITORY_DIRECTORY_WITH_REF_API_PATH)
   @Operation(
       summary = "Get a repository's path with ref",
       description =
@@ -170,7 +172,7 @@ public class RepositoryController {
         description = "Failure",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
-  public RepositoryFileDetailVO getRepositoryPathWithRef(
+  public List<RepositoryFileVO> getRepositoryDirectoryWithRef(
       @RequestParam(value = "id", required = false) Long id,
       @RequestParam(value = "username", required = false) String username,
       @RequestParam(value = "repositoryName", required = false) String repositoryName,
@@ -181,10 +183,45 @@ public class RepositoryController {
     id = repositoryPO.getId();
     username = userService.getById(repositoryPO.getUserId()).getUsername();
     repositoryName = repositoryPO.getRepositoryName();
+    path = normalizePath(path);
     tryUpdateUrl(repositoryPO, username);
     try (var jGitRepository = createJGitRepository(username, repositoryName)) {
-      var git = new Git(jGitRepository);
-      return fetchRepositoryPathWithRef(git, repositoryPO, ref, path);
+      try (var git = new Git(jGitRepository)) {
+        return fetchRepositoryDirectoryWithRef(git, repositoryPO, ref, path);
+      }
+    }
+  }
+
+  @GetMapping(ApiPathConstant.REPOSITORY_GET_REPOSITORY_FILE_WITH_REF_API_PATH)
+  @Operation(
+      summary = "Get a file with given ref",
+      tags = {"Repository", "Get Method"})
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Success",
+        content = @Content(schema = @Schema(implementation = String.class))),
+    @ApiResponse(
+        description = "Failure",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public ResponseEntity<StreamingResponseBody> getFileWithRef(
+      @RequestParam(value = "id", required = false) Long id,
+      @RequestParam(value = "username", required = false) String username,
+      @RequestParam(value = "repositoryName", required = false) String repositoryName,
+      @RequestParam("ref") String ref,
+      @RequestParam("path") String path,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    var repositoryPO = getRepositoryPO(id, username, repositoryName, accessToken);
+    id = repositoryPO.getId();
+    username = userService.getById(repositoryPO.getUserId()).getUsername();
+    repositoryName = repositoryPO.getRepositoryName();
+    path = normalizePath(path);
+    tryUpdateUrl(repositoryPO, username);
+    try (var jGitRepository = createJGitRepository(username, repositoryName)) {
+      try (var git = new Git(jGitRepository)) {
+        return fetchRepositoryFileWithRef(git, repositoryPO, ref, path);
+      }
     }
   }
 
@@ -514,54 +551,90 @@ public class RepositoryController {
     return path;
   }
 
+  private ResponseEntity<StreamingResponseBody> fetchRepositoryFileWithRef(
+      Git git, RepositoryPO repositoryPO, String ref, String path) {
+    if (".".equals(path)) {
+      throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
+    }
+    try {
+      if (git.getRepository().getAllRefsByPeeledObjectId().isEmpty()) {
+        throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
+      }
+      logger.debug("Get path content: '{}/{}'", ref, path);
+      var repository = git.getRepository();
+      ObjectId refId = getRefId(ref, repository);
+      try (var revWalk = new RevWalk(repository)) {
+        var commit = revWalk.parseCommit(refId);
+        final TreeWalk treeWalk = TreeWalk.forPath(repository, path, commit.getTree());
+        if (treeWalk == null) {
+          logger.info(
+              "Path '{}' in ref '{}' of repo '{}' not found", path, ref, repository.getDirectory());
+          throw new GenericException(ErrorCodeEnum.REPOSITORY_PATH_NOT_FOUND, path);
+        }
+        try (treeWalk) {
+          if (treeWalk.isSubtree()) {
+            // Do not use this api for directory
+            throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
+          }
+          var inputStream = repository.open(treeWalk.getObjectId(0)).openStream();
+          StreamingResponseBody stream =
+              outputStream -> {
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                  outputStream.write(buffer, 0, bytesRead);
+                }
+                inputStream.close();
+              };
+          return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(stream);
+        }
+      }
+    } catch (GenericException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   /**
-   * Fetch the repository path with ref
+   * Fetch the repository directory with ref
    *
    * @param git the git object
    * @param repositoryPO the repository PO
    * @param ref the ref
    * @param path the path
-   * @return the repository file detail VO
+   * @return List of RepositoryFileVO
    */
-  private RepositoryFileDetailVO fetchRepositoryPathWithRef(
+  private List<RepositoryFileVO> fetchRepositoryDirectoryWithRef(
       Git git, RepositoryPO repositoryPO, String ref, String path) {
-    path = normalizePath(path);
     try {
       // empty repository
       if (git.getRepository().getAllRefsByPeeledObjectId().isEmpty()) {
-        if (ref.isBlank()) {
-          if (".".equals(path)) {
-            return new RepositoryFileDetailVO(true, "", "", "", List.of());
-          }
+        if (!ref.isBlank()) {
+          throw new GenericException(ErrorCodeEnum.REPOSITORY_REF_NOT_FOUND, ref);
+        }
+        if (!".".equals(path)) {
           throw new GenericException(ErrorCodeEnum.REPOSITORY_PATH_NOT_FOUND, path);
         }
-        throw new GenericException(ErrorCodeEnum.REPOSITORY_REF_NOT_FOUND, ref);
+        return List.of();
       }
       logger.debug("Get path content: '{}/{}'", ref, path);
       var repository = git.getRepository();
-      ObjectId refId = null;
-      try {
-        refId = repository.resolve(ref);
-      } catch (AmbiguousObjectException
-          | IncorrectObjectTypeException
-          | RevisionSyntaxException e) {
-        // this happens for invalid ref such as 'invalid ref'
-        logger.info("Ref '{}' in repo '{}' not found", ref, repository.getDirectory());
-        throw new GenericException(ErrorCodeEnum.REPOSITORY_REF_NOT_FOUND, ref);
-      } catch (IOException e) {
-        logger.error("Failed to resolve ref '{}' in repo '{}'", ref, repository.getDirectory());
-        throw e;
-      }
+      ObjectId refId = getRefId(ref, repository);
       try (var revWalk = new RevWalk(repository)) {
         var commit = revWalk.parseCommit(refId);
 
         var cacheKey = RedisUtil.generateKey(this, commit.getName() + path);
-        RepositoryFileDetailVO cacheValue =
-            (RepositoryFileDetailVO) redisTemplate.opsForValue().get(cacheKey);
-        if (cacheValue != null) {
+        // In redis, when the key for list is not here, the empty list is returned.
+        // In this case, we can not cache the empty list
+        var cacheValue =
+            redisTemplate.opsForList().range(cacheKey, 0, -1).stream()
+                .map(obj -> (RepositoryFileVO) obj)
+                .toList();
+        if (!cacheValue.isEmpty()) {
           logger.debug("Cache hit, key: {}, value: {}", cacheKey, cacheValue);
         } else {
-          logger.info("Cache miss, key: {}", cacheKey);
+          logger.debug("Cache missed, key: {}", cacheKey);
           final TreeWalk treeWalk =
               ".".equals(path)
                   ? new TreeWalk(repository)
@@ -601,23 +674,15 @@ public class RepositoryController {
                   path,
                   ref,
                   repository.getDirectory());
-              cacheValue =
-                  new RepositoryFileDetailVO(
-                      false,
-                      new String(repository.open(treeWalk.getObjectId(0)).getBytes()),
-                      "",
-                      "",
-                      List.of());
+              // Do not use this API to get the content of a file
+              throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
             }
           }
         }
-        redisTemplate
-            .opsForValue()
-            .set(
-                cacheKey,
-                cacheValue,
-                ApplicationConstant.SERVICE_CACHE_EXPIRATION,
-                TimeUnit.MILLISECONDS);
+        redisTemplate.delete(cacheKey);
+        redisTemplate.opsForList().rightPushAll(cacheKey, cacheValue);
+        redisTemplate.expire(
+            cacheKey, ApplicationConstant.SERVICE_CACHE_EXPIRATION, TimeUnit.MILLISECONDS);
         return cacheValue;
       }
     } catch (GenericException e) {
@@ -627,30 +692,27 @@ public class RepositoryController {
     }
   }
 
-  private RepositoryFileDetailVO traverseDirectoryTree(TreeWalk dirTree, Repository repository)
+  private ObjectId getRefId(String ref, Repository repository) throws IOException {
+    try {
+      ObjectId refId = repository.resolve(ref);
+      return refId;
+    } catch (AmbiguousObjectException | IncorrectObjectTypeException | RevisionSyntaxException e) {
+      // this happens for invalid ref such as 'invalid ref'
+      logger.info("Ref '{}' in repo '{}' not found", ref, repository.getDirectory());
+      throw new GenericException(ErrorCodeEnum.REPOSITORY_REF_NOT_FOUND, ref);
+    } catch (IOException e) {
+      logger.error("Failed to resolve ref '{}' in repo '{}'", ref, repository.getDirectory());
+      throw e;
+    }
+  }
+
+  private List<RepositoryFileVO> traverseDirectoryTree(TreeWalk dirTree, Repository repository)
       throws Exception {
     var directory = new LinkedList<RepositoryFileVO>();
-    String readmeContent = "";
-    String licenseContent = "";
     while (dirTree.next()) {
       directory.add(new RepositoryFileVO(dirTree.getNameString(), dirTree.isSubtree()));
-      if (dirTree.isSubtree()) {
-        continue;
-      }
-      var name = dirTree.getNameString();
-      if ("README.md".equals(name)) {
-        readmeContent = new String(repository.open(dirTree.getObjectId(0)).getBytes());
-        logger.debug(
-            "README.md content: {}",
-            readmeContent.substring(0, Math.min(100, readmeContent.length())));
-      } else if ("LICENSE".equals(name)) {
-        licenseContent = new String(repository.open(dirTree.getObjectId(0)).getBytes());
-        logger.debug(
-            "LICENSE content: {}",
-            licenseContent.substring(0, Math.min(100, licenseContent.length())));
-      }
     }
-    return new RepositoryFileDetailVO(true, "", readmeContent, licenseContent, directory);
+    return directory;
   }
 
   /**

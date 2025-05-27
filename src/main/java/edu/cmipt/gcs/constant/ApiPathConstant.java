@@ -52,8 +52,10 @@ public class ApiPathConstant {
       REPOSITORY_API_PREFIX + "/add-collaborator";
   public static final String REPOSITORY_REMOVE_COLLABORATION_API_PATH =
       REPOSITORY_API_PREFIX + "/remove-collaborator";
-  public static final String REPOSITORY_GET_REPOSITORY_PATH_WITH_REF_API_PATH =
-      REPOSITORY_API_PREFIX + "/get-path-with-ref";
+  public static final String REPOSITORY_GET_REPOSITORY_DIRECTORY_WITH_REF_API_PATH =
+      REPOSITORY_API_PREFIX + "/get-directory-with-ref";
+  public static final String REPOSITORY_GET_REPOSITORY_FILE_WITH_REF_API_PATH =
+      REPOSITORY_API_PREFIX + "/get-file-with-ref";
 
   public static final String SSH_KEY_API_PREFIX = ALL_API_PREFIX + "/ssh";
   public static final String SSH_KEY_UPLOAD_SSH_KEY_API_PATH = SSH_KEY_API_PREFIX + "/upload";

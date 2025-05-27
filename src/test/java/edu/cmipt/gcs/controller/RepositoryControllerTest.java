@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -190,21 +191,30 @@ public class RepositoryControllerTest {
   }
 
   @Test
-  public void testGetRepositoryPathWithRefValid() throws Exception {
+  public void testGetRepositoryDirectoryWithRefValid() throws Exception {
     mvc.perform(
-            get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_PATH_WITH_REF_API_PATH)
+            get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_DIRECTORY_WITH_REF_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("id", TestConstant.REPOSITORY_ID)
                 .param("ref", "master")
                 .param("path", "/"))
         .andExpectAll(
             status().isOk(),
-            jsonPath("$.isDirectory").value(true),
-            jsonPath("$.content").value(""),
-            jsonPath("$.readmeContent").value(""),
-            jsonPath("$.licenseContent").value(""),
-            jsonPath("$.directoryList").isArray(),
-            jsonPath("$.directoryList.length()").value(1));
+            jsonPath("$").isArray(),
+            jsonPath("$.length()").value(1),
+            jsonPath("$[0].name").value("README.md"),
+            jsonPath("$[0].isDirectory").value(false));
+  }
+
+  @Test
+  public void testGetRepositoryFileWithRefValid() throws Exception {
+    mvc.perform(
+            get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_FILE_WITH_REF_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", TestConstant.REPOSITORY_ID)
+                .param("ref", "master")
+                .param("path", "/README.md"))
+        .andExpectAll(status().isOk(), content().bytes("".getBytes()));
   }
 
   @Test
@@ -217,9 +227,9 @@ public class RepositoryControllerTest {
   }
 
   @Test
-  public void testGetRepositoryPathWithRefInvalid() throws Exception {
+  public void testGetRepositoryDirectoryWithRefInvalid() throws Exception {
     mvc.perform(
-            get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_PATH_WITH_REF_API_PATH)
+            get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_DIRECTORY_WITH_REF_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("id", TestConstant.REPOSITORY_ID)
                 .param("ref", "master")

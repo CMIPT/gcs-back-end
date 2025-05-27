@@ -34,7 +34,7 @@ public class CacheAspect {
     String cacheKey = RedisUtil.generateKey(joinPoint.getTarget(), id);
     Object cacheValue = redisTemplate.opsForValue().get(cacheKey);
     if (cacheValue == null) {
-      logger.info("Cache miss, key: {}", cacheKey);
+      logger.debug("Cache missed, key: {}", cacheKey);
       cacheValue = joinPoint.proceed();
     } else {
       logger.debug("Cache hit, key: {}, value: {}", cacheKey, cacheValue);
@@ -58,10 +58,10 @@ public class CacheAspect {
     String argsIdKey = RedisUtil.generateKey(joinPoint.getTarget(), argsId);
     Object argsIdValue = redisTemplate.opsForValue().get(argsIdKey);
     if (argsIdValue == null) {
-      logger.info("Cache miss, key: {}", argsIdKey);
+      logger.debug("Cache missed, key: {}", argsIdKey);
       cacheValue = joinPoint.proceed();
       if (cacheValue == null) {
-        logger.info("PO not found in getOne method, return null");
+        logger.debug("PO not found in getOne method, return null");
         return null;
       }
       argsIdValue = cacheValue.getClass().getMethod("getId").invoke(cacheValue);
@@ -80,10 +80,10 @@ public class CacheAspect {
     if (cacheValue == null) {
       cacheValue = redisTemplate.opsForValue().get(cacheKey);
       if (cacheValue == null) {
-        logger.info("Cache miss, key: {}", cacheKey);
+        logger.debug("Cache missed, key: {}", cacheKey);
         cacheValue = joinPoint.proceed();
         if (cacheValue == null) {
-          logger.info("PO not found in getOne method, return null");
+          logger.debug("PO not found in getOne method, return null");
           return null;
         }
       } else {
@@ -116,7 +116,7 @@ public class CacheAspect {
       }
       String cacheKey = RedisUtil.generateKey(joinPoint.getTarget(), id);
       redisTemplate.delete(cacheKey);
-      logger.info("Cache delete, key: {}", cacheKey);
+      logger.debug("Cache deleted, key: {}", cacheKey);
     }
     return result;
   }
