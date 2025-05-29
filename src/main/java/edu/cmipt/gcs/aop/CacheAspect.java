@@ -4,7 +4,9 @@ import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.util.RedisUtil;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
@@ -101,12 +103,13 @@ public class CacheAspect {
     return cacheValue;
   }
 
-  @Around(
-      "execution(* edu.cmipt.gcs.service.*ServiceImpl.updateById(..)) || "
-          + "execution(* edu.cmipt.gcs.service.*ServiceImpl.removeById(java.io.Serializable))")
-  public Object updateOrRemoveAdvice(ProceedingJoinPoint joinPoint) throws Throwable {
-    boolean result = (boolean) joinPoint.proceed();
-    if (result) {
+  @AfterReturning(
+      pointcut =
+          "execution(* edu.cmipt.gcs.service.*ServiceImpl.updateById(..)) || "
+              + "execution(* edu.cmipt.gcs.service.*ServiceImpl.removeById(java.io.Serializable))",
+      returning = "result")
+  public void updateOrRemoveAdvice(JoinPoint joinPoint, Object result) throws Throwable {
+    if ((boolean) result) {
       String id;
       if (joinPoint.getSignature().getName().equals("removeById")) {
         id = joinPoint.getArgs()[0].toString();
@@ -118,6 +121,5 @@ public class CacheAspect {
       redisTemplate.delete(cacheKey);
       logger.debug("Cache deleted, key: {}", cacheKey);
     }
-    return result;
   }
 }
