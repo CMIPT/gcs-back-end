@@ -13,7 +13,7 @@ services:
     environment:
       FRONT_END_REVERSE_PROXY_PORT: ${FRONT_END_REVERSE_PROXY_PORT}
   gcs-postgres:
-    image: postgres:14
+    image: postgres:17
     container_name: gcs-postgres
     restart: always
     environment:
