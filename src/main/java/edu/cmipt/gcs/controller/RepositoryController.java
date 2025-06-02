@@ -17,11 +17,13 @@ import edu.cmipt.gcs.pojo.collaboration.CollaboratorVO;
 import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
+import edu.cmipt.gcs.pojo.repository.CommitAuthorVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryDTO;
 import edu.cmipt.gcs.pojo.repository.RepositoryDetailVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryFileVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
+import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.service.RepositoryService;
 import edu.cmipt.gcs.service.UserCollaborateRepositoryService;
 import edu.cmipt.gcs.service.UserService;
@@ -48,7 +50,9 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.errors.AmbiguousObjectException;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
+import org.eclipse.jgit.lib.AnyObjectId;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -517,16 +521,59 @@ public class RepositoryController {
       String avatarUrl = userPO.getAvatarUrl();
       List<String> branchList = List.of();
       List<String> tagList = List.of();
+      String commitHash = "", commitMessage = "", commitTimestamp = "";
+      CommitAuthorVO commitAuthorVO = null;
       // not an empty repository
       if (!git.getRepository().getAllRefsByPeeledObjectId().isEmpty()) {
         branchList = git.branchList().call().stream().map(Ref::getName).toList();
         tagList = git.tagList().call().stream().map(Ref::getName).toList();
+        var latestCommit =
+            git.log()
+                .add(getRefId(defaultRef, git.getRepository()))
+                .setMaxCount(1)
+                .call()
+                .iterator()
+                .next();
+        commitAuthorVO = new CommitAuthorVO(getAuthorPO(latestCommit.getAuthorIdent()));
+        commitHash = latestCommit.getName();
+        commitMessage = latestCommit.getFullMessage();
+        // convert to milliseconds
+        commitTimestamp = String.valueOf(latestCommit.getCommitTime() * 1000L);
       }
       return new RepositoryDetailVO(
-          repositoryPO, username, avatarUrl, branchList, tagList, defaultRef);
+          repositoryPO,
+          username,
+          avatarUrl,
+          branchList,
+          tagList,
+          defaultRef,
+          commitHash,
+          commitMessage,
+          commitTimestamp,
+          commitAuthorVO);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private UserPO getAuthorPO(PersonIdent author) {
+    var authorPO = userService.getOneByEmail(author.getEmailAddress());
+    if (authorPO == null) {
+      logger.info(
+          "Author with email '{}' not found in user database, using author information from"
+              + " commit",
+          author.getEmailAddress());
+      authorPO = userService.getOneByUsername(author.getName());
+      if (authorPO == null) {
+        logger.info(
+            "Author with name '{}' not found in user database, using author information from"
+                + " commit",
+            author.getName());
+        authorPO = UserPO.fromPersonIndent(author);
+      }
+    }
+    assert (authorPO != null);
+    return authorPO;
   }
 
   /**
@@ -625,13 +672,12 @@ public class RepositoryController {
         var commit = revWalk.parseCommit(refId);
 
         var cacheKey = RedisUtil.generateKey(this, commit.getName() + path);
-        // In redis, when the key for list is not here, the empty list is returned.
-        // In this case, we can not cache the empty list
+        var tmp = redisTemplate.opsForValue().get(cacheKey);
         var cacheValue =
-            redisTemplate.opsForList().range(cacheKey, 0, -1).stream()
-                .map(obj -> (RepositoryFileVO) obj)
-                .toList();
-        if (!cacheValue.isEmpty()) {
+            tmp != null && tmp instanceof List<?>
+                ? ((List<?>) tmp).stream().map(obj -> (RepositoryFileVO) obj).toList()
+                : null;
+        if (cacheKey == null) {
           logger.debug("Cache hit, key: {}, value: {}", cacheKey, cacheValue);
         } else {
           logger.debug("Cache missed, key: {}", cacheKey);
@@ -656,7 +702,7 @@ public class RepositoryController {
                   repository.getDirectory());
               treeWalk.addTree(commit.getTree());
               treeWalk.setRecursive(false);
-              cacheValue = traverseDirectoryTree(treeWalk, repository);
+              cacheValue = traverseDirectoryTree(treeWalk, git, refId);
             } else if (treeWalk.isSubtree()) {
               logger.debug(
                   "Path '{}' in ref '{}' of repo '{}' is a directory",
@@ -666,7 +712,7 @@ public class RepositoryController {
               try (var dirWalk = new TreeWalk(repository)) {
                 dirWalk.addTree(treeWalk.getObjectId(0));
                 dirWalk.setRecursive(false);
-                cacheValue = traverseDirectoryTree(dirWalk, repository);
+                cacheValue = traverseDirectoryTree(dirWalk, git, refId);
               }
             } else {
               logger.debug(
@@ -679,10 +725,13 @@ public class RepositoryController {
             }
           }
         }
-        redisTemplate.delete(cacheKey);
-        redisTemplate.opsForList().rightPushAll(cacheKey, cacheValue);
-        redisTemplate.expire(
-            cacheKey, ApplicationConstant.SERVICE_CACHE_EXPIRATION, TimeUnit.MILLISECONDS);
+        redisTemplate
+            .opsForValue()
+            .set(
+                cacheKey,
+                cacheValue,
+                ApplicationConstant.SERVICE_CACHE_EXPIRATION,
+                TimeUnit.MILLISECONDS);
         return cacheValue;
       }
     } catch (GenericException e) {
@@ -706,11 +755,21 @@ public class RepositoryController {
     }
   }
 
-  private List<RepositoryFileVO> traverseDirectoryTree(TreeWalk dirTree, Repository repository)
+  private List<RepositoryFileVO> traverseDirectoryTree(TreeWalk dirTree, Git git, AnyObjectId refId)
       throws Exception {
     var directory = new LinkedList<RepositoryFileVO>();
     while (dirTree.next()) {
-      directory.add(new RepositoryFileVO(dirTree.getNameString(), dirTree.isSubtree()));
+      var name = dirTree.getNameString();
+      var latestCommit = git.log().add(refId).addPath(name).setMaxCount(1).call().iterator().next();
+      directory.add(
+          new RepositoryFileVO(
+              name,
+              dirTree.isSubtree(),
+              latestCommit.getName(),
+              latestCommit.getFullMessage(),
+              // Convert seconds to milliseconds
+              String.valueOf(latestCommit.getCommitTime() * 1000L),
+              new CommitAuthorVO(getAuthorPO(latestCommit.getAuthorIdent()))));
     }
     return directory;
   }

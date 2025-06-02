@@ -19,14 +19,22 @@ public record RepositoryDetailVO(
     @Schema(description = "SSH URL") String sshUrl,
     @Schema(description = "Branch List") List<String> branchList,
     @Schema(description = "Tag List") List<String> tagList,
-    @Schema(description = "Default ref") String defaultRef) {
+    @Schema(description = "Default ref") String defaultRef,
+    @Schema(description = "The latest commit hash of the file") String commitHash,
+    @Schema(description = "The latest commit messeage of the file") String commitMessage,
+    @Schema(description = "The latest timestamp of the commit") String commitTimestamp,
+    @Schema(description = "The author of the latest commit") CommitAuthorVO commitAuthor) {
   public RepositoryDetailVO(
       RepositoryPO repositoryPO,
       String username,
       String avatarUrl,
       List<String> branchList,
       List<String> tagList,
-      String defaultRef) {
+      String defaultRef,
+      String commitHash,
+      String commitMessage,
+      String commitTimestamp,
+      CommitAuthorVO commitAuthor) {
     this(
         repositoryPO.getId().toString(),
         repositoryPO.getRepositoryName(),
@@ -43,6 +51,10 @@ public record RepositoryDetailVO(
         repositoryPO.getSshUrl(),
         branchList,
         tagList,
-        defaultRef);
+        defaultRef,
+        commitHash,
+        commitMessage,
+        commitTimestamp,
+        commitAuthor);
   }
 }
