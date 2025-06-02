@@ -6,5 +6,4 @@ public record CommitVO(
     @Schema(description = "Commit hash") String hash,
     @Schema(description = "Commit message") String message,
     @Schema(description = "Commit timestamp") String timestamp,
-    @Schema(description = "Author of the commit") CommitAuthorVO author
-) {}
+    @Schema(description = "Author of the commit") CommitAuthorVO author) {}
