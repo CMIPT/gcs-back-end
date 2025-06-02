@@ -18,6 +18,7 @@ import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.repository.CommitAuthorVO;
+import edu.cmipt.gcs.pojo.repository.CommitVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryDTO;
 import edu.cmipt.gcs.pojo.repository.RepositoryDetailVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryFileVO;
@@ -547,10 +548,7 @@ public class RepositoryController {
           branchList,
           tagList,
           defaultRef,
-          commitHash,
-          commitMessage,
-          commitTimestamp,
-          commitAuthorVO);
+          new CommitVO(commitHash, commitMessage, commitTimestamp, commitAuthorVO));
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -765,11 +763,12 @@ public class RepositoryController {
           new RepositoryFileVO(
               name,
               dirTree.isSubtree(),
-              latestCommit.getName(),
-              latestCommit.getFullMessage(),
-              // Convert seconds to milliseconds
-              String.valueOf(latestCommit.getCommitTime() * 1000L),
-              new CommitAuthorVO(getAuthorPO(latestCommit.getAuthorIdent()))));
+              new CommitVO(
+                  latestCommit.getName(),
+                  latestCommit.getFullMessage(),
+                  // Convert seconds to milliseconds
+                  String.valueOf(latestCommit.getCommitTime() * 1000L),
+                  new CommitAuthorVO(getAuthorPO(latestCommit.getAuthorIdent())))));
     }
     return directory;
   }

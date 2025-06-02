@@ -188,12 +188,12 @@ public class RepositoryControllerTest {
             jsonPath("$.tagList").isArray(),
             jsonPath("$.tagList.length()").value(0),
             jsonPath("$.defaultRef").value("refs/heads/master"),
-            jsonPath("$.commitHash").isString(),
-            jsonPath("$.commitMessage").value("Initial commit"),
-            jsonPath("$.commitTimestamp").isString(),
-            jsonPath("$.commitAuthor.name").isString(),
-            jsonPath("$.commitAuthor.email").isString(),
-            jsonPath("$.commitAuthor.avatarUrl").value(""));
+            jsonPath("$.commit.hash").isString(),
+            jsonPath("$.commit.message").value("Initial commit"),
+            jsonPath("$.commit.timestamp").isString(),
+            jsonPath("$.commit.author.name").isString(),
+            jsonPath("$.commit.author.email").isString(),
+            jsonPath("$.commit.author.avatarUrl").value(""));
   }
 
   @Test
@@ -210,12 +210,12 @@ public class RepositoryControllerTest {
             jsonPath("$.length()").value(1),
             jsonPath("$[0].name").value("README.md"),
             jsonPath("$[0].isDirectory").value(false),
-            jsonPath("$[0].commitHash").isString(),
-            jsonPath("$[0].commitMessage").value("Initial commit"),
-            jsonPath("$[0].commitTimestamp").isString(),
-            jsonPath("$[0].commitAuthor.name").isString(),
-            jsonPath("$[0].commitAuthor.email").isString(),
-            jsonPath("$[0].commitAuthor.avatarUrl").value(""));
+            jsonPath("$[0].commit.hash").isString(),
+            jsonPath("$[0].commit.message").value("Initial commit"),
+            jsonPath("$[0].commit.timestamp").isString(),
+            jsonPath("$[0].commit.author.name").isString(),
+            jsonPath("$[0].commit.author.email").isString(),
+            jsonPath("$[0].commit.author.avatarUrl").value(""));
   }
 
   @Test
