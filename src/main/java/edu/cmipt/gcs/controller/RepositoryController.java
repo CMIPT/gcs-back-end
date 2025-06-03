@@ -535,7 +535,13 @@ public class RepositoryController {
                 .call()
                 .iterator()
                 .next();
-        commitAuthorVO = new CommitAuthorVO(getAuthorPO(latestCommit.getAuthorIdent()));
+        var authorIdent = latestCommit.getAuthorIdent();
+        var authorPO = getAuthorPO(authorIdent);
+        if (authorPO != null) {
+          commitAuthorVO = new CommitAuthorVO(authorPO);
+        } else {
+          commitAuthorVO = new CommitAuthorVO(authorIdent);
+        }
         commitHash = latestCommit.getName();
         commitMessage = latestCommit.getFullMessage();
         // convert to milliseconds
@@ -567,10 +573,8 @@ public class RepositoryController {
             "Author with name '{}' not found in user database, using author information from"
                 + " commit",
             author.getName());
-        authorPO = UserPO.fromPersonIndent(author);
       }
     }
-    assert (authorPO != null);
     return authorPO;
   }
 
