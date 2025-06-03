@@ -2,6 +2,7 @@ package edu.cmipt.gcs.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.GitConstant;
@@ -18,13 +19,14 @@ import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.repository.CommitAuthorVO;
+import edu.cmipt.gcs.pojo.repository.CommitDetailVO;
 import edu.cmipt.gcs.pojo.repository.CommitVO;
+import edu.cmipt.gcs.pojo.repository.DiffVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryDTO;
 import edu.cmipt.gcs.pojo.repository.RepositoryDetailVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryFileVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
-import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.service.RepositoryService;
 import edu.cmipt.gcs.service.UserCollaborateRepositoryService;
 import edu.cmipt.gcs.service.UserService;
@@ -41,24 +43,32 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.errors.AmbiguousObjectException;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.AnyObjectId;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.treewalk.AbstractTreeIterator;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,6 +90,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 @Tag(name = "Repository", description = "Repository Related APIs")
 public class RepositoryController {
   private static final Logger logger = LoggerFactory.getLogger(RepositoryController.class);
+  @Autowired private ObjectMapper objectMappter;
   @Autowired private RepositoryService repositoryService;
   @Autowired private UserService userService;
   @Autowired private UserCollaborateRepositoryService userCollaborateRepositoryService;
@@ -193,6 +204,35 @@ public class RepositoryController {
     try (var jGitRepository = createJGitRepository(username, repositoryName)) {
       try (var git = new Git(jGitRepository)) {
         return fetchRepositoryDirectoryWithRef(git, repositoryPO, ref, path);
+      }
+    }
+  }
+
+  @GetMapping(ApiPathConstant.REPOSITORY_GET_REPOSITORY_COMMIT_DETAILS_API_PATH)
+  @Operation(
+      summary = "Get commit details",
+      description = "Get commit details with the given commit hash",
+      tags = {"Repository", "Get Method"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Failure",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public ResponseEntity<StreamingResponseBody> getCommitDetails(
+      @RequestParam(value = "id", required = false) Long id,
+      @RequestParam(value = "username", required = false) String username,
+      @RequestParam(value = "repositoryName", required = false) String repositoryName,
+      @RequestParam("commitHash") String commitHash,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    var repositoryPO = getRepositoryPO(id, username, repositoryName, accessToken);
+    id = repositoryPO.getId();
+    username = userService.getById(repositoryPO.getUserId()).getUsername();
+    repositoryName = repositoryPO.getRepositoryName();
+    tryUpdateUrl(repositoryPO, username);
+    try (var jGitRepository = createJGitRepository(username, repositoryName)) {
+      try (var git = new Git(jGitRepository)) {
+        return fetchRepositoryCommitDetails(git, repositoryPO, commitHash);
       }
     }
   }
@@ -535,13 +575,7 @@ public class RepositoryController {
                 .call()
                 .iterator()
                 .next();
-        var authorIdent = latestCommit.getAuthorIdent();
-        var authorPO = getAuthorPO(authorIdent);
-        if (authorPO != null) {
-          commitAuthorVO = new CommitAuthorVO(authorPO);
-        } else {
-          commitAuthorVO = new CommitAuthorVO(authorIdent);
-        }
+        commitAuthorVO = getCommitAuthorVO(latestCommit);
         commitHash = latestCommit.getName();
         commitMessage = latestCommit.getFullMessage();
         // convert to milliseconds
@@ -560,22 +594,27 @@ public class RepositoryController {
     }
   }
 
-  private UserPO getAuthorPO(PersonIdent author) {
-    var authorPO = userService.getOneByEmail(author.getEmailAddress());
+  private CommitAuthorVO getCommitAuthorVO(RevCommit commit) {
+    var authorIdent = commit.getAuthorIdent();
+    var authorPO = userService.getOneByEmail(authorIdent.getEmailAddress());
     if (authorPO == null) {
       logger.info(
           "Author with email '{}' not found in user database, using author information from"
               + " commit",
-          author.getEmailAddress());
-      authorPO = userService.getOneByUsername(author.getName());
+          authorIdent.getEmailAddress());
+      authorPO = userService.getOneByUsername(authorIdent.getName());
       if (authorPO == null) {
         logger.info(
             "Author with name '{}' not found in user database, using author information from"
                 + " commit",
-            author.getName());
+            authorIdent.getName());
       }
     }
-    return authorPO;
+    if (authorPO != null) {
+      return new CommitAuthorVO(authorPO);
+    } else {
+      return new CommitAuthorVO(authorIdent);
+    }
   }
 
   /**
@@ -638,6 +677,76 @@ public class RepositoryController {
           return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM).body(stream);
         }
       }
+    } catch (GenericException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private ResponseEntity<StreamingResponseBody> fetchRepositoryCommitDetails(
+      Git git, RepositoryPO repositoryPO, String commitHash) {
+    var repository = git.getRepository();
+    try {
+      if (repository.getAllRefsByPeeledObjectId().isEmpty()) {
+        throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
+      }
+      logger.debug("Get commit details: '{}'", commitHash);
+      ObjectId commitId = repository.resolve(commitHash);
+      if (commitId == null || !commitId.name().equals(commitHash)) {
+        throw new GenericException(ErrorCodeEnum.REPOSITORY_COMMIT_NOT_FOUND, commitHash);
+      }
+      List<DiffVO> diffVOList = new LinkedList<>();
+      RevCommit commit;
+      RevCommit parentCommit = null;
+      try (var revWalk = new RevWalk(repository)) {
+        commit = revWalk.parseCommit(commitId);
+        if (commit.getParentCount() > 0) {
+          parentCommit = revWalk.parseCommit(commit.getParent(0).getId());
+        }
+      }
+      try (var diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
+        diffFormatter.setRepository(repository);
+        diffFormatter.setDetectRenames(true);
+        AbstractTreeIterator parentIter;
+        AbstractTreeIterator commitIter;
+        try (var reader = repository.newObjectReader()) {
+          parentIter =
+              parentCommit == null
+                  ? new EmptyTreeIterator()
+                  : new CanonicalTreeParser(null, reader, parentCommit.getTree());
+          commitIter = new CanonicalTreeParser(null, reader, commit.getTree());
+        }
+        List<DiffEntry> diffEntryList = diffFormatter.scan(parentIter, commitIter);
+        for (var diffEntry : diffEntryList) {
+          var diffOutput = new ByteArrayOutputStream();
+          try (var fileDiffFormatter = new DiffFormatter(diffOutput)) {
+            fileDiffFormatter.setRepository(repository);
+            fileDiffFormatter.format(diffEntry);
+            fileDiffFormatter.flush();
+          }
+          var oldPath = diffEntry.getOldPath();
+          var newPath = diffEntry.getNewPath();
+          diffVOList.add(
+              new DiffVO(
+                  "/dev/null".equals(oldPath) ? null : oldPath,
+                  "/dev/null".equals(newPath) ? null : newPath,
+                  diffOutput.toString(StandardCharsets.UTF_8)));
+        }
+      }
+      var commitDetailVO =
+          new CommitDetailVO(
+              commit.getName(),
+              commit.getFullMessage(),
+              // Convert seconds to milliseconds
+              String.valueOf(commit.getCommitTime() * 1000L),
+              getCommitAuthorVO(commit),
+              diffVOList);
+      StreamingResponseBody stream =
+          outputStream -> {
+            objectMappter.writeValue(outputStream, commitDetailVO);
+          };
+      return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(stream);
     } catch (GenericException e) {
       throw e;
     } catch (Exception e) {
@@ -772,7 +881,7 @@ public class RepositoryController {
                   latestCommit.getFullMessage(),
                   // Convert seconds to milliseconds
                   String.valueOf(latestCommit.getCommitTime() * 1000L),
-                  new CommitAuthorVO(getAuthorPO(latestCommit.getAuthorIdent())))));
+                  getCommitAuthorVO(latestCommit))));
     }
     return directory;
   }
