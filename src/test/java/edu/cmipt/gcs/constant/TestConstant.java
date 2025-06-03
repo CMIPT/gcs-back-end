@@ -18,6 +18,7 @@ public class TestConstant {
   public static String OTHER_REFRESH_TOKEN;
   public static String REPOSITORY_ID;
   public static String REPOSITORY_NAME;
+  public static String REPOSITORY_LATEST_COMMIT_HASH;
   public static Integer REPOSITORY_SIZE = 10;
   public static String OTHER_REPOSITORY_ID;
   public static String OTHER_PRIVATE_REPOSITORY_ID;
