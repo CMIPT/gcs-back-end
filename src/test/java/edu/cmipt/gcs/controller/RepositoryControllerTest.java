@@ -425,7 +425,7 @@ public class RepositoryControllerTest {
   }
 
   @Test
-  @Order(Ordered.HIGHEST_PRECEDENCE + 6)
+  @Order(Ordered.LOWEST_PRECEDENCE)
   public void testDeleteRepositoryValid() throws Exception {
     mvc.perform(
             delete(ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH)
