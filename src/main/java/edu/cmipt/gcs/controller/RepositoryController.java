@@ -679,7 +679,7 @@ public class RepositoryController {
             tmp != null && tmp instanceof List<?>
                 ? ((List<?>) tmp).stream().map(obj -> (RepositoryFileVO) obj).toList()
                 : null;
-        if (cacheKey == null) {
+        if (cacheValue != null) {
           logger.debug("Cache hit, key: {}, value: {}", cacheKey, cacheValue);
         } else {
           logger.debug("Cache missed, key: {}", cacheKey);
