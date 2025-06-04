@@ -209,6 +209,46 @@ public class RepositoryController {
     }
   }
 
+  @GetMapping(ApiPathConstant.REPOSITORY_PAGE_COMMIT_WITH_REF_API_PATH)
+  @Operation(
+      summary = "Page commits with ref",
+      description =
+          "Page commits with the given ref, path is relative to the repository root directory, ref"
+              + " is the branch, tag name or hash. When path is root, return the latest commits of"
+              + " ref; otherwise path must not be directory and return the commits that modified"
+              + " the file",
+      tags = {"Repository", "Get Method"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Failure",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public PageVO<CommitVO> pageCommitWithRef(
+      @RequestParam(value = "id", required = false) Long id,
+      @RequestParam(value = "username", required = false) String username,
+      @RequestParam(value = "repositoryName", required = false) String repositoryName,
+      @RequestParam("ref") String ref,
+      @RequestParam("path") String path,
+      @RequestParam("page") @Min(1) Integer page,
+      @RequestParam("size") @Min(1) Integer size,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
+      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+    }
+    var repositoryPO = getRepositoryPO(id, username, repositoryName, accessToken);
+    id = repositoryPO.getId();
+    username = userService.getById(repositoryPO.getUserId()).getUsername();
+    repositoryName = repositoryPO.getRepositoryName();
+    path = normalizePath(path);
+    tryUpdateUrl(repositoryPO, username);
+    try (var jGitRepository = createJGitRepository(username, repositoryName)) {
+      try (var git = new Git(jGitRepository)) {
+        return fetchPageCommitWithRef(git, ref, path, page, size);
+      }
+    }
+  }
+
   @GetMapping(ApiPathConstant.REPOSITORY_GET_REPOSITORY_COMMIT_DETAILS_API_PATH)
   @Operation(
       summary = "Get commit details",
@@ -545,6 +585,55 @@ public class RepositoryController {
           .build();
     } catch (Exception e) {
       logger.error("Failed to create git with repository: {}/{}", username, repositoryName);
+      throw new RuntimeException(e);
+    }
+  }
+
+  public PageVO<CommitVO> fetchPageCommitWithRef(
+      Git git, String ref, String path, Integer page, Integer size) {
+    var repository = git.getRepository();
+    try {
+      ObjectId refId = getRefId(ref, repository);
+      try (var revWalk = new RevWalk(repository)) {
+        var commit = revWalk.parseCommit(refId);
+        var logCommand = git.log().add(commit);
+        if (path != null && !path.isBlank() && !path.equals(".")) {
+          // if path is not null, only get the commits that modified the files under the given path
+          var treeWalk = TreeWalk.forPath(repository, path, commit.getTree());
+          if (treeWalk == null) {
+            logger.info(
+                "Path '{}' in ref '{}' of repo '{}' not found",
+                path,
+                ref,
+                repository.getDirectory());
+            throw new GenericException(ErrorCodeEnum.REPOSITORY_PATH_NOT_FOUND, path);
+          }
+          if (treeWalk.isSubtree()) {
+            throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
+          }
+          treeWalk.close();
+          logCommand.addPath(path);
+        }
+        var commitIter = logCommand.setMaxCount(ApplicationConstant.MAX_PAGE_TOTAL_COUNT).call();
+        int skip = (page - 1) * size;
+        long total = 0;
+        List<CommitVO> commitList = new LinkedList<>();
+        for (RevCommit commitItem : commitIter) {
+          if (total >= skip && total < skip + size) {
+            commitList.add(
+                new CommitVO(
+                    commitItem.getName(),
+                    commitItem.getFullMessage(),
+                    String.valueOf(commitItem.getCommitTime() * 1000L),
+                    getCommitAuthorVO(commitItem)));
+          }
+          total++;
+        }
+        return new PageVO<>(total, commitList);
+      }
+    } catch (GenericException e) {
+      throw e;
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
