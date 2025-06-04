@@ -233,6 +233,29 @@ public class RepositoryControllerTest {
   }
 
   @Test
+  public void testPageCommitWithRefValid() throws Exception {
+    mvc.perform(
+            get(ApiPathConstant.REPOSITORY_PAGE_COMMIT_WITH_REF_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", TestConstant.REPOSITORY_ID)
+                .param("ref", "master")
+                .param("path", "/")
+                .param("page", "1")
+                .param("size", "10"))
+        .andExpectAll(
+            status().isOk(),
+            jsonPath("$.total").value(greaterThan(0)),
+            jsonPath("$.records").isArray(),
+            jsonPath("$.records.length()").value(1),
+            jsonPath("$.records[0].hash").isString(),
+            jsonPath("$.records[0].message").value("Initial commit"),
+            jsonPath("$.records[0].timestamp").isString(),
+            jsonPath("$.records[0].author.name").isString(),
+            jsonPath("$.records[0].author.email").isString(),
+            jsonPath("$.records[0].author.avatarUrl").value(""));
+  }
+
+  @Test
   public void testGetRepositoryDirectoryWithRefValid() throws Exception {
     mvc.perform(
             get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_DIRECTORY_WITH_REF_API_PATH)
