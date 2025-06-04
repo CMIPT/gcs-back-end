@@ -3,6 +3,7 @@ package edu.cmipt.gcs.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import edu.cmipt.gcs.constant.ApiPathConstant;
+import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.ValidationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
@@ -23,6 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.nio.file.Files;
@@ -150,10 +152,13 @@ public class SshKeyController {
   })
   public PageVO<SshKeyVO> pageSshKey(
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
-      @RequestParam("page") Integer page,
-      @RequestParam("size") Integer size,
+      @RequestParam("page") @Min(1) Integer page,
+      @RequestParam("size") @Min(1) Integer size,
       @RequestParam("orderBy") SshKeyOrderByEnum orderBy,
       @RequestParam("isAsc") Boolean isAsc) {
+    if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
+      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+    }
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
     var wrapper = new QueryWrapper<SshKeyPO>();
     wrapper.eq("user_id", idInToken);

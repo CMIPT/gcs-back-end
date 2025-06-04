@@ -2,6 +2,7 @@ package edu.cmipt.gcs.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.GitConstant;
@@ -18,13 +19,14 @@ import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.repository.CommitAuthorVO;
+import edu.cmipt.gcs.pojo.repository.CommitDetailVO;
 import edu.cmipt.gcs.pojo.repository.CommitVO;
+import edu.cmipt.gcs.pojo.repository.DiffVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryDTO;
 import edu.cmipt.gcs.pojo.repository.RepositoryDetailVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryFileVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
-import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.service.RepositoryService;
 import edu.cmipt.gcs.service.UserCollaborateRepositoryService;
 import edu.cmipt.gcs.service.UserService;
@@ -38,27 +40,36 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.errors.AmbiguousObjectException;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.AnyObjectId;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.treewalk.AbstractTreeIterator;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,6 +91,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 @Tag(name = "Repository", description = "Repository Related APIs")
 public class RepositoryController {
   private static final Logger logger = LoggerFactory.getLogger(RepositoryController.class);
+  @Autowired private ObjectMapper objectMappter;
   @Autowired private RepositoryService repositoryService;
   @Autowired private UserService userService;
   @Autowired private UserCollaborateRepositoryService userCollaborateRepositoryService;
@@ -192,7 +204,76 @@ public class RepositoryController {
     tryUpdateUrl(repositoryPO, username);
     try (var jGitRepository = createJGitRepository(username, repositoryName)) {
       try (var git = new Git(jGitRepository)) {
-        return fetchRepositoryDirectoryWithRef(git, repositoryPO, ref, path);
+        return fetchRepositoryDirectoryWithRef(git, ref, path);
+      }
+    }
+  }
+
+  @GetMapping(ApiPathConstant.REPOSITORY_PAGE_COMMIT_WITH_REF_API_PATH)
+  @Operation(
+      summary = "Page commits with ref",
+      description =
+          "Page commits with the given ref, path is relative to the repository root directory, ref"
+              + " is the branch, tag name or hash. When path is root, return the latest commits of"
+              + " ref; otherwise path must not be directory and return the commits that modified"
+              + " the file",
+      tags = {"Repository", "Get Method"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Failure",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public PageVO<CommitVO> pageCommitWithRef(
+      @RequestParam(value = "id", required = false) Long id,
+      @RequestParam(value = "username", required = false) String username,
+      @RequestParam(value = "repositoryName", required = false) String repositoryName,
+      @RequestParam("ref") String ref,
+      @RequestParam("path") String path,
+      @RequestParam("page") @Min(1) Integer page,
+      @RequestParam("size") @Min(1) Integer size,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
+      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+    }
+    var repositoryPO = getRepositoryPO(id, username, repositoryName, accessToken);
+    id = repositoryPO.getId();
+    username = userService.getById(repositoryPO.getUserId()).getUsername();
+    repositoryName = repositoryPO.getRepositoryName();
+    path = normalizePath(path);
+    tryUpdateUrl(repositoryPO, username);
+    try (var jGitRepository = createJGitRepository(username, repositoryName)) {
+      try (var git = new Git(jGitRepository)) {
+        return fetchPageCommitWithRef(git, ref, path, page, size);
+      }
+    }
+  }
+
+  @GetMapping(ApiPathConstant.REPOSITORY_GET_REPOSITORY_COMMIT_DETAILS_API_PATH)
+  @Operation(
+      summary = "Get commit details",
+      description = "Get commit details with the given commit hash",
+      tags = {"Repository", "Get Method"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Failure",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public ResponseEntity<StreamingResponseBody> getCommitDetails(
+      @RequestParam(value = "id", required = false) Long id,
+      @RequestParam(value = "username", required = false) String username,
+      @RequestParam(value = "repositoryName", required = false) String repositoryName,
+      @RequestParam("commitHash") String commitHash,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    var repositoryPO = getRepositoryPO(id, username, repositoryName, accessToken);
+    id = repositoryPO.getId();
+    username = userService.getById(repositoryPO.getUserId()).getUsername();
+    repositoryName = repositoryPO.getRepositoryName();
+    tryUpdateUrl(repositoryPO, username);
+    try (var jGitRepository = createJGitRepository(username, repositoryName)) {
+      try (var git = new Git(jGitRepository)) {
+        return fetchRepositoryCommitDetails(git, commitHash);
       }
     }
   }
@@ -225,7 +306,7 @@ public class RepositoryController {
     tryUpdateUrl(repositoryPO, username);
     try (var jGitRepository = createJGitRepository(username, repositoryName)) {
       try (var git = new Git(jGitRepository)) {
-        return fetchRepositoryFileWithRef(git, repositoryPO, ref, path);
+        return fetchRepositoryFileWithRef(git, ref, path);
       }
     }
   }
@@ -325,36 +406,7 @@ public class RepositoryController {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, collaborator);
     }
     Long collaboratorId = userPO.getId();
-    var repositoryPO = repositoryService.getById(repositoryId);
-    if (repositoryPO == null) {
-      throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
-    }
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    Long repositoryUserId = repositoryPO.getUserId();
-    if (!idInToken.equals(repositoryUserId)) {
-      logger.info(
-          "User[{}] tried to add collaborator to repository[{}] whose creator is [{}]",
-          idInToken,
-          repositoryId,
-          repositoryUserId);
-      checkVisibility(
-          repositoryPO,
-          idInToken,
-          new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId));
-      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
-    }
-    if (collaboratorId.equals(repositoryUserId)) {
-      logger.info("User[{}] tried to add himself to repository[{}]", collaboratorId, repositoryId);
-      throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
-    }
-    if (userCollaborateRepositoryService.getOneByCollaboratorIdAndRepositoryId(
-            collaboratorId, repositoryId)
-        != null) {
-      logger.info(
-          "Collaborator[{}] already exists in repository[{}]", collaboratorId, repositoryId);
-      throw new GenericException(
-          ErrorCodeEnum.COLLABORATION_ALREADY_EXISTS, collaboratorId, repositoryId);
-    }
+    checkCollaborationValidity(repositoryId, collaboratorId, accessToken);
     if (!userCollaborateRepositoryService.save(
         new UserCollaborateRepositoryPO(collaboratorId, repositoryId))) {
       logger.error(
@@ -362,6 +414,29 @@ public class RepositoryController {
       throw new GenericException(
           ErrorCodeEnum.COLLABORATION_ADD_FAILED, collaboratorId, repositoryId);
     }
+  }
+
+  @GetMapping(ApiPathConstant.REPOSITORY_CHECK_COLLABORATION_VALIDITY_API_PATH)
+  @Operation(
+      summary = "Check collaboration validity",
+      description = "Check if the collaboration is valid",
+      tags = {"Repository", "Get Method"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Collaboration is invalid",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public void checkCollaborationValidity(
+      @RequestParam("repositoryId") Long repositoryId,
+      @RequestParam("collaborator") String collaborator,
+      @RequestParam("collaboratorType") AddCollaboratorTypeEnum collaboratorType,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    var userPO = collaboratorType.getOne(userService, collaborator);
+    if (userPO == null) {
+      throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, collaborator);
+    }
+    checkCollaborationValidity(repositoryId, userPO.getId(), accessToken);
   }
 
   @DeleteMapping(ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH)
@@ -417,11 +492,14 @@ public class RepositoryController {
   })
   public PageVO<CollaboratorVO> pageCollaborator(
       @RequestParam("repositoryId") Long repositoryId,
-      @RequestParam("page") Integer page,
-      @RequestParam("size") Integer size,
+      @RequestParam("page") @Min(1) Integer page,
+      @RequestParam("size") @Min(1) Integer size,
       @RequestParam("orderBy") CollaboratorOrderByEnum orderBy,
       @RequestParam("isAsc") Boolean isAsc,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
+      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+    }
     var repository = repositoryService.getById(repositoryId);
     if (repository == null) {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
@@ -454,11 +532,14 @@ public class RepositoryController {
   public PageVO<RepositoryVO> pageRepository(
       @RequestParam("user") String user,
       @RequestParam("userType") UserQueryTypeEnum userType,
-      @RequestParam("page") Integer page,
-      @RequestParam("size") Integer size,
+      @RequestParam("page") @Min(1) Integer page,
+      @RequestParam("size") @Min(1) Integer size,
       @RequestParam("orderBy") RepositoryOrderByEnum orderBy,
       @RequestParam("isAsc") Boolean isAsc,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
+      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+    }
     var userPO = userType.getOne(userService, user);
     if (userPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user);
@@ -508,6 +589,55 @@ public class RepositoryController {
     }
   }
 
+  public PageVO<CommitVO> fetchPageCommitWithRef(
+      Git git, String ref, String path, Integer page, Integer size) {
+    var repository = git.getRepository();
+    try {
+      ObjectId refId = getRefId(ref, repository);
+      try (var revWalk = new RevWalk(repository)) {
+        var commit = revWalk.parseCommit(refId);
+        var logCommand = git.log().add(commit);
+        if (path != null && !path.isBlank() && !path.equals(".")) {
+          // if path is not null, only get the commits that modified the files under the given path
+          var treeWalk = TreeWalk.forPath(repository, path, commit.getTree());
+          if (treeWalk == null) {
+            logger.info(
+                "Path '{}' in ref '{}' of repo '{}' not found",
+                path,
+                ref,
+                repository.getDirectory());
+            throw new GenericException(ErrorCodeEnum.REPOSITORY_PATH_NOT_FOUND, path);
+          }
+          if (treeWalk.isSubtree()) {
+            throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
+          }
+          treeWalk.close();
+          logCommand.addPath(path);
+        }
+        var commitIter = logCommand.setMaxCount(ApplicationConstant.MAX_PAGE_TOTAL_COUNT).call();
+        int skip = (page - 1) * size;
+        long total = 0;
+        List<CommitVO> commitList = new LinkedList<>();
+        for (RevCommit commitItem : commitIter) {
+          if (total >= skip && total < skip + size) {
+            commitList.add(
+                new CommitVO(
+                    commitItem.getName(),
+                    commitItem.getFullMessage(),
+                    String.valueOf(commitItem.getCommitTime() * 1000L),
+                    getCommitAuthorVO(commitItem)));
+          }
+          total++;
+        }
+        return new PageVO<>(total, commitList);
+      }
+    } catch (GenericException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   /**
    * Fetch the repository details
    *
@@ -535,7 +665,7 @@ public class RepositoryController {
                 .call()
                 .iterator()
                 .next();
-        commitAuthorVO = new CommitAuthorVO(getAuthorPO(latestCommit.getAuthorIdent()));
+        commitAuthorVO = getCommitAuthorVO(latestCommit);
         commitHash = latestCommit.getName();
         commitMessage = latestCommit.getFullMessage();
         // convert to milliseconds
@@ -554,24 +684,27 @@ public class RepositoryController {
     }
   }
 
-  private UserPO getAuthorPO(PersonIdent author) {
-    var authorPO = userService.getOneByEmail(author.getEmailAddress());
+  private CommitAuthorVO getCommitAuthorVO(RevCommit commit) {
+    var authorIdent = commit.getAuthorIdent();
+    var authorPO = userService.getOneByEmail(authorIdent.getEmailAddress());
     if (authorPO == null) {
       logger.info(
           "Author with email '{}' not found in user database, using author information from"
               + " commit",
-          author.getEmailAddress());
-      authorPO = userService.getOneByUsername(author.getName());
+          authorIdent.getEmailAddress());
+      authorPO = userService.getOneByUsername(authorIdent.getName());
       if (authorPO == null) {
         logger.info(
             "Author with name '{}' not found in user database, using author information from"
                 + " commit",
-            author.getName());
-        authorPO = UserPO.fromPersonIndent(author);
+            authorIdent.getName());
       }
     }
-    assert (authorPO != null);
-    return authorPO;
+    if (authorPO != null) {
+      return new CommitAuthorVO(authorPO);
+    } else {
+      return new CommitAuthorVO(authorIdent);
+    }
   }
 
   /**
@@ -597,7 +730,7 @@ public class RepositoryController {
   }
 
   private ResponseEntity<StreamingResponseBody> fetchRepositoryFileWithRef(
-      Git git, RepositoryPO repositoryPO, String ref, String path) {
+      Git git, String ref, String path) {
     if (".".equals(path)) {
       throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
     }
@@ -641,17 +774,85 @@ public class RepositoryController {
     }
   }
 
+  private ResponseEntity<StreamingResponseBody> fetchRepositoryCommitDetails(
+      Git git, String commitHash) {
+    var repository = git.getRepository();
+    try {
+      if (repository.getAllRefsByPeeledObjectId().isEmpty()) {
+        throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
+      }
+      logger.debug("Get commit details: '{}'", commitHash);
+      ObjectId commitId = repository.resolve(commitHash);
+      if (commitId == null || !commitId.name().equals(commitHash)) {
+        throw new GenericException(ErrorCodeEnum.REPOSITORY_COMMIT_NOT_FOUND, commitHash);
+      }
+      List<DiffVO> diffVOList = new LinkedList<>();
+      RevCommit commit;
+      RevCommit parentCommit = null;
+      try (var revWalk = new RevWalk(repository)) {
+        commit = revWalk.parseCommit(commitId);
+        if (commit.getParentCount() > 0) {
+          parentCommit = revWalk.parseCommit(commit.getParent(0).getId());
+        }
+      }
+      try (var diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
+        diffFormatter.setRepository(repository);
+        diffFormatter.setDetectRenames(true);
+        AbstractTreeIterator parentIter;
+        AbstractTreeIterator commitIter;
+        try (var reader = repository.newObjectReader()) {
+          parentIter =
+              parentCommit == null
+                  ? new EmptyTreeIterator()
+                  : new CanonicalTreeParser(null, reader, parentCommit.getTree());
+          commitIter = new CanonicalTreeParser(null, reader, commit.getTree());
+        }
+        List<DiffEntry> diffEntryList = diffFormatter.scan(parentIter, commitIter);
+        for (var diffEntry : diffEntryList) {
+          var diffOutput = new ByteArrayOutputStream();
+          try (var fileDiffFormatter = new DiffFormatter(diffOutput)) {
+            fileDiffFormatter.setRepository(repository);
+            fileDiffFormatter.format(diffEntry);
+            fileDiffFormatter.flush();
+          }
+          var oldPath = diffEntry.getOldPath();
+          var newPath = diffEntry.getNewPath();
+          diffVOList.add(
+              new DiffVO(
+                  "/dev/null".equals(oldPath) ? null : oldPath,
+                  "/dev/null".equals(newPath) ? null : newPath,
+                  diffOutput.toString(StandardCharsets.UTF_8)));
+        }
+      }
+      var commitDetailVO =
+          new CommitDetailVO(
+              commit.getName(),
+              commit.getFullMessage(),
+              // Convert seconds to milliseconds
+              String.valueOf(commit.getCommitTime() * 1000L),
+              getCommitAuthorVO(commit),
+              diffVOList);
+      StreamingResponseBody stream =
+          outputStream -> {
+            objectMappter.writeValue(outputStream, commitDetailVO);
+          };
+      return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(stream);
+    } catch (GenericException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   /**
    * Fetch the repository directory with ref
    *
    * @param git the git object
-   * @param repositoryPO the repository PO
    * @param ref the ref
    * @param path the path
    * @return List of RepositoryFileVO
    */
-  private List<RepositoryFileVO> fetchRepositoryDirectoryWithRef(
-      Git git, RepositoryPO repositoryPO, String ref, String path) {
+  private List<RepositoryFileVO> fetchRepositoryDirectoryWithRef(Git git, String ref, String path) {
     try {
       // empty repository
       if (git.getRepository().getAllRefsByPeeledObjectId().isEmpty()) {
@@ -675,7 +876,7 @@ public class RepositoryController {
             tmp != null && tmp instanceof List<?>
                 ? ((List<?>) tmp).stream().map(obj -> (RepositoryFileVO) obj).toList()
                 : null;
-        if (cacheKey == null) {
+        if (cacheValue != null) {
           logger.debug("Cache hit, key: {}, value: {}", cacheKey, cacheValue);
         } else {
           logger.debug("Cache missed, key: {}", cacheKey);
@@ -768,7 +969,7 @@ public class RepositoryController {
                   latestCommit.getFullMessage(),
                   // Convert seconds to milliseconds
                   String.valueOf(latestCommit.getCommitTime() * 1000L),
-                  new CommitAuthorVO(getAuthorPO(latestCommit.getAuthorIdent())))));
+                  getCommitAuthorVO(latestCommit))));
     }
     return directory;
   }
@@ -844,6 +1045,40 @@ public class RepositoryController {
       logger.info(
           "User[{}] tried to get private repository of user[{}]", userId, repositoryPO.getUserId());
       throw e;
+    }
+  }
+
+  private void checkCollaborationValidity(
+      Long repositoryId, Long collaboratorId, String accessToken) {
+    var repositoryPO = repositoryService.getById(repositoryId);
+    if (repositoryPO == null) {
+      throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
+    }
+    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long repositoryUserId = repositoryPO.getUserId();
+    if (!idInToken.equals(repositoryUserId)) {
+      logger.info(
+          "User[{}] tried to add collaborator to repository[{}] whose creator is [{}]",
+          idInToken,
+          repositoryId,
+          repositoryUserId);
+      checkVisibility(
+          repositoryPO,
+          idInToken,
+          new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId));
+      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+    }
+    if (collaboratorId.equals(repositoryUserId)) {
+      logger.info("User[{}] tried to add himself to repository[{}]", collaboratorId, repositoryId);
+      throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
+    }
+    if (userCollaborateRepositoryService.getOneByCollaboratorIdAndRepositoryId(
+            collaboratorId, repositoryId)
+        != null) {
+      logger.info(
+          "Collaborator[{}] already exists in repository[{}]", collaboratorId, repositoryId);
+      throw new GenericException(
+          ErrorCodeEnum.COLLABORATION_ALREADY_EXISTS, collaboratorId, repositoryId);
     }
   }
 }

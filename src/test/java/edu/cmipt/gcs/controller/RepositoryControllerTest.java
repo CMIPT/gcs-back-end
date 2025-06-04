@@ -1,11 +1,14 @@
 package edu.cmipt.gcs.controller;
 
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.nullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -20,6 +23,7 @@ import edu.cmipt.gcs.enumeration.RepositoryOrderByEnum;
 import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.pojo.collaboration.CollaboratorVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
+import edu.cmipt.gcs.pojo.repository.RepositoryDetailVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
 import java.util.function.BiFunction;
 import org.junit.jupiter.api.BeforeAll;
@@ -166,34 +170,89 @@ public class RepositoryControllerTest {
 
   @Test
   public void testGetRepositoryDetailsValid() throws Exception {
+    var content =
+        mvc.perform(
+                get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH)
+                    .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                    .param("id", TestConstant.REPOSITORY_ID)
+                    .param("ref", "master")
+                    .param("path", "/"))
+            .andExpectAll(
+                status().isOk(),
+                jsonPath("$.id").value(TestConstant.REPOSITORY_ID),
+                jsonPath("$.repositoryName").value(TestConstant.REPOSITORY_NAME),
+                jsonPath("$.isPrivate").value(false),
+                jsonPath("$.userId").value(TestConstant.ID),
+                jsonPath("$.username").value(TestConstant.USERNAME),
+                jsonPath("$.star").value(0),
+                jsonPath("$.fork").value(0),
+                jsonPath("$.watcher").value(0),
+                jsonPath("$.branchList").isArray(),
+                jsonPath("$.branchList.length()").value(1),
+                jsonPath("$.branchList[0]").value("refs/heads/master"),
+                jsonPath("$.tagList").isArray(),
+                jsonPath("$.tagList.length()").value(0),
+                jsonPath("$.defaultRef").value("refs/heads/master"),
+                jsonPath("$.commit.hash").isString(),
+                jsonPath("$.commit.message").value("Initial commit"),
+                jsonPath("$.commit.timestamp").isString(),
+                jsonPath("$.commit.author.name").isString(),
+                jsonPath("$.commit.author.email").isString(),
+                jsonPath("$.commit.author.avatarUrl").value(""))
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    TestConstant.REPOSITORY_LATEST_COMMIT_HASH =
+        objectMapper.readValue(content, RepositoryDetailVO.class).commit().hash();
+  }
+
+  @Test
+  public void testGetCommitDetailsValid() throws Exception {
+    var res =
+        mvc.perform(
+                get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_COMMIT_DETAILS_API_PATH)
+                    .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                    .param("id", TestConstant.REPOSITORY_ID)
+                    .param("commitHash", TestConstant.REPOSITORY_LATEST_COMMIT_HASH))
+            .andExpect(request().asyncStarted())
+            .andReturn();
+    mvc.perform(asyncDispatch(res))
+        .andExpectAll(
+            status().isOk(),
+            jsonPath("$.hash").isString(),
+            jsonPath("$.message").value("Initial commit"),
+            jsonPath("$.timestamp").isString(),
+            jsonPath("$.author.name").isString(),
+            jsonPath("$.author.email").isString(),
+            jsonPath("$.author.avatarUrl").value(""),
+            jsonPath("$.diffList").isArray(),
+            jsonPath("$.diffList.length()").value(1),
+            jsonPath("$.diffList[0].oldPath").value(nullValue()),
+            jsonPath("$.diffList[0].newPath").value("README.md"),
+            jsonPath("$.diffList[0].content").isString());
+  }
+
+  @Test
+  public void testPageCommitWithRefValid() throws Exception {
     mvc.perform(
-            get(ApiPathConstant.REPOSITORY_GET_REPOSITORY_API_PATH)
+            get(ApiPathConstant.REPOSITORY_PAGE_COMMIT_WITH_REF_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("id", TestConstant.REPOSITORY_ID)
                 .param("ref", "master")
-                .param("path", "/"))
+                .param("path", "/")
+                .param("page", "1")
+                .param("size", "10"))
         .andExpectAll(
             status().isOk(),
-            jsonPath("$.id").value(TestConstant.REPOSITORY_ID),
-            jsonPath("$.repositoryName").value(TestConstant.REPOSITORY_NAME),
-            jsonPath("$.isPrivate").value(false),
-            jsonPath("$.userId").value(TestConstant.ID),
-            jsonPath("$.username").value(TestConstant.USERNAME),
-            jsonPath("$.star").value(0),
-            jsonPath("$.fork").value(0),
-            jsonPath("$.watcher").value(0),
-            jsonPath("$.branchList").isArray(),
-            jsonPath("$.branchList.length()").value(1),
-            jsonPath("$.branchList[0]").value("refs/heads/master"),
-            jsonPath("$.tagList").isArray(),
-            jsonPath("$.tagList.length()").value(0),
-            jsonPath("$.defaultRef").value("refs/heads/master"),
-            jsonPath("$.commit.hash").isString(),
-            jsonPath("$.commit.message").value("Initial commit"),
-            jsonPath("$.commit.timestamp").isString(),
-            jsonPath("$.commit.author.name").isString(),
-            jsonPath("$.commit.author.email").isString(),
-            jsonPath("$.commit.author.avatarUrl").value(""));
+            jsonPath("$.total").value(greaterThan(0)),
+            jsonPath("$.records").isArray(),
+            jsonPath("$.records.length()").value(1),
+            jsonPath("$.records[0].hash").isString(),
+            jsonPath("$.records[0].message").value("Initial commit"),
+            jsonPath("$.records[0].timestamp").isString(),
+            jsonPath("$.records[0].author.name").isString(),
+            jsonPath("$.records[0].author.email").isString(),
+            jsonPath("$.records[0].author.avatarUrl").value(""));
   }
 
   @Test
@@ -389,7 +448,7 @@ public class RepositoryControllerTest {
   }
 
   @Test
-  @Order(Ordered.HIGHEST_PRECEDENCE + 6)
+  @Order(Ordered.LOWEST_PRECEDENCE)
   public void testDeleteRepositoryValid() throws Exception {
     mvc.perform(
             delete(ApiPathConstant.REPOSITORY_DELETE_REPOSITORY_API_PATH)
@@ -398,6 +457,7 @@ public class RepositoryControllerTest {
         .andExpect(status().isOk());
     TestConstant.REPOSITORY_ID = null;
     TestConstant.REPOSITORY_NAME = null;
+    TestConstant.REPOSITORY_LATEST_COMMIT_HASH = null;
     TestConstant.REPOSITORY_SIZE--;
   }
 

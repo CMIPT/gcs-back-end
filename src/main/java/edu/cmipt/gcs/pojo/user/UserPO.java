@@ -9,7 +9,6 @@ import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.eclipse.jgit.lib.PersonIdent;
 
 @Data
 @AllArgsConstructor
@@ -40,13 +39,5 @@ public class UserPO {
     this.id = id;
     this.username = user.username();
     this.avatarUrl = user.avatarUrl();
-  }
-
-  public static UserPO fromPersonIndent(PersonIdent personIdent) {
-    UserPO userPO = new UserPO();
-    userPO.setUsername(personIdent.getName());
-    userPO.setEmail(personIdent.getEmailAddress());
-    userPO.setAvatarUrl(""); // Default avatar URL can be set here if needed
-    return userPO;
   }
 }

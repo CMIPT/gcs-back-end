@@ -1,6 +1,7 @@
 package edu.cmipt.gcs.pojo.repository;
 
 import edu.cmipt.gcs.pojo.user.UserPO;
+import org.eclipse.jgit.lib.PersonIdent;
 
 public record CommitAuthorVO(String id, String name, String email, String avatarUrl) {
   public CommitAuthorVO(UserPO userPO) {
@@ -9,5 +10,9 @@ public record CommitAuthorVO(String id, String name, String email, String avatar
         userPO.getUsername(),
         userPO.getEmail(),
         userPO.getAvatarUrl());
+  }
+
+  public CommitAuthorVO(PersonIdent personIdent) {
+    this(null, personIdent.getName(), personIdent.getEmailAddress(), "");
   }
 }
