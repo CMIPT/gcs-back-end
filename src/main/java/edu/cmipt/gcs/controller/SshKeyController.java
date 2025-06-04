@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.nio.file.Files;
@@ -150,8 +151,8 @@ public class SshKeyController {
   })
   public PageVO<SshKeyVO> pageSshKey(
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
-      @RequestParam("page") Integer page,
-      @RequestParam("size") Integer size,
+      @RequestParam("page") @Min(1) Integer page,
+      @RequestParam("size") @Min(1) Integer size,
       @RequestParam("orderBy") SshKeyOrderByEnum orderBy,
       @RequestParam("isAsc") Boolean isAsc) {
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));

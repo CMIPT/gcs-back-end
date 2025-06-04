@@ -40,6 +40,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -451,8 +452,8 @@ public class RepositoryController {
   })
   public PageVO<CollaboratorVO> pageCollaborator(
       @RequestParam("repositoryId") Long repositoryId,
-      @RequestParam("page") Integer page,
-      @RequestParam("size") Integer size,
+      @RequestParam("page") @Min(1) Integer page,
+      @RequestParam("size") @Min(1) Integer size,
       @RequestParam("orderBy") CollaboratorOrderByEnum orderBy,
       @RequestParam("isAsc") Boolean isAsc,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
@@ -488,8 +489,8 @@ public class RepositoryController {
   public PageVO<RepositoryVO> pageRepository(
       @RequestParam("user") String user,
       @RequestParam("userType") UserQueryTypeEnum userType,
-      @RequestParam("page") Integer page,
-      @RequestParam("size") Integer size,
+      @RequestParam("page") @Min(1) Integer page,
+      @RequestParam("size") @Min(1) Integer size,
       @RequestParam("orderBy") RepositoryOrderByEnum orderBy,
       @RequestParam("isAsc") Boolean isAsc,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
