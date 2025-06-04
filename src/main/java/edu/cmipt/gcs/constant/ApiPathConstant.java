@@ -58,6 +58,8 @@ public class ApiPathConstant {
       REPOSITORY_API_PREFIX + "/get-file-with-ref";
   public static final String REPOSITORY_GET_REPOSITORY_COMMIT_DETAILS_API_PATH =
       REPOSITORY_API_PREFIX + "/get-commit-details";
+  public static final String REPOSITORY_CHECK_COLLABORATION_VALIDITY_API_PATH =
+      REPOSITORY_API_PREFIX + "/collaboration-validity";
 
   public static final String SSH_KEY_API_PREFIX = ALL_API_PREFIX + "/ssh";
   public static final String SSH_KEY_UPLOAD_SSH_KEY_API_PATH = SSH_KEY_API_PREFIX + "/upload";

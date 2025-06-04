@@ -365,36 +365,7 @@ public class RepositoryController {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, collaborator);
     }
     Long collaboratorId = userPO.getId();
-    var repositoryPO = repositoryService.getById(repositoryId);
-    if (repositoryPO == null) {
-      throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
-    }
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    Long repositoryUserId = repositoryPO.getUserId();
-    if (!idInToken.equals(repositoryUserId)) {
-      logger.info(
-          "User[{}] tried to add collaborator to repository[{}] whose creator is [{}]",
-          idInToken,
-          repositoryId,
-          repositoryUserId);
-      checkVisibility(
-          repositoryPO,
-          idInToken,
-          new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId));
-      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
-    }
-    if (collaboratorId.equals(repositoryUserId)) {
-      logger.info("User[{}] tried to add himself to repository[{}]", collaboratorId, repositoryId);
-      throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
-    }
-    if (userCollaborateRepositoryService.getOneByCollaboratorIdAndRepositoryId(
-            collaboratorId, repositoryId)
-        != null) {
-      logger.info(
-          "Collaborator[{}] already exists in repository[{}]", collaboratorId, repositoryId);
-      throw new GenericException(
-          ErrorCodeEnum.COLLABORATION_ALREADY_EXISTS, collaboratorId, repositoryId);
-    }
+    checkCollaborationValidity(repositoryId, collaboratorId, accessToken);
     if (!userCollaborateRepositoryService.save(
         new UserCollaborateRepositoryPO(collaboratorId, repositoryId))) {
       logger.error(
@@ -402,6 +373,29 @@ public class RepositoryController {
       throw new GenericException(
           ErrorCodeEnum.COLLABORATION_ADD_FAILED, collaboratorId, repositoryId);
     }
+  }
+
+  @GetMapping(ApiPathConstant.REPOSITORY_CHECK_COLLABORATION_VALIDITY_API_PATH)
+  @Operation(
+      summary = "Check collaboration validity",
+      description = "Check if the collaboration is valid",
+      tags = {"Repository", "Get Method"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Collaboration is invalid",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public void checkCollaborationValidity(
+      @RequestParam("repositoryId") Long repositoryId,
+      @RequestParam("collaborator") String collaborator,
+      @RequestParam("collaboratorType") AddCollaboratorTypeEnum collaboratorType,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    var userPO = collaboratorType.getOne(userService, collaborator);
+    if (userPO == null) {
+      throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, collaborator);
+    }
+    checkCollaborationValidity(repositoryId, userPO.getId(), accessToken);
   }
 
   @DeleteMapping(ApiPathConstant.REPOSITORY_REMOVE_COLLABORATION_API_PATH)
@@ -957,6 +951,40 @@ public class RepositoryController {
       logger.info(
           "User[{}] tried to get private repository of user[{}]", userId, repositoryPO.getUserId());
       throw e;
+    }
+  }
+
+  private void checkCollaborationValidity(
+      Long repositoryId, Long collaboratorId, String accessToken) {
+    var repositoryPO = repositoryService.getById(repositoryId);
+    if (repositoryPO == null) {
+      throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
+    }
+    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long repositoryUserId = repositoryPO.getUserId();
+    if (!idInToken.equals(repositoryUserId)) {
+      logger.info(
+          "User[{}] tried to add collaborator to repository[{}] whose creator is [{}]",
+          idInToken,
+          repositoryId,
+          repositoryUserId);
+      checkVisibility(
+          repositoryPO,
+          idInToken,
+          new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId));
+      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+    }
+    if (collaboratorId.equals(repositoryUserId)) {
+      logger.info("User[{}] tried to add himself to repository[{}]", collaboratorId, repositoryId);
+      throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
+    }
+    if (userCollaborateRepositoryService.getOneByCollaboratorIdAndRepositoryId(
+            collaboratorId, repositoryId)
+        != null) {
+      logger.info(
+          "Collaborator[{}] already exists in repository[{}]", collaboratorId, repositoryId);
+      throw new GenericException(
+          ErrorCodeEnum.COLLABORATION_ALREADY_EXISTS, collaboratorId, repositoryId);
     }
   }
 }
