@@ -203,7 +203,7 @@ public class RepositoryController {
     tryUpdateUrl(repositoryPO, username);
     try (var jGitRepository = createJGitRepository(username, repositoryName)) {
       try (var git = new Git(jGitRepository)) {
-        return fetchRepositoryDirectoryWithRef(git, repositoryPO, ref, path);
+        return fetchRepositoryDirectoryWithRef(git, ref, path);
       }
     }
   }
@@ -232,7 +232,7 @@ public class RepositoryController {
     tryUpdateUrl(repositoryPO, username);
     try (var jGitRepository = createJGitRepository(username, repositoryName)) {
       try (var git = new Git(jGitRepository)) {
-        return fetchRepositoryCommitDetails(git, repositoryPO, commitHash);
+        return fetchRepositoryCommitDetails(git, commitHash);
       }
     }
   }
@@ -265,7 +265,7 @@ public class RepositoryController {
     tryUpdateUrl(repositoryPO, username);
     try (var jGitRepository = createJGitRepository(username, repositoryName)) {
       try (var git = new Git(jGitRepository)) {
-        return fetchRepositoryFileWithRef(git, repositoryPO, ref, path);
+        return fetchRepositoryFileWithRef(git, ref, path);
       }
     }
   }
@@ -634,7 +634,7 @@ public class RepositoryController {
   }
 
   private ResponseEntity<StreamingResponseBody> fetchRepositoryFileWithRef(
-      Git git, RepositoryPO repositoryPO, String ref, String path) {
+      Git git, String ref, String path) {
     if (".".equals(path)) {
       throw new GenericException(ErrorCodeEnum.ILLOGICAL_OPERATION);
     }
@@ -679,7 +679,7 @@ public class RepositoryController {
   }
 
   private ResponseEntity<StreamingResponseBody> fetchRepositoryCommitDetails(
-      Git git, RepositoryPO repositoryPO, String commitHash) {
+      Git git, String commitHash) {
     var repository = git.getRepository();
     try {
       if (repository.getAllRefsByPeeledObjectId().isEmpty()) {
@@ -752,13 +752,12 @@ public class RepositoryController {
    * Fetch the repository directory with ref
    *
    * @param git the git object
-   * @param repositoryPO the repository PO
    * @param ref the ref
    * @param path the path
    * @return List of RepositoryFileVO
    */
   private List<RepositoryFileVO> fetchRepositoryDirectoryWithRef(
-      Git git, RepositoryPO repositoryPO, String ref, String path) {
+      Git git, String ref, String path) {
     try {
       // empty repository
       if (git.getRepository().getAllRefsByPeeledObjectId().isEmpty()) {
