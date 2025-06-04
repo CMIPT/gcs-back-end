@@ -3,6 +3,7 @@ package edu.cmipt.gcs.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import edu.cmipt.gcs.constant.ApiPathConstant;
+import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.ValidationConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
@@ -155,6 +156,9 @@ public class SshKeyController {
       @RequestParam("size") @Min(1) Integer size,
       @RequestParam("orderBy") SshKeyOrderByEnum orderBy,
       @RequestParam("isAsc") Boolean isAsc) {
+    if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
+      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+    }
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
     var wrapper = new QueryWrapper<SshKeyPO>();
     wrapper.eq("user_id", idInToken);

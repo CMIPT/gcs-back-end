@@ -457,6 +457,9 @@ public class RepositoryController {
       @RequestParam("orderBy") CollaboratorOrderByEnum orderBy,
       @RequestParam("isAsc") Boolean isAsc,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
+      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+    }
     var repository = repositoryService.getById(repositoryId);
     if (repository == null) {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
@@ -494,6 +497,9 @@ public class RepositoryController {
       @RequestParam("orderBy") RepositoryOrderByEnum orderBy,
       @RequestParam("isAsc") Boolean isAsc,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
+      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+    }
     var userPO = userType.getOne(userService, user);
     if (userPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user);
