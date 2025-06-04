@@ -763,8 +763,7 @@ public class RepositoryController {
    * @param path the path
    * @return List of RepositoryFileVO
    */
-  private List<RepositoryFileVO> fetchRepositoryDirectoryWithRef(
-      Git git, String ref, String path) {
+  private List<RepositoryFileVO> fetchRepositoryDirectoryWithRef(Git git, String ref, String path) {
     try {
       // empty repository
       if (git.getRepository().getAllRefsByPeeledObjectId().isEmpty()) {
