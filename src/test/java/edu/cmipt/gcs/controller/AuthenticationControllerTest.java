@@ -259,19 +259,26 @@ public class AuthenticationControllerTest {
   }
 
   @Test
-  public void testEmailVerificationCodeCoolDownValid() throws Exception {
-    // Generate a verification code for the first time
+  public void testEmailVerificationCodeValid() throws Exception {
     String code = EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL);
     EmailVerificationCodeUtil.verifyVerificationCode(
-        TestConstant.EMAIL, code); // Verify the code and set it cool down
+            TestConstant.EMAIL, code);
+    String newCode =
+            EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL);
+    EmailVerificationCodeUtil.verifyVerificationCode(
+            TestConstant.EMAIL, newCode);
+  }
 
-    String newCode = EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL);
+  @Test
+  public void testEmailVerificationCodeCoolDownValid() throws Exception {
+    String code = EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL);
     assertThrows(
         GenericException.class,
         () ->
             EmailVerificationCodeUtil.generateVerificationCode(
                 TestConstant.EMAIL));
+    //Set the verification code cool down to make sure other place useful
     EmailVerificationCodeUtil.verifyVerificationCode(
-            TestConstant.EMAIL, newCode); //set the verification code cool down again to make sure other place useful
+            TestConstant.EMAIL, code);
   }
 }
