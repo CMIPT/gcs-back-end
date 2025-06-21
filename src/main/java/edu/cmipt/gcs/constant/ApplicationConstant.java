@@ -12,5 +12,6 @@ public class ApplicationConstant {
   public static final long EMAIL_VERIFICATION_CODE_LENGTH = 6L;
   public static final Long SERVICE_CACHE_EXPIRATION = 24 * 60 * 60 * 1000L; // 24 hours
   public static final int MAX_PAGE_TOTAL_COUNT = 1000; // maximum total count for pagination
-  public static final long EMAIL_VERIFICATION_CODE_COOL_DOWN_TIME = min(60 * 1000L,EMAIL_VERIFICATION_CODE_EXPIRATION); // 1 minute
+  public static final long EMAIL_VERIFICATION_CODE_COOL_DOWN_TIME =
+      min(60 * 1000L, EMAIL_VERIFICATION_CODE_EXPIRATION); // 1 minute
 }

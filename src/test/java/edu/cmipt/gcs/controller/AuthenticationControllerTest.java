@@ -261,12 +261,9 @@ public class AuthenticationControllerTest {
   @Test
   public void testEmailVerificationCodeValid() throws Exception {
     String code = EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL);
-    EmailVerificationCodeUtil.verifyVerificationCode(
-            TestConstant.EMAIL, code);
-    String newCode =
-            EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL);
-    EmailVerificationCodeUtil.verifyVerificationCode(
-            TestConstant.EMAIL, newCode);
+    EmailVerificationCodeUtil.verifyVerificationCode(TestConstant.EMAIL, code);
+    String newCode = EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL);
+    EmailVerificationCodeUtil.verifyVerificationCode(TestConstant.EMAIL, newCode);
   }
 
   @Test
@@ -274,11 +271,8 @@ public class AuthenticationControllerTest {
     String code = EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL);
     assertThrows(
         GenericException.class,
-        () ->
-            EmailVerificationCodeUtil.generateVerificationCode(
-                TestConstant.EMAIL));
-    //Set the verification code cool down to make sure other place useful
-    EmailVerificationCodeUtil.verifyVerificationCode(
-            TestConstant.EMAIL, code);
+        () -> EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL));
+    // Set the verification code cool down to make sure other place useful
+    EmailVerificationCodeUtil.verifyVerificationCode(TestConstant.EMAIL, code);
   }
 }
