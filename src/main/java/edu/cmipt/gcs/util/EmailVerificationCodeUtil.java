@@ -1,6 +1,9 @@
 package edu.cmipt.gcs.util;
 
 import edu.cmipt.gcs.constant.ApplicationConstant;
+import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+import edu.cmipt.gcs.exception.GenericException;
+import java.util.concurrent.TimeUnit;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +17,19 @@ public class EmailVerificationCodeUtil {
   }
 
   public static String generateVerificationCode(String email) {
+    var codeKey = RedisUtil.generateKey(EmailVerificationCodeUtil.class, email);
+    long expireTime = redisTemplate.getExpire(codeKey, TimeUnit.MILLISECONDS);
+    assert expireTime != -1 : "Redis key for email verification code should not be permanent";
+    if (expireTime > 0) {
+      long coolDownTime =
+          expireTime
+              + ApplicationConstant.EMAIL_VERIFICATION_CODE_COOL_DOWN_TIME
+              - ApplicationConstant.EMAIL_VERIFICATION_CODE_EXPIRATION;
+      if (coolDownTime > 0) {
+        throw new GenericException(
+            ErrorCodeEnum.EMAIL_VERIFICATION_CODE_COOL_DOWN, coolDownTime / 1000);
+      }
+    }
     String code =
         String.valueOf(
             (int)
@@ -22,10 +38,10 @@ public class EmailVerificationCodeUtil {
     redisTemplate
         .opsForValue()
         .set(
-            RedisUtil.generateKey(EmailVerificationCodeUtil.class, email),
+            codeKey,
             code,
             ApplicationConstant.EMAIL_VERIFICATION_CODE_EXPIRATION,
-            java.util.concurrent.TimeUnit.MILLISECONDS);
+            TimeUnit.MILLISECONDS);
     return code;
   }
 

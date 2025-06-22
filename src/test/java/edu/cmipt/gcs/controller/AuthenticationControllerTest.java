@@ -1,6 +1,7 @@
 package edu.cmipt.gcs.controller;
 
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -15,6 +16,7 @@ import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
 import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.user.UserVO;
 import edu.cmipt.gcs.util.EmailVerificationCodeUtil;
 import edu.cmipt.gcs.util.MessageSourceUtil;
@@ -254,5 +256,23 @@ public class AuthenticationControllerTest {
         .andExpectAll(status().isOk());
     // Sign in again to make the information consistent
     testSignInValid();
+  }
+
+  @Test
+  public void testEmailVerificationCodeValid() throws Exception {
+    String code = EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL);
+    EmailVerificationCodeUtil.verifyVerificationCode(TestConstant.EMAIL, code);
+    String newCode = EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL);
+    EmailVerificationCodeUtil.verifyVerificationCode(TestConstant.EMAIL, newCode);
+  }
+
+  @Test
+  public void testEmailVerificationCodeCoolDownValid() throws Exception {
+    String code = EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL);
+    assertThrows(
+        GenericException.class,
+        () -> EmailVerificationCodeUtil.generateVerificationCode(TestConstant.EMAIL));
+    // Set the verification code cool down to make sure other place useful
+    EmailVerificationCodeUtil.verifyVerificationCode(TestConstant.EMAIL, code);
   }
 }
