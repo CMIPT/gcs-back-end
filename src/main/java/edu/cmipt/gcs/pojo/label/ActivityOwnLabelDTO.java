@@ -10,18 +10,18 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ActivityOwnLabelDTO {
-    @Schema(description = "activity ID")
-    private Long activityId;
+  @Schema(description = "activity ID")
+  private Long activityId;
 
-    @Schema(description = "Label ID")
-    private Long id;
+  @Schema(description = "Label ID")
+  private Long id;
 
-    @Schema(description = "Label Name")
-    private String name;
+  @Schema(description = "Label Name")
+  private String name;
 
-    @Schema(description = "Label Description")
-    private String description;
+  @Schema(description = "Label Description")
+  private String description;
 
-    @Schema(description = "Label Color")
-    private String hexColor;
+  @Schema(description = "Label Color")
+  private String hexColor;
 }

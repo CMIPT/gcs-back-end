@@ -10,22 +10,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ActivityDesignateAssigneeDTO {
-    @Schema(description = "Assignment ID")
-    private Long id;
+  @Schema(description = "Assignment ID")
+  private Long id;
 
-    @Schema(description = "Activity ID")
-    private Long activityId;
+  @Schema(description = "Activity ID")
+  private Long activityId;
 
-    @Schema(description = "Assignee ID")
-    private Long assigneeId;
+  @Schema(description = "Assignee ID")
+  private Long assigneeId;
 
-    @Schema(description = "User Name")
-    private String username;
+  @Schema(description = "User Name")
+  private String username;
 
-    @Schema(description = "User Avatar URL")
-    private String avatarUrl;
+  @Schema(description = "User Avatar URL")
+  private String avatarUrl;
 
-    @Schema(description = "User Email")
-    private String email;
-
+  @Schema(description = "User Email")
+  private String email;
 }

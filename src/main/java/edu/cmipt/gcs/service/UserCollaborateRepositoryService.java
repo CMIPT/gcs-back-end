@@ -16,5 +16,5 @@ public interface UserCollaborateRepositoryService extends IService<UserCollabora
   UserCollaborateRepositoryPO getOneByCollaboratorIdAndRepositoryId(
       Long collaboratorId, Long repositoryId);
 
-    void removeByRepositoryId(Long repositoryId);
+  void removeByRepositoryId(Long repositoryId);
 }

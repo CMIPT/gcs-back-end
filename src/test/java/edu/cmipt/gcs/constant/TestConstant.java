@@ -1,6 +1,5 @@
 package edu.cmipt.gcs.constant;
 
-
 import java.util.Date;
 
 public class TestConstant {
@@ -37,7 +36,7 @@ public class TestConstant {
   public static String DELETE_REPOSITORY_ID;
   public static String ASSIGNEE_ID;
   public static Integer LABEL_SIZE = 10;
-  public static String LABEL_NAME  = "test-label";
+  public static String LABEL_NAME = "test-label";
   public static String LABEL_HEX_COLOR = "#000000";
   public static String LABEL_ID;
   public static String DELETE_LABEL_ID;

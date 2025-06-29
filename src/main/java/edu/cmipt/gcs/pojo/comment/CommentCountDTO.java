@@ -10,10 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Schema(description = "Comment Count Data Transfer Object")
 public class CommentCountDTO {
-    @Schema(description = "Comment Count")
-    private Long count;
+  @Schema(description = "Comment Count")
+  private Long count;
 
-    @Schema(description = "Activity ID")
-    private Long activityId;
-
+  @Schema(description = "Activity ID")
+  private Long activityId;
 }

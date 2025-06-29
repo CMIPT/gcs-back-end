@@ -27,7 +27,12 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
   private final LabelService labelService;
   private final UserCollaborateRepositoryService userCollaborateRepositoryService;
 
-  public RepositoryServiceImpl(@Lazy UserCollaborateRepositoryService userCollaborateRepositoryService, LabelService labelService, ActivityService activityService, UserService userService, RedisTemplate<String, Object> redisTemplate) {
+  public RepositoryServiceImpl(
+      @Lazy UserCollaborateRepositoryService userCollaborateRepositoryService,
+      LabelService labelService,
+      ActivityService activityService,
+      UserService userService,
+      RedisTemplate<String, Object> redisTemplate) {
     this.userCollaborateRepositoryService = userCollaborateRepositoryService;
     this.labelService = labelService;
     this.activityService = activityService;

@@ -17,7 +17,6 @@ import edu.cmipt.gcs.util.RedisUtil;
 import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +32,10 @@ public class UserCollaborateRepositoryServiceImpl
   final RepositoryService repositoryService;
   final UserMapper userMapper;
 
-  public UserCollaborateRepositoryServiceImpl(RedisTemplate<String, Object> redisTemplate, RepositoryService repositoryService, UserMapper userMapper) {
+  public UserCollaborateRepositoryServiceImpl(
+      RedisTemplate<String, Object> redisTemplate,
+      RepositoryService repositoryService,
+      UserMapper userMapper) {
     this.redisTemplate = redisTemplate;
     this.repositoryService = repositoryService;
     this.userMapper = userMapper;
@@ -55,9 +57,7 @@ public class UserCollaborateRepositoryServiceImpl
 
   @Override
   public void removeByRepositoryId(Long repositoryId) {
-    super.remove(
-        new QueryWrapper<UserCollaborateRepositoryPO>()
-            .eq("repository_id", repositoryId));
+    super.remove(new QueryWrapper<UserCollaborateRepositoryPO>().eq("repository_id", repositoryId));
   }
 
   @Override

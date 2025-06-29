@@ -2,20 +2,20 @@ package edu.cmipt.gcs.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import edu.cmipt.gcs.pojo.activity.ActivityPO;
 import edu.cmipt.gcs.pojo.activity.ActivityDetailDTO;
+import edu.cmipt.gcs.pojo.activity.ActivityPO;
 import edu.cmipt.gcs.pojo.activity.ActivityQueryDTO;
 
 public interface ActivityService extends IService<ActivityPO> {
 
-    ActivityPO getLatestActivityByRepositoryId(Long repositoryId);
+  ActivityPO getLatestActivityByRepositoryId(Long repositoryId);
 
-    Page<ActivityDetailDTO> pageActivities(ActivityQueryDTO activityQueryDTO, Page<ActivityDetailDTO> objectPage);
+  Page<ActivityDetailDTO> pageActivities(
+      ActivityQueryDTO activityQueryDTO, Page<ActivityDetailDTO> objectPage);
 
-    ActivityDetailDTO getDetailedOneById(Long id);
+  ActivityDetailDTO getDetailedOneById(Long id);
 
-    ActivityPO getOneByActivityNumberAndRepositoryId(Long activityNumber, Long repositoryId);
+  ActivityPO getOneByActivityNumberAndRepositoryId(Long activityNumber, Long repositoryId);
 
-    void removeByRepositoryId(Long repositoryId);
+  void removeByRepositoryId(Long repositoryId);
 }
-
