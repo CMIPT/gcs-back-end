@@ -17,3 +17,13 @@ COMMENT ON COLUMN public.t_ssh_key.gmt_created IS 'Timestamp when the ssh_key re
 COMMENT ON COLUMN public.t_ssh_key.gmt_updated IS 'Timestamp when the ssh_key record was last updated.';
 COMMENT ON COLUMN public.t_ssh_key.gmt_deleted IS 'Timestamp when the ssh_key record was deleted.
 If set to NULL, it indicates that the ssh_key record has not been deleted.';
+
+-- The constraint of t_ssh_key is added to the table.
+ALTER TABLE ONLY public.t_ssh_key
+    ADD CONSTRAINT pk_ssh_key PRIMARY KEY (id);
+ALTER TABLE ONLY public.t_ssh_key
+    ADD CONSTRAINT unique_t_ssh_key_user_id_public_key
+    UNIQUE (user_id, public_key, gmt_deleted);
+ALTER TABLE ONLY public.t_ssh_key
+    ADD CONSTRAINT unique_t_ssh_key_user_id_name_key
+    UNIQUE (user_id, name, gmt_deleted);

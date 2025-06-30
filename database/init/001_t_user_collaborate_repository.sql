@@ -16,3 +16,10 @@ COMMENT ON COLUMN public.t_user_collaborate_repository.gmt_created IS 'Timestamp
 COMMENT ON COLUMN public.t_user_collaborate_repository.gmt_updated IS 'Timestamp when the relationship was last updated.';
 COMMENT ON COLUMN public.t_user_collaborate_repository.gmt_deleted IS 'Timestamp when the relationship was deleted.
 If set to NULL, it indicates that the repository has not been deleted.';
+
+-- The constraint of t_user_collaborate_repository is added to the table.
+ALTER TABLE ONLY public.t_user_collaborate_repository
+    ADD CONSTRAINT pk_user_collaborate_repository PRIMARY KEY (id);
+ALTER TABLE ONLY public.t_user_collaborate_repository
+    ADD CONSTRAINT t_user_collaborate_repository_collaborator_id_repository_id
+    UNIQUE (collaborator_id, repository_id, gmt_deleted);

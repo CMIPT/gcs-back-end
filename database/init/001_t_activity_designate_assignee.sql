@@ -18,3 +18,9 @@ COMMENT ON COLUMN public.t_activity_designate_assignee.gmt_updated IS 'Timestamp
 COMMENT ON COLUMN public.t_activity_designate_assignee.gmt_deleted IS 'Timestamp when the relationship was deleted.
 If set to NULL, it indicates that the relationship has not been deleted.';
 
+-- The constraint of t_activity_designate_assignee is added to the table.
+ALTER TABLE ONLY public.t_activity_designate_assignee
+    ADD CONSTRAINT pk_activity_designate_assignee PRIMARY KEY (id);
+ALTER TABLE ONLY public.t_activity_designate_assignee
+    ADD CONSTRAINT t_activity_designate_assignee_activity_id_assignee_id
+    UNIQUE (activity_id, assignee_id, gmt_deleted);

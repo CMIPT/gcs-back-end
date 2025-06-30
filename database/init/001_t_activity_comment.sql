@@ -27,3 +27,7 @@ COMMENT ON COLUMN public.t_activity_comment.gmt_updated IS 'Timestamp when the c
 COMMENT ON COLUMN public.t_activity_comment.gmt_resolved IS 'Timestamp when the comment was resolved. NULL if not resolved.';
 COMMENT ON COLUMN public.t_activity_comment.gmt_hidden IS 'Timestamp when the comment was hidden. NULL if not hidden.';
 COMMENT ON COLUMN public.t_activity_comment.gmt_deleted IS 'Timestamp when the comment was deleted. NULL if not deleted.';
+
+-- The constraint of t_activity_comment is added to the table.
+ALTER TABLE ONLY public.t_activity_comment
+    ADD CONSTRAINT pk_activity_comment PRIMARY KEY (id);

@@ -31,5 +31,11 @@ COMMENT ON COLUMN public.t_activity.gmt_closed IS 'Timestamp when the activity w
 COMMENT ON COLUMN public.t_activity.gmt_locked IS 'Timestamp when the activity was locked. NULL if not locked.';
 COMMENT ON COLUMN public.t_activity.gmt_deleted IS 'Timestamp when the activity was deleted. NULL if not deleted.';
 
-
+-- The constraint of t_activity is added to the table.
+ALTER TABLE ONLY public.t_activity
+    ADD CONSTRAINT pk_activity PRIMARY KEY (id);
+ALTER TABLE ONLY public.t_activity
+    ADD CONSTRAINT t_activity_number_repository_id
+    UNIQUE (number, repository_id, gmt_deleted);
+CREATE INDEX idx_repo_activity ON public.t_activity(repository_id, number DESC);
 

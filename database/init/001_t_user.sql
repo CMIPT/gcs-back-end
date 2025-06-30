@@ -19,3 +19,13 @@ COMMENT ON COLUMN public.t_user.gmt_created IS 'Timestamp when the user record w
 COMMENT ON COLUMN public.t_user.gmt_updated IS 'Timestamp when the user record was last updated.';
 COMMENT ON COLUMN public.t_user.gmt_deleted IS 'Timestamp when the user record was deleted.
 If set to NULL, it indicates that the user information has not been deleted.';
+
+-- The constraint of t_user is added to the table.
+ALTER TABLE ONLY public.t_user
+    ADD CONSTRAINT pk_user PRIMARY KEY (id);
+ALTER TABLE ONLY public.t_user
+    ADD CONSTRAINT unique_t_user_username_email
+    UNIQUE (username, gmt_deleted);
+ALTER TABLE ONLY public.t_user
+    ADD CONSTRAINT unique_t_user_email
+    UNIQUE (email, gmt_deleted);

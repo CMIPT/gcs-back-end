@@ -30,3 +30,9 @@ COMMENT ON COLUMN public.t_repository.gmt_created IS 'Timestamp when the reposit
 COMMENT ON COLUMN public.t_repository.gmt_updated IS 'Timestamp when the repository was last updated.';
 COMMENT ON COLUMN public.t_repository.gmt_deleted IS 'Timestamp when the repository was deleted.
 If set to NULL, it indicates that the repository has not been deleted.';
+
+-- -- The constraint of t_repository is added to the table.
+ALTER TABLE ONLY public.t_repository
+    ADD CONSTRAINT pk_repository PRIMARY KEY (id);
+CREATE UNIQUE INDEX unique_t_repository_name_user_id ON public.t_repository
+    (LOWER(repository_name), user_id, gmt_deleted);

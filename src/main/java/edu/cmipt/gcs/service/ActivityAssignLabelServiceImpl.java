@@ -67,8 +67,8 @@ public class ActivityAssignLabelServiceImpl
                         new LabelVO(
                             label.getId().toString(),
                             label.getName(),
-                            label.getDescription(),
-                            label.getHexColor()),
+                            label.getHexColor(),
+                            label.getDescription()),
                     Collectors.toList())));
   }
 

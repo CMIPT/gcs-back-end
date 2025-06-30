@@ -21,3 +21,16 @@ COMMENT ON COLUMN public.t_label.gmt_created IS 'Timestamp when the label record
 COMMENT ON COLUMN public.t_label.gmt_updated IS 'Timestamp when the label record was last updated.';
 COMMENT ON COLUMN public.t_label.gmt_deleted IS 'Timestamp when the label record was deleted.
 -- If set to NULL, it indicates that the label record has not been deleted.';
+
+-- The constraint of t_label added to the table.
+ALTER TABLE ONLY public.t_label
+    ADD CONSTRAINT pk_label PRIMARY KEY (id);
+ALTER TABLE ONLY public.t_label
+    ADD CONSTRAINT unique_t_label_name_repository_id
+    UNIQUE (name, repository_id, gmt_deleted);
+ALTER TABLE ONLY public.t_label
+    ADD CONSTRAINT unique_t_label_color_repository_id
+    UNIQUE (hex_color, repository_id, gmt_deleted);
+ALTER TABLE ONLY public.t_label
+    ADD CONSTRAINT ck_label_color
+CHECK (hex_color ~ '^#[0-9A-Fa-f]{6}$');
