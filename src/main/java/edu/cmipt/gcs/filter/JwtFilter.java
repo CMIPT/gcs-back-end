@@ -69,7 +69,6 @@ public class JwtFilter extends OncePerRequestFilter {
                   ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH,
                   ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH,
                   ApiPathConstant.ACTIVITY_GET_ACTIVITY_API_PATH,
-                  ApiPathConstant.ACTIVITY_GET_COMMENT_API_PATH,
                   ApiPathConstant.ACTIVITY_PAGE_COMMENT_API_PATH,
                   ApiPathConstant.ACTIVITY_PAGE_LABEL_API_PATH,
                   ApiPathConstant.ACTIVITY_PAGE_ASSIGNEE_API_PATH,

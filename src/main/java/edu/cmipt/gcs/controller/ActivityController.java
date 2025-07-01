@@ -31,8 +31,11 @@ import jakarta.validation.constraints.Min;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import static edu.cmipt.gcs.constant.ApplicationConstant.MAX_RETRY;
 
 @Validated
 @RestController
@@ -42,14 +45,14 @@ public class ActivityController {
 
   @Autowired private UserService userService;
   @Autowired private ActivityService activityService;
-  @Autowired private RepositoryService repositoryService;
   @Autowired private CommentService commentService;
-  @Autowired private UserCollaborateRepositoryService userCollaborateRepositoryService;
   @Autowired private ActivityAssignLabelService activityAssignLabelService;
   @Autowired private ActivityDesignateAssigneeService activityDesignateAssigneeService;
   @Autowired private LabelService labelService;
+  @Autowired private PermissionService permissionService;
 
   // TODO 查询问题子问题
+  // TODO 查询评论子评论
 
   @PostMapping(ApiPathConstant.ACTIVITY_CREATE_ACTIVITY_API_PATH)
   @Operation(
@@ -64,7 +67,7 @@ public class ActivityController {
   })
   public void createActivity(
       @Validated(CreateGroup.class) @RequestBody ActivityDTO activity,
-      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) throws InterruptedException {
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
     Long repositoryId = null;
     try {
@@ -73,22 +76,28 @@ public class ActivityController {
       logger.error(e.getMessage());
       throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
     }
-    checkRepositoryOperationValidity(
+    permissionService.checkRepositoryOperationValidity(
         repositoryId,
         idInToken,
         OperationTypeEnum.WRITE,
         new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId));
-    ActivityPO latestActivityPO = activityService.getLatestActivityByRepositoryId(repositoryId);
-    int activityNumber;
-    if (latestActivityPO == null) {
-      activityNumber = 1;
-    } else {
-      activityNumber = latestActivityPO.getNumber() + 1;
-    }
-    var activityPO = new ActivityPO(activity, activityNumber, idInToken.toString());
-    if (!activityService.save(activityPO)) {
-      throw new GenericException(ErrorCodeEnum.ACTIVITY_CREATE_FAILED, activity);
-    }
+    int retry = 0;
+    while (true) {
+      try {
+          ActivityPO latestActivityPO = activityService.getLatestActivityByRepositoryId(repositoryId);
+          int number = (latestActivityPO == null ? 1 : latestActivityPO.getNumber() + 1);
+          var activityPO = new ActivityPO(activity, number, idInToken.toString());
+          activityService.save(activityPO);
+          return;
+        } catch (DuplicateKeyException e) {
+          retry++;
+          if (retry >= MAX_RETRY) {
+            throw new GenericException(ErrorCodeEnum.ACTIVITY_CREATE_FAILED, activity);
+          }
+          // 短暂 sleep 重试
+          Thread.sleep(50);
+        }
+      }
   }
 
   @DeleteMapping(ApiPathConstant.ACTIVITY_DELETE_ACTIVITY_API_PATH)
@@ -105,22 +114,24 @@ public class ActivityController {
   public void deleteActivity(
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken,
       @RequestParam("id") Long id) {
-    var activityPO = activityService.getById(id);
-    if (activityPO == null) {
-      throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, id);
-    }
-    String userId = JwtUtil.getId(accessToken);
-    // only admin can delete activity
-    if (!userId.equals(activityPO.getUserId().toString())) {
-      logger.info("User[{}] tried to delete activity of user[{}]", userId, activityPO.getUserId());
-      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
-    }
-    if (!activityService.removeById(id)) {
-      throw new GenericException(ErrorCodeEnum.ACTIVITY_DELETE_FAILED, id);
-    }
+    // do not support delete activity by now
+    throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
+//    var activityPO = activityService.getById(id);
+//    if (activityPO == null) {
+//      throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, id);
+//    }
+//    String userId = JwtUtil.getId(accessToken);
+//    // only admin can delete activity
+//    if (!userId.equals(activityPO.getUserId().toString())) {
+//      logger.info("User[{}] tried to delete activity of user[{}]", userId, activityPO.getUserId());
+//      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+//    }
+//    if (!activityService.removeById(id)) {
+//      throw new GenericException(ErrorCodeEnum.ACTIVITY_DELETE_FAILED, id);
+//    }
   }
 
-  // 包括修改状态（关闭，锁）
+  // 包括修改状态（关闭，锁定）
   @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_API_PATH)
   @Operation(
       summary = "Update an activity",
@@ -144,7 +155,7 @@ public class ActivityController {
       logger.error(e.getMessage());
       throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
     }
-    checkActivityOperationValidity(
+    permissionService.checkActivityOperationValidity(
         activityId,
         idInToken,
         OperationTypeEnum.WRITE,
@@ -184,7 +195,7 @@ public class ActivityController {
     if (userPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user);
     }
-    checkRepositoryOperationValidity(
+    permissionService.checkRepositoryOperationValidity(
         repositoryId,
         Long.valueOf(JwtUtil.getId(accessToken)),
         OperationTypeEnum.READ,
@@ -228,7 +239,7 @@ public class ActivityController {
     }
     id = activityPO.getId();
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    checkActivityOperationValidity(
+    permissionService.checkActivityOperationValidity(
         id,
         idInToken,
         OperationTypeEnum.READ,
@@ -238,34 +249,6 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, notFoundMessage);
     }
     return new ActivityDetailVO(activityDetailDTO);
-  }
-
-  @GetMapping(ApiPathConstant.ACTIVITY_GET_COMMENT_API_PATH)
-  @Operation(
-      summary = "Get an activity comment",
-      description = "Get an activity comment by activity id and comment id",
-      tags = {"Activity", "Get Method"})
-  @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Success"),
-    @ApiResponse(
-        description = "Comment not found",
-        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
-  })
-  public CommentVO getActivityComment(
-      @RequestParam("activityId") Long activityId,
-      @RequestParam("commentId") Long commentId,
-      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    checkActivityOperationValidity(
-        activityId,
-        idInToken,
-        OperationTypeEnum.READ,
-        new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, commentId));
-    CommentPO commentPO = commentService.getById(commentId);
-    if (commentPO == null) {
-      throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, commentId);
-    }
-    return new CommentVO(commentPO);
   }
 
   // 修改评论(内容 或者隐藏状态)
@@ -295,7 +278,7 @@ public class ActivityController {
     if (commentPO == null) {
       throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, commentId);
     }
-    checkActivityOperationValidity(
+    permissionService.checkActivityOperationValidity(
         commentPO.getActivityId(),
         idInToken,
         OperationTypeEnum.WRITE,
@@ -324,7 +307,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id);
     }
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    checkActivityOperationValidity(
+    permissionService.checkActivityOperationValidity(
         commentPO.getActivityId(),
         idInToken,
         OperationTypeEnum.WRITE,
@@ -356,7 +339,7 @@ public class ActivityController {
       logger.error(e.getMessage());
       throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
     }
-    checkActivityOperationValidity(
+    permissionService.checkActivityOperationValidity(
         activityId,
         idInToken,
         OperationTypeEnum.WRITE,
@@ -384,7 +367,7 @@ public class ActivityController {
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
 
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    checkActivityOperationValidity(
+    permissionService.checkActivityOperationValidity(
         activityId,
         idInToken,
         OperationTypeEnum.READ,
@@ -412,7 +395,7 @@ public class ActivityController {
       @RequestParam("labelId") Long labelId,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    checkActivityOperationValidity(
+    permissionService.checkActivityOperationValidity(
         activityId,
         idInToken,
         OperationTypeEnum.WRITE,
@@ -461,7 +444,7 @@ public class ActivityController {
       throw new GenericException(
           ErrorCodeEnum.ACTIVITY_NOT_FOUND, activityAssignLabelPO.getActivityId());
     }
-    checkRepositoryOperationValidity(
+    permissionService.checkRepositoryOperationValidity(
         activityPO.getRepositoryId(),
         idInToken,
         OperationTypeEnum.WRITE,
@@ -492,7 +475,7 @@ public class ActivityController {
       @RequestParam("size") @Min(1) Integer size,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    checkActivityOperationValidity(
+    permissionService.checkActivityOperationValidity(
         activityId,
         idInToken,
         OperationTypeEnum.READ,
@@ -523,7 +506,7 @@ public class ActivityController {
     if (UserPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, assigneeId);
     }
-    checkActivityOperationValidity(
+    permissionService.checkActivityOperationValidity(
         activityId,
         idInToken,
         OperationTypeEnum.WRITE,
@@ -559,7 +542,7 @@ public class ActivityController {
     if (activityDesignateAssigneePO == null) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_ASSIGNEE_NOT_FOUND, id);
     }
-    checkActivityOperationValidity(
+    permissionService.checkActivityOperationValidity(
         activityDesignateAssigneePO.getActivityId(),
         idInToken,
         OperationTypeEnum.WRITE,
@@ -591,7 +574,7 @@ public class ActivityController {
       @RequestParam("page") @Min(1) Integer page,
       @RequestParam("size") @Min(1) Integer size,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    checkActivityOperationValidity(
+    permissionService.checkActivityOperationValidity(
         activityId,
         Long.valueOf(JwtUtil.getId(accessToken)),
         OperationTypeEnum.READ,
@@ -603,43 +586,5 @@ public class ActivityController {
         iPage.getTotal(), iPage.getRecords().stream().map(AssigneeVO::new).toList());
   }
 
-  /**
-   * Check the validity of the repository operation.
-   *
-   * @param repositoryId the repository id
-   * @param userId the user id
-   * @param e the message when the repository is not found
-   * @throws GenericException if the repository is private and the user is not the creator or is not
-   *     one of collaborators
-   */
-  private void checkRepositoryOperationValidity(
-      Long repositoryId, Long userId, OperationTypeEnum operationTypeEnum, GenericException e) {
-    // Check if the repository exists
-    var repositoryPO = repositoryService.getById(repositoryId);
-    if (repositoryPO == null) {
-      throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
-    }
-    // If the repository is private, we return NOT_FOUND to make sure the user can't know
-    if (!userId.equals(repositoryPO.getUserId())
-        && userCollaborateRepositoryService.getOneByCollaboratorIdAndRepositoryId(
-                userId, repositoryPO.getId())
-            == null) {
-      logger.debug(
-          "User[{}] tried to get repository of user[{}]", userId, repositoryPO.getUserId());
-      if (repositoryPO.getIsPrivate()) throw e;
-      else if (operationTypeEnum == OperationTypeEnum.WRITE) {
-        throw new GenericException(ErrorCodeEnum.ACCESS_DENIED, repositoryId);
-      }
-    }
-  }
 
-  private void checkActivityOperationValidity(
-      Long activityId, Long idInToken, OperationTypeEnum operationTypeEnum, GenericException e) {
-    var activityPO = activityService.getById(activityId);
-    if (activityPO == null) {
-      throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, activityId);
-    }
-    Long repositoryId = activityPO.getRepositoryId();
-    checkRepositoryOperationValidity(repositoryId, idInToken, operationTypeEnum, e);
-  }
 }

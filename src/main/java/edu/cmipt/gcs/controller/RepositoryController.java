@@ -94,7 +94,7 @@ public class RepositoryController {
   @Autowired private UserCollaborateRepositoryService userCollaborateRepositoryService;
   @Autowired private RedisTemplate<String, Object> redisTemplate;
   @Autowired private LabelService labelService;
-  @Autowired private ActivityService activityService;
+  @Autowired private PermissionService permissionService;
 
   @PostMapping(ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH)
   @Operation(
@@ -587,7 +587,7 @@ public class RepositoryController {
       throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
     }
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    checkRepositoryOperationValidity(
+    permissionService.checkRepositoryOperationValidity(
         repositoryId,
         idInToken,
         OperationTypeEnum.WRITE,
@@ -636,7 +636,7 @@ public class RepositoryController {
       throw new GenericException(ErrorCodeEnum.LABEL_NOT_FOUND, id);
     }
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    checkRepositoryOperationValidity(
+    permissionService.checkRepositoryOperationValidity(
         labelPO.getRepositoryId(),
         idInToken,
         OperationTypeEnum.WRITE,
@@ -666,7 +666,7 @@ public class RepositoryController {
       throw new GenericException(ErrorCodeEnum.LABEL_NOT_FOUND, id);
     }
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    checkRepositoryOperationValidity(
+    permissionService.checkRepositoryOperationValidity(
         labelPO.getRepositoryId(),
         idInToken,
         OperationTypeEnum.WRITE,
@@ -697,7 +697,7 @@ public class RepositoryController {
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
 
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    checkRepositoryOperationValidity(
+    permissionService.checkRepositoryOperationValidity(
         repositoryId,
         idInToken,
         OperationTypeEnum.READ,
@@ -1224,25 +1224,5 @@ public class RepositoryController {
           ErrorCodeEnum.COLLABORATION_ALREADY_EXISTS, collaboratorId, repositoryId);
     }
   }
-
-  private void checkRepositoryOperationValidity(
-      Long repositoryId, Long userId, OperationTypeEnum operationTypeEnum, GenericException e) {
-    // Check if the repository exists
-    var repositoryPO = repositoryService.getById(repositoryId);
-    if (repositoryPO == null) {
-      throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
-    }
-    // If the repository is private, we return NOT_FOUND to make sure the user can't know
-    if (!userId.equals(repositoryPO.getUserId())
-        && userCollaborateRepositoryService.getOneByCollaboratorIdAndRepositoryId(
-                userId, repositoryPO.getId())
-            == null) {
-      logger.debug(
-          "User[{}] tried to get repository of user[{}]", userId, repositoryPO.getUserId());
-      if (repositoryPO.getIsPrivate()) throw e;
-      else if (operationTypeEnum == OperationTypeEnum.WRITE) {
-        throw new GenericException(ErrorCodeEnum.ACCESS_DENIED, repositoryId);
-      }
-    }
-  }
+  
 }

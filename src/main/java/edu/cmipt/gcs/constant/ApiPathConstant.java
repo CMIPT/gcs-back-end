@@ -87,7 +87,6 @@ public class ApiPathConstant {
   public static final String ACTIVITY_UPDATE_ACTIVITY_API_PATH = ACTIVITY_API_PREFIX + "/update";
   public static final String ACTIVITY_PAGE_ACTIVITY_API_PATH = ACTIVITY_API_PREFIX + "/page";
 
-  public static final String ACTIVITY_GET_COMMENT_API_PATH = ACTIVITY_API_PREFIX + "/get-comment";
   public static final String ACTIVITY_CREATE_COMMENT_API_PATH =
       ACTIVITY_API_PREFIX + "/create-comment";
   public static final String ACTIVITY_UPDATE_COMMENT_API_PATH =

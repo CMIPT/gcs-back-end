@@ -68,11 +68,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
 
   @Override
   public ActivityPO getLatestActivityByRepositoryId(Long repositoryId) {
-    return super.getOne(
-        new QueryWrapper<ActivityPO>()
-            .eq("repository_id", repositoryId)
-            .orderByDesc("gmt_created")
-            .last("LIMIT 1"));
+    return activityMapper.getLatestActivityIgnoreLogicDeleted(repositoryId);
   }
 
   @Override
@@ -157,7 +153,6 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
     return activityDetailDTOPage;
   }
 
-  // todo 需要修改 暂时不对
   @Override
   public ActivityDetailDTO getDetailedOneById(Long id) {
     var queryWrapper =

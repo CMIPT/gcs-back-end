@@ -22,5 +22,5 @@ If set to NULL, it indicates that the relationship has not been deleted.';
 ALTER TABLE ONLY public.t_activity_assign_label
     ADD CONSTRAINT pk_activity_assign_label PRIMARY KEY (id);
 ALTER TABLE ONLY public.t_activity_assign_label
-    ADD CONSTRAINT t_activity_assign_label_user_id_activity_id_label_id
+    ADD CONSTRAINT t_activity_assign_label_activity_id_label_id
     UNIQUE (activity_id, label_id, gmt_deleted);

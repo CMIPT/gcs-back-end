@@ -29,8 +29,5 @@ ALTER TABLE ONLY public.t_label
     ADD CONSTRAINT unique_t_label_name_repository_id
     UNIQUE (name, repository_id, gmt_deleted);
 ALTER TABLE ONLY public.t_label
-    ADD CONSTRAINT unique_t_label_color_repository_id
-    UNIQUE (hex_color, repository_id, gmt_deleted);
-ALTER TABLE ONLY public.t_label
     ADD CONSTRAINT ck_label_color
 CHECK (hex_color ~ '^#[0-9A-Fa-f]{6}$');

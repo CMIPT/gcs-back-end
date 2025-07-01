@@ -36,6 +36,4 @@ ALTER TABLE ONLY public.t_activity
     ADD CONSTRAINT pk_activity PRIMARY KEY (id);
 ALTER TABLE ONLY public.t_activity
     ADD CONSTRAINT t_activity_number_repository_id
-    UNIQUE (number, repository_id, gmt_deleted);
-CREATE INDEX idx_repo_activity ON public.t_activity(repository_id, number DESC);
-
+    UNIQUE (number, repository_id);
