@@ -65,10 +65,6 @@ public class RepositoryPO {
     }
   }
 
-  public RepositoryPO(RepositoryDTO repositoryDTO, String userId, String username) {
-    this(repositoryDTO, userId, username, false);
-  }
-
   public RepositoryPO(RepositoryDTO repositoryDTO) {
     this(repositoryDTO, null, null, false);
   }
