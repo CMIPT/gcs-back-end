@@ -14,5 +14,5 @@ public class ApplicationConstant {
   public static final int MAX_PAGE_TOTAL_COUNT = 1000; // maximum total count for pagination
   public static final long EMAIL_VERIFICATION_CODE_COOL_DOWN_TIME =
       min(60 * 1000L, EMAIL_VERIFICATION_CODE_EXPIRATION); // 1 minute
-  public static final int MAX_RETRY = 5; // maximum retry count for operations
+  public static final int CREATE_LABEL_MAX_RETRY_TIMES = 5; // maximum retry count for operations
 }

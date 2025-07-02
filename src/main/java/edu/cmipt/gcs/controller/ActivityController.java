@@ -3,6 +3,7 @@ package edu.cmipt.gcs.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import edu.cmipt.gcs.constant.ApiPathConstant;
+import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.enumeration.*;
 import edu.cmipt.gcs.exception.GenericException;
@@ -32,10 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import static edu.cmipt.gcs.constant.ApplicationConstant.MAX_RETRY;
 
 @Validated
 @RestController
@@ -91,7 +90,7 @@ public class ActivityController {
           return;
         } catch (DuplicateKeyException e) {
           retry++;
-          if (retry >= MAX_RETRY) {
+          if (retry >= ApplicationConstant.CREATE_LABEL_MAX_RETRY_TIMES) {
             throw new GenericException(ErrorCodeEnum.ACTIVITY_CREATE_FAILED, activity);
           }
           // 短暂 sleep 重试

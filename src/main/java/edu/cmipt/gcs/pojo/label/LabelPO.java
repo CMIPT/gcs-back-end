@@ -30,6 +30,17 @@ public class LabelPO {
   @TableLogic private Timestamp gmtDeleted;
 
   public LabelPO(Long userId, LabelDTO labelDTO) {
+    this(
+        null,
+        userId,
+        null,
+        labelDTO.name(),
+        labelDTO.description(),
+        labelDTO.hexColor(),
+        null,
+        null,
+        null
+    );
     try {
       this.id = Long.valueOf(labelDTO.id());
     } catch (NumberFormatException e) {
@@ -40,9 +51,5 @@ public class LabelPO {
     } catch (NumberFormatException e) {
       this.repositoryId = null;
     }
-    this.userId = userId;
-    this.name = labelDTO.name();
-    this.description = labelDTO.description();
-    this.hexColor = labelDTO.hexColor();
   }
 }

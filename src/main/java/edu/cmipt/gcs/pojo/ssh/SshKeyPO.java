@@ -28,6 +28,15 @@ public class SshKeyPO {
   @TableLogic private Timestamp gmtDeleted;
 
   public SshKeyPO(SshKeyDTO sshKeyDTO, String userId) {
+    this(
+        null,
+        null,
+        sshKeyDTO.name(),
+        sshKeyDTO.publicKey(),
+        null,
+        null,
+        null
+    );
     try {
       this.id = Long.valueOf(sshKeyDTO.id());
     } catch (NumberFormatException e) {
@@ -38,8 +47,6 @@ public class SshKeyPO {
     } catch (NumberFormatException e) {
       this.userId = null;
     }
-    this.name = sshKeyDTO.name();
-    this.publicKey = sshKeyDTO.publicKey();
   }
 
   public SshKeyPO(SshKeyDTO sshKeyDTO) {

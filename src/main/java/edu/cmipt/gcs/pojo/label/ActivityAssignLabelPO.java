@@ -28,8 +28,14 @@ public class ActivityAssignLabelPO {
   @TableLogic private Timestamp gmtDeleted;
 
   public ActivityAssignLabelPO(Long userId, Long activityId, Long labelId) {
-    this.userId = userId;
-    this.activityId = activityId;
-    this.labelId = labelId;
+    this(
+        null,
+        userId,
+        activityId,
+        labelId,
+        null,
+        null,
+        null
+    );
   }
 }

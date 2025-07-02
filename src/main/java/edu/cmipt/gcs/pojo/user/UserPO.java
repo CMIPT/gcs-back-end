@@ -30,14 +30,26 @@ public class UserPO {
   @TableLogic private Timestamp gmtDeleted;
 
   public UserPO(UserCreateDTO user) {
-    this.username = user.username();
-    this.email = user.email();
-    this.userPassword = MD5Converter.convertToMD5(user.userPassword());
+    this(null,
+        user.username(),
+        user.email(),
+        MD5Converter.convertToMD5(user.userPassword()),
+            null,
+            null,
+            null,
+            null);
   }
 
   public UserPO(UserUpdateDTO user, Long id) {
-    this.id = id;
-    this.username = user.username();
-    this.avatarUrl = user.avatarUrl();
+    this(
+        id,
+        user.username(),
+        null,
+        null,
+        user.avatarUrl(),
+        null,
+        null,
+        null
+    );
   }
 }

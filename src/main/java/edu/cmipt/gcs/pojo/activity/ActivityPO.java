@@ -34,6 +34,21 @@ public class ActivityPO {
   @TableLogic private Timestamp gmtDeleted;
 
   public ActivityPO(ActivityDTO activityDTO, Integer activityNumber, String userId) {
+    this(
+        null,
+        activityNumber,
+        null,
+        null,
+        activityDTO.title(),
+        activityDTO.description(),
+        activityDTO.isPullRequest(),
+        null,
+        activityDTO.gmtClosed(),
+        activityDTO.gmtLocked(),
+        null,
+        null,
+        null
+    );
     try {
       this.id = Long.valueOf(activityDTO.id());
     } catch (NumberFormatException e) {
@@ -49,12 +64,6 @@ public class ActivityPO {
     } catch (NumberFormatException e) {
       this.userId = null;
     }
-    this.number = activityNumber;
-    this.isPullRequest = false;
-    this.title = activityDTO.title();
-    this.description = activityDTO.description();
-    this.gmtClosed = activityDTO.gmtClosed();
-    this.gmtLocked = activityDTO.gmtLocked();
   }
 
   public ActivityPO(ActivityDTO activityDTO) {

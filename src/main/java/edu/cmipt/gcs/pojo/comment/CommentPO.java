@@ -33,6 +33,20 @@ public class CommentPO {
   @TableLogic private Timestamp gmtDeleted;
 
   public CommentPO(CommentDTO comment, Long idInToken) {
+    this(
+        null,
+        null,
+        idInToken,
+        comment.content(),
+        comment.codePath(),
+        comment.codeLine(),
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    );
     try {
       this.id = Long.valueOf(comment.id());
     } catch (NumberFormatException e) {
@@ -43,10 +57,6 @@ public class CommentPO {
     } catch (NumberFormatException e) {
       this.activityId = null;
     }
-    this.userId = idInToken;
-    this.content = comment.content();
-    this.codePath = comment.codePath();
-    this.codeLine = comment.codeLine();
     try {
       this.parentId = Long.valueOf(comment.parentId());
     } catch (NumberFormatException e) {
