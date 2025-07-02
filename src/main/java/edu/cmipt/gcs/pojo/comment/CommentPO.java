@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.sql.Timestamp;
-
 import edu.cmipt.gcs.util.TypeConversionUtil;
+import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -47,8 +46,7 @@ public class CommentPO {
         null,
         null,
         null,
-        null
-    );
+        null);
     this.id = TypeConversionUtil.convertToLong(comment.id());
     this.activityId = TypeConversionUtil.convertToLong(comment.activityId());
     this.parentId = TypeConversionUtil.convertToLong(comment.parentId());
@@ -58,17 +56,19 @@ public class CommentPO {
 
   private Timestamp getHiddenTimeSinceEpoch(Boolean isHidden) {
     if (isHidden != null && isHidden) {
-        return this.gmtHidden != null ? this.gmtHidden : new Timestamp(System.currentTimeMillis());
+      return this.gmtHidden != null ? this.gmtHidden : new Timestamp(System.currentTimeMillis());
     } else {
-        return null;
+      return null;
     }
   }
 
   private Timestamp getResolvedTimeSinceEpoch(Boolean isResolved) {
     if (isResolved != null && isResolved) {
-        return this.gmtResolved != null ? this.gmtResolved : new Timestamp(System.currentTimeMillis());
+      return this.gmtResolved != null
+          ? this.gmtResolved
+          : new Timestamp(System.currentTimeMillis());
     } else {
-        return null;
+      return null;
     }
   }
 }

@@ -5,10 +5,9 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import edu.cmipt.gcs.constant.GitConstant;
+import edu.cmipt.gcs.util.TypeConversionUtil;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
-
-import edu.cmipt.gcs.util.TypeConversionUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -52,8 +51,7 @@ public class RepositoryPO {
         null,
         null,
         null,
-        null
-    );
+        null);
     this.id = TypeConversionUtil.convertToLong(repositoryDTO.id());
     this.userId = TypeConversionUtil.convertToLong(userId);
     if (this.repositoryDescription == null) {

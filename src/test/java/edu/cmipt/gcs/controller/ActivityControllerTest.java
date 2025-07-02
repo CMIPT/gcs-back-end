@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.cmipt.gcs.constant.ApiPathConstant;
@@ -17,10 +16,7 @@ import edu.cmipt.gcs.constant.TestConstant;
 import edu.cmipt.gcs.enumeration.ActivityOrderByEnum;
 import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.pojo.activity.ActivityDetailVO;
-import edu.cmipt.gcs.pojo.assign.ActivityDesignateAssigneePO;
 import edu.cmipt.gcs.pojo.assign.AssigneeVO;
-import edu.cmipt.gcs.pojo.comment.CommentPO;
-import edu.cmipt.gcs.pojo.label.ActivityAssignLabelPO;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.service.ActivityAssignLabelService;
 import edu.cmipt.gcs.service.ActivityDesignateAssigneeService;
@@ -96,7 +92,8 @@ public class ActivityControllerTest {
             if (repositoryId.equals(TestConstant.REPOSITORY_ID)) {
               TestConstant.REPOSITORY_ACTIVITY_NUMBER = pageVO.records().get(0).number();
               TestConstant.REPOSITORY_ACTIVITY_ID = pageVO.records().get(0).id();
-              TestConstant.REPOSITORY_DELETE_ACTIVITY_ID = pageVO.records().get(TestConstant.ACTIVITY_SIZE-1).id();
+              TestConstant.REPOSITORY_DELETE_ACTIVITY_ID =
+                  pageVO.records().get(TestConstant.ACTIVITY_SIZE - 1).id();
             } else if (repositoryId.equals(TestConstant.OTHER_REPOSITORY_ID)) {
               TestConstant.OTHER_REPOSITORY_ACTIVITY_NUMBER = pageVO.records().get(0).number();
               TestConstant.OTHER_REPOSITORY_ACTIVITY_ID = pageVO.records().get(0).id();
@@ -771,24 +768,24 @@ public class ActivityControllerTest {
                 .param("id", TestConstant.REPOSITORY_DELETE_ACTIVITY_ID))
         .andExpectAll(status().isNotImplemented());
 
-//    //  Verify that comments、labels and assignees are removed when the activity is deleted
-//    long CommentCnt =
-//        commentService.count(
-//            new QueryWrapper<CommentPO>()
-//                .eq("activity_id", Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)));
-//    long labelCnt =
-//        activityAssignLabelService.count(
-//            new QueryWrapper<ActivityAssignLabelPO>()
-//                .eq("activity_id", Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)));
-//    long assigneeCnt =
-//        activityDesignateAssigneeService.count(
-//            new QueryWrapper<ActivityDesignateAssigneePO>()
-//                .eq("activity_id", Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)));
-//    Assertions.assertEquals(0, CommentCnt);
-//    Assertions.assertEquals(0, labelCnt);
-//    Assertions.assertEquals(0, assigneeCnt);
-//    TestConstant.REPOSITORY_DELETE_ACTIVITY_ID = null;
-//    TestConstant.ACTIVITY_SIZE--;
+    //    //  Verify that comments、labels and assignees are removed when the activity is deleted
+    //    long CommentCnt =
+    //        commentService.count(
+    //            new QueryWrapper<CommentPO>()
+    //                .eq("activity_id", Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)));
+    //    long labelCnt =
+    //        activityAssignLabelService.count(
+    //            new QueryWrapper<ActivityAssignLabelPO>()
+    //                .eq("activity_id", Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)));
+    //    long assigneeCnt =
+    //        activityDesignateAssigneeService.count(
+    //            new QueryWrapper<ActivityDesignateAssigneePO>()
+    //                .eq("activity_id", Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)));
+    //    Assertions.assertEquals(0, CommentCnt);
+    //    Assertions.assertEquals(0, labelCnt);
+    //    Assertions.assertEquals(0, assigneeCnt);
+    //    TestConstant.REPOSITORY_DELETE_ACTIVITY_ID = null;
+    //    TestConstant.ACTIVITY_SIZE--;
   }
 
   @Test
@@ -805,28 +802,28 @@ public class ActivityControllerTest {
   public void testAssignActivityNumberValid() throws Exception {
     // create a new activity to update the activity latest number
     String activityDTO =
-            """
-            {
-                "repositoryId": "%s",
-                "title": "Test Activity",
-                "description": "This is a test activity ,which is used to verify the activity number assignment",
-                "isPullRequest": false
-            }
-            """
-                    .formatted(TestConstant.REPOSITORY_ID);
+        """
+        {
+            "repositoryId": "%s",
+            "title": "Test Activity",
+            "description": "This is a test activity ,which is used to verify the activity number assignment",
+            "isPullRequest": false
+        }
+        """
+            .formatted(TestConstant.REPOSITORY_ID);
     var result = activityCreator.apply(TestConstant.ACCESS_TOKEN, activityDTO);
     if (result != null) {
       throw result;
     }
-//    TestConstant.ACTIVITY_SIZE++;  // Used in conjunction with deletion activity test
-    // verify the number of new activity doesn't duplicate in the repository, includes the deleted activity
+    //    TestConstant.ACTIVITY_SIZE++;  // Used in conjunction with deletion activity test
+    // verify the number of new activity doesn't duplicate in the repository, includes the deleted
+    // activity
     // the number should be equal to the activity size + 1
     mvc.perform(
-                    get(ApiPathConstant.ACTIVITY_GET_ACTIVITY_API_PATH)
-                            .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                            .param("activityNumber", String.valueOf(TestConstant.ACTIVITY_SIZE + 1))
-                            .param("repositoryId", TestConstant.REPOSITORY_ID))
-            .andExpectAll(
-                    status().isOk());
+            get(ApiPathConstant.ACTIVITY_GET_ACTIVITY_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("activityNumber", String.valueOf(TestConstant.ACTIVITY_SIZE + 1))
+                .param("repositoryId", TestConstant.REPOSITORY_ID))
+        .andExpectAll(status().isOk());
   }
 }

@@ -588,9 +588,7 @@ public class RepositoryController {
     }
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
     permissionService.checkRepositoryOperationValidity(
-        repositoryId,
-        idInToken,
-        OperationTypeEnum.WRITE);
+        repositoryId, idInToken, OperationTypeEnum.WRITE);
     String labelName = label.name();
     String labelHexColor = label.hexColor();
     if (labelService.getOneByNameAndRepositoryId(labelName, repositoryId) != null) {
@@ -636,9 +634,7 @@ public class RepositoryController {
     }
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
     permissionService.checkRepositoryOperationValidity(
-        labelPO.getRepositoryId(),
-        idInToken,
-        OperationTypeEnum.WRITE);
+        labelPO.getRepositoryId(), idInToken, OperationTypeEnum.WRITE);
     if (!labelService.updateById(new LabelPO(idInToken, label))) {
       logger.error("Failed to update label[{}]", id);
       throw new GenericException(ErrorCodeEnum.LABEL_UPDATE_FAILED, label);
@@ -665,9 +661,7 @@ public class RepositoryController {
     }
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
     permissionService.checkRepositoryOperationValidity(
-        labelPO.getRepositoryId(),
-        idInToken,
-        OperationTypeEnum.WRITE);
+        labelPO.getRepositoryId(), idInToken, OperationTypeEnum.WRITE);
     if (!labelService.removeById(id)) {
       logger.error("Failed to delete label[{}]", id);
       throw new GenericException(ErrorCodeEnum.LABEL_DELETE_FAILED, id);
@@ -695,9 +689,7 @@ public class RepositoryController {
 
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
     permissionService.checkRepositoryOperationValidity(
-        repositoryId,
-        idInToken,
-        OperationTypeEnum.READ);
+        repositoryId, idInToken, OperationTypeEnum.READ);
     var wrapper = new QueryWrapper<LabelPO>();
     wrapper.eq("repository_id", repositoryId);
     wrapper.orderBy(true, isAsc, orderBy.getFieldName());
@@ -1220,5 +1212,4 @@ public class RepositoryController {
           ErrorCodeEnum.COLLABORATION_ALREADY_EXISTS, collaboratorId, repositoryId);
     }
   }
-  
 }

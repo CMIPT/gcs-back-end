@@ -28,14 +28,6 @@ public class ActivityDesignateAssigneePO {
   @TableLogic private Timestamp gmtDeleted;
 
   public ActivityDesignateAssigneePO(Long idInToken, Long activityId, Long assigneeId) {
-    this(
-        null,
-        activityId,
-        assigneeId,
-        idInToken,
-        null,
-        null,
-        null
-    );
+    this(null, activityId, assigneeId, idInToken, null, null, null);
   }
 }

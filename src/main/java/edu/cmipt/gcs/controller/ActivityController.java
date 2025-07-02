@@ -66,7 +66,8 @@ public class ActivityController {
   })
   public void createActivity(
       @Validated(CreateGroup.class) @RequestBody ActivityDTO activity,
-      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) throws InterruptedException {
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken)
+      throws InterruptedException {
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
     Long repositoryId = null;
     try {
@@ -76,26 +77,24 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
     }
     permissionService.checkRepositoryOperationValidity(
-        repositoryId,
-        idInToken,
-        OperationTypeEnum.WRITE);
+        repositoryId, idInToken, OperationTypeEnum.WRITE);
     int retry = 0;
     while (true) {
       try {
-          ActivityPO latestActivityPO = activityService.getLatestActivityByRepositoryId(repositoryId);
-          int number = (latestActivityPO == null ? 1 : latestActivityPO.getNumber() + 1);
-          var activityPO = new ActivityPO(activity, number, idInToken.toString());
-          activityService.save(activityPO);
-          return;
-        } catch (DuplicateKeyException e) {
-          retry++;
-          if (retry >= ApplicationConstant.CREATE_LABEL_MAX_RETRY_TIMES) {
-            throw new GenericException(ErrorCodeEnum.ACTIVITY_CREATE_FAILED, activity);
-          }
-          // 短暂 sleep 重试
-          Thread.sleep(50);
+        ActivityPO latestActivityPO = activityService.getLatestActivityByRepositoryId(repositoryId);
+        int number = (latestActivityPO == null ? 1 : latestActivityPO.getNumber() + 1);
+        var activityPO = new ActivityPO(activity, number, idInToken.toString());
+        activityService.save(activityPO);
+        return;
+      } catch (DuplicateKeyException e) {
+        retry++;
+        if (retry >= ApplicationConstant.CREATE_LABEL_MAX_RETRY_TIMES) {
+          throw new GenericException(ErrorCodeEnum.ACTIVITY_CREATE_FAILED, activity);
         }
+        // 短暂 sleep 重试
+        Thread.sleep(50);
       }
+    }
   }
 
   @DeleteMapping(ApiPathConstant.ACTIVITY_DELETE_ACTIVITY_API_PATH)
@@ -114,19 +113,20 @@ public class ActivityController {
       @RequestParam("id") Long id) {
     // do not support delete activity by now
     throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
-//    var activityPO = activityService.getById(id);
-//    if (activityPO == null) {
-//      throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, id);
-//    }
-//    String userId = JwtUtil.getId(accessToken);
-//    // only admin can delete activity
-//    if (!userId.equals(activityPO.getUserId().toString())) {
-//      logger.info("User[{}] tried to delete activity of user[{}]", userId, activityPO.getUserId());
-//      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
-//    }
-//    if (!activityService.removeById(id)) {
-//      throw new GenericException(ErrorCodeEnum.ACTIVITY_DELETE_FAILED, id);
-//    }
+    //    var activityPO = activityService.getById(id);
+    //    if (activityPO == null) {
+    //      throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, id);
+    //    }
+    //    String userId = JwtUtil.getId(accessToken);
+    //    // only admin can delete activity
+    //    if (!userId.equals(activityPO.getUserId().toString())) {
+    //      logger.info("User[{}] tried to delete activity of user[{}]", userId,
+    // activityPO.getUserId());
+    //      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+    //    }
+    //    if (!activityService.removeById(id)) {
+    //      throw new GenericException(ErrorCodeEnum.ACTIVITY_DELETE_FAILED, id);
+    //    }
   }
 
   // 包括修改状态（关闭，锁定）
@@ -154,9 +154,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
     }
     permissionService.checkActivityOperationValidity(
-        activityId,
-        idInToken,
-        OperationTypeEnum.WRITE);
+        activityId, idInToken, OperationTypeEnum.WRITE);
     if (!activityService.updateById(new ActivityPO(activity))) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, activityId);
     }
@@ -193,9 +191,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user);
     }
     permissionService.checkRepositoryOperationValidity(
-        repositoryId,
-        Long.valueOf(JwtUtil.getId(accessToken)),
-        OperationTypeEnum.READ);
+        repositoryId, Long.valueOf(JwtUtil.getId(accessToken)), OperationTypeEnum.READ);
     var iPage = activityService.pageActivities(activityQueryDTO, new Page<>(page, size));
     return new PageVO<>(
         iPage.getTotal(), iPage.getRecords().stream().map(ActivityDetailVO::new).toList());
@@ -235,10 +231,7 @@ public class ActivityController {
     }
     id = activityPO.getId();
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    permissionService.checkActivityOperationValidity(
-        id,
-        idInToken,
-        OperationTypeEnum.READ);
+    permissionService.checkActivityOperationValidity(id, idInToken, OperationTypeEnum.READ);
     ActivityDetailDTO activityDetailDTO = activityService.getDetailedOneById(id);
     if (activityDetailDTO == null) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, notFoundMessage);
@@ -274,9 +267,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, commentId);
     }
     permissionService.checkActivityOperationValidity(
-        commentPO.getActivityId(),
-        idInToken,
-        OperationTypeEnum.WRITE);
+        commentPO.getActivityId(), idInToken, OperationTypeEnum.WRITE);
     if (!commentService.updateById(new CommentPO(comment, idInToken))) {
       throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, comment);
     }
@@ -302,9 +293,7 @@ public class ActivityController {
     }
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
     permissionService.checkActivityOperationValidity(
-        commentPO.getActivityId(),
-        idInToken,
-        OperationTypeEnum.WRITE);
+        commentPO.getActivityId(), idInToken, OperationTypeEnum.WRITE);
     if (!commentService.removeById(id)) {
       throw new GenericException(ErrorCodeEnum.COMMENT_DELETE_FAILED, id);
     }
@@ -333,9 +322,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
     }
     permissionService.checkActivityOperationValidity(
-        activityId,
-        idInToken,
-        OperationTypeEnum.WRITE);
+        activityId, idInToken, OperationTypeEnum.WRITE);
     if (!commentService.save(new CommentPO(comment, idInToken))) {
       throw new GenericException(ErrorCodeEnum.COMMENT_CREATE_FAILED, comment);
     }
@@ -359,10 +346,7 @@ public class ActivityController {
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
 
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    permissionService.checkActivityOperationValidity(
-        activityId,
-        idInToken,
-        OperationTypeEnum.READ);
+    permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
     var wrapper = new QueryWrapper<CommentPO>();
     wrapper.eq("activity_id", activityId);
     wrapper.orderBy(true, true, "gmt_created");
@@ -387,9 +371,7 @@ public class ActivityController {
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
     permissionService.checkActivityOperationValidity(
-        activityId,
-        idInToken,
-        OperationTypeEnum.WRITE);
+        activityId, idInToken, OperationTypeEnum.WRITE);
     // 检查这个标签是否存在于当前活动对应的仓库中
     var activityPO = activityService.getById(activityId);
     if (activityPO == null) {
@@ -435,9 +417,7 @@ public class ActivityController {
           ErrorCodeEnum.ACTIVITY_NOT_FOUND, activityAssignLabelPO.getActivityId());
     }
     permissionService.checkRepositoryOperationValidity(
-        activityPO.getRepositoryId(),
-        idInToken,
-        OperationTypeEnum.WRITE);
+        activityPO.getRepositoryId(), idInToken, OperationTypeEnum.WRITE);
     if (!activityAssignLabelService.removeById(id)) {
       throw new GenericException(
           ErrorCodeEnum.ACTIVITY_DELETE_LABEL_FAILED, activityPO.getId(), id);
@@ -464,10 +444,7 @@ public class ActivityController {
       @RequestParam("size") @Min(1) Integer size,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    permissionService.checkActivityOperationValidity(
-        activityId,
-        idInToken,
-        OperationTypeEnum.READ);
+    permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
     var iPage =
         activityAssignLabelService.pageActivityLabelsByActivityId(
             activityId, new Page<>(page, size));
@@ -495,9 +472,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, assigneeId);
     }
     permissionService.checkActivityOperationValidity(
-        activityId,
-        idInToken,
-        OperationTypeEnum.WRITE);
+        activityId, idInToken, OperationTypeEnum.WRITE);
     if (activityDesignateAssigneeService.getOneByActivityIdAndAssigneeId(activityId, assigneeId)
         != null) {
       throw new GenericException(
@@ -530,9 +505,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_ASSIGNEE_NOT_FOUND, id);
     }
     permissionService.checkActivityOperationValidity(
-        activityDesignateAssigneePO.getActivityId(),
-        idInToken,
-        OperationTypeEnum.WRITE);
+        activityDesignateAssigneePO.getActivityId(), idInToken, OperationTypeEnum.WRITE);
     if (!activityDesignateAssigneeService.removeById(id)) {
       throw new GenericException(
           ErrorCodeEnum.ACTIVITY_DELETE_ASSIGNEE_FAILED,
@@ -561,15 +534,11 @@ public class ActivityController {
       @RequestParam("size") @Min(1) Integer size,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     permissionService.checkActivityOperationValidity(
-        activityId,
-        Long.valueOf(JwtUtil.getId(accessToken)),
-        OperationTypeEnum.READ);
+        activityId, Long.valueOf(JwtUtil.getId(accessToken)), OperationTypeEnum.READ);
     var iPage =
         activityDesignateAssigneeService.pageActivityAssigneesByActivityId(
             activityId, new Page<>(page, size));
     return new PageVO<>(
         iPage.getTotal(), iPage.getRecords().stream().map(AssigneeVO::new).toList());
   }
-
-
 }

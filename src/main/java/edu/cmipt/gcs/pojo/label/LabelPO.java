@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.sql.Timestamp;
-
 import edu.cmipt.gcs.util.TypeConversionUtil;
+import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -41,8 +40,7 @@ public class LabelPO {
         labelDTO.hexColor(),
         null,
         null,
-        null
-    );
+        null);
     this.id = TypeConversionUtil.convertToLong(labelDTO.id());
     this.repositoryId = TypeConversionUtil.convertToLong(labelDTO.repositoryId());
   }
