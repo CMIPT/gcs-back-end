@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.sql.Timestamp;
+
+import edu.cmipt.gcs.util.TypeConversionUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -47,31 +49,26 @@ public class CommentPO {
         null,
         null
     );
-    try {
-      this.id = Long.valueOf(comment.id());
-    } catch (NumberFormatException e) {
-      this.id = null;
-    }
-    try {
-      this.activityId = Long.valueOf(comment.activityId());
-    } catch (NumberFormatException e) {
-      this.activityId = null;
-    }
-    try {
-      this.parentId = Long.valueOf(comment.parentId());
-    } catch (NumberFormatException e) {
-      this.parentId = null;
-    }
-    if (comment.isResolved() != null && comment.isResolved()) {
-      this.gmtResolved = new Timestamp(System.currentTimeMillis());
-    } else {
-      this.gmtResolved = null;
-    }
+    this.id = TypeConversionUtil.convertToLong(comment.id());
+    this.activityId = TypeConversionUtil.convertToLong(comment.activityId());
+    this.parentId = TypeConversionUtil.convertToLong(comment.parentId());
+    this.gmtResolved = getResolvedTimeSinceEpoch(comment.isResolved());
+    this.gmtHidden = getHiddenTimeSinceEpoch(comment.isHidden());
+  }
 
-    if (comment.isHidden() != null && comment.isHidden()) {
-      this.gmtHidden = new Timestamp(System.currentTimeMillis());
+  private Timestamp getHiddenTimeSinceEpoch(Boolean isHidden) {
+    if (isHidden != null && isHidden) {
+        return this.gmtHidden != null ? this.gmtHidden : new Timestamp(System.currentTimeMillis());
     } else {
-      this.gmtHidden = null;
+        return null;
+    }
+  }
+
+  private Timestamp getResolvedTimeSinceEpoch(Boolean isResolved) {
+    if (isResolved != null && isResolved) {
+        return this.gmtResolved != null ? this.gmtResolved : new Timestamp(System.currentTimeMillis());
+    } else {
+        return null;
     }
   }
 }

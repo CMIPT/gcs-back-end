@@ -10,13 +10,20 @@ public interface PermissionService {
      * @param repositoryId the repository id
      * @param userId the user id
      * @param operationTypeEnum the operation type
-     * @param e the message when the repository is not found
      * @throws GenericException if the repository is private and the user is not the creator or is not
      *     one of collaborators
      */
     void checkRepositoryOperationValidity(
-            Long repositoryId, Long userId, OperationTypeEnum operationTypeEnum, GenericException e);
+            Long repositoryId, Long userId, OperationTypeEnum operationTypeEnum);
 
+    /**
+     * Check the validity of the activity operation.
+     *
+     * @param activityId the activity id
+     * @param userId the user id
+     * @param operationTypeEnum the operation type
+     * @throws GenericException if activity not found or check repository operation validity failed
+     */
     void checkActivityOperationValidity(
-            Long activityId, Long userId, OperationTypeEnum operationTypeEnum, GenericException e);
+            Long activityId, Long userId, OperationTypeEnum operationTypeEnum);
 }

@@ -13,16 +13,15 @@ import java.util.Objects;
 
 @Service
 public class PermissionServiceImpl implements PermissionService{
+    private static final Logger logger = LoggerFactory.getLogger(PermissionServiceImpl.class);
 
-    @Autowired
-    private UserService userService;
     @Autowired private ActivityService activityService;
     @Autowired private RepositoryService repositoryService;
     @Autowired private UserCollaborateRepositoryService userCollaborateRepositoryService;
-    private static final Logger logger = LoggerFactory.getLogger(PermissionServiceImpl.class);
+
     @Override
     public void checkRepositoryOperationValidity(
-            Long repositoryId, Long userId, OperationTypeEnum operationTypeEnum, GenericException e) {
+            Long repositoryId, Long userId, OperationTypeEnum operationTypeEnum) {
         // Check if the repository exists
         var repositoryPO = repositoryService.getById(repositoryId);
         if (repositoryPO == null) {
@@ -36,7 +35,7 @@ public class PermissionServiceImpl implements PermissionService{
                     "User[{}] tried to get repository of user[{}]", userId, repositoryPO.getUserId());
             // If the repository is private, we return NOT_FOUND to make sure the user can't know
             if (repositoryPO.getIsPrivate()) {
-                throw e;
+                throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
             }
             else if (operationTypeEnum == OperationTypeEnum.WRITE) {
                 throw new GenericException(ErrorCodeEnum.ACCESS_DENIED, repositoryId);
@@ -46,17 +45,17 @@ public class PermissionServiceImpl implements PermissionService{
 
     @Override
     public void checkActivityOperationValidity(
-            Long activityId, Long idInToken, OperationTypeEnum operationTypeEnum, GenericException e) {
+            Long activityId, Long idInToken, OperationTypeEnum operationTypeEnum) {
         var activityPO = activityService.getById(activityId);
         if (activityPO == null) {
             throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, activityId);
         }
-        // whatever the activity is public or private,
+        // whatever the repository is public or private,
         // the corresponding repository must be visible to activity creator,
         // so we just need check if idInToken is equal to one of activity creator id ,repository creator id, repository collaborator id
         if(!Objects.equals(idInToken, activityPO.getUserId())) {
             Long repositoryId = activityPO.getRepositoryId();
-            checkRepositoryOperationValidity(repositoryId, idInToken, operationTypeEnum, e);
+            checkRepositoryOperationValidity(repositoryId, idInToken, operationTypeEnum);
         }
     }
 }

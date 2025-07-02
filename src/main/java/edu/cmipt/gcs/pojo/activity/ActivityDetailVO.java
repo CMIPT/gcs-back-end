@@ -14,7 +14,7 @@ public record ActivityDetailVO(
     @Schema(description = "Activity Description") String description,
     @Schema(description = "Activity Labels") List<LabelVO> labels,
     @Schema(description = "Username") String username,
-    @Schema(description = "Everyone's name of Assignees") List<AssigneeVO> assignees,
+    @Schema(description = "Activity Assignees") List<AssigneeVO> assignees,
     @Schema(description = "The count of comment") String commentCnt,
     @Schema(description = "Created timestamp, seconds since epoch") String gmtCreated,
     @Schema(description = "Closed timestamp, seconds since epoch") String gmtClosed,

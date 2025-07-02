@@ -590,8 +590,7 @@ public class RepositoryController {
     permissionService.checkRepositoryOperationValidity(
         repositoryId,
         idInToken,
-        OperationTypeEnum.WRITE,
-        new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND));
+        OperationTypeEnum.WRITE);
     String labelName = label.name();
     String labelHexColor = label.hexColor();
     if (labelService.getOneByNameAndRepositoryId(labelName, repositoryId) != null) {
@@ -639,8 +638,7 @@ public class RepositoryController {
     permissionService.checkRepositoryOperationValidity(
         labelPO.getRepositoryId(),
         idInToken,
-        OperationTypeEnum.WRITE,
-        new GenericException(ErrorCodeEnum.LABEL_NOT_FOUND, id));
+        OperationTypeEnum.WRITE);
     if (!labelService.updateById(new LabelPO(idInToken, label))) {
       logger.error("Failed to update label[{}]", id);
       throw new GenericException(ErrorCodeEnum.LABEL_UPDATE_FAILED, label);
@@ -669,8 +667,7 @@ public class RepositoryController {
     permissionService.checkRepositoryOperationValidity(
         labelPO.getRepositoryId(),
         idInToken,
-        OperationTypeEnum.WRITE,
-        new GenericException(ErrorCodeEnum.LABEL_NOT_FOUND, id));
+        OperationTypeEnum.WRITE);
     if (!labelService.removeById(id)) {
       logger.error("Failed to delete label[{}]", id);
       throw new GenericException(ErrorCodeEnum.LABEL_DELETE_FAILED, id);
@@ -700,8 +697,7 @@ public class RepositoryController {
     permissionService.checkRepositoryOperationValidity(
         repositoryId,
         idInToken,
-        OperationTypeEnum.READ,
-        new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND));
+        OperationTypeEnum.READ);
     var wrapper = new QueryWrapper<LabelPO>();
     wrapper.eq("repository_id", repositoryId);
     wrapper.orderBy(true, isAsc, orderBy.getFieldName());

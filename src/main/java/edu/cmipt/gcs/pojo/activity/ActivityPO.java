@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.sql.Timestamp;
+
+import edu.cmipt.gcs.util.TypeConversionUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -43,30 +45,39 @@ public class ActivityPO {
         activityDTO.description(),
         activityDTO.isPullRequest(),
         null,
-        activityDTO.gmtClosed(),
-        activityDTO.gmtLocked(),
+        null,
+        null,
         null,
         null,
         null
     );
-    try {
-      this.id = Long.valueOf(activityDTO.id());
-    } catch (NumberFormatException e) {
-      this.id = null;
+    if(this.description == null) {
+      this.description = "";
     }
-    try {
-      this.repositoryId = Long.valueOf(activityDTO.repositoryId());
-    } catch (NumberFormatException e) {
-      this.repositoryId = null;
-    }
-    try {
-      this.userId = Long.valueOf(userId);
-    } catch (NumberFormatException e) {
-      this.userId = null;
-    }
+    this.id = TypeConversionUtil.convertToLong(activityDTO.id());
+    this.repositoryId = TypeConversionUtil.convertToLong(activityDTO.repositoryId());
+    this.userId = TypeConversionUtil.convertToLong(userId);
+    this.gmtClosed = getClosedTimeSinceEpoch(activityDTO.isClosed());
+    this.gmtLocked = getLockedTimeSinceEpoch(activityDTO.isLocked());
   }
 
   public ActivityPO(ActivityDTO activityDTO) {
     this(activityDTO, null, null);
+  }
+
+  private Timestamp getClosedTimeSinceEpoch(Boolean closed) {
+    if (closed != null && closed) {
+      return this.gmtClosed != null ? this.gmtClosed : new Timestamp(System.currentTimeMillis());
+    } else {
+      return null;
+    }
+  }
+
+  private Timestamp getLockedTimeSinceEpoch(Boolean locked) {
+    if (locked != null && locked) {
+    return this.gmtLocked != null ? this.gmtLocked : new Timestamp(System.currentTimeMillis());
+    } else {
+      return null;
+    }
   }
 }

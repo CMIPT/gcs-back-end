@@ -37,5 +37,5 @@ public record CommentDTO(
                 "Line number in the code file where the comment is made. NULL if not applicable")
         Integer codeLine,
     @Schema(description = "Parent Comment ID") String parentId,
-    @Schema(description = "Whether or Not Resolved Comment") Boolean isResolved,
-    @Schema(description = "Whether or Not Hide Comment") Boolean isHidden) {}
+    @Schema(description = "Whether or not the comment is resolved") Boolean isResolved,
+    @Schema(description = "Whether or not the comment is hidden") Boolean isHidden) {}

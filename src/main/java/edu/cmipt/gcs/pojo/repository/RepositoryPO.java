@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import edu.cmipt.gcs.constant.GitConstant;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
+
+import edu.cmipt.gcs.util.TypeConversionUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,24 +39,28 @@ public class RepositoryPO {
 
   public RepositoryPO(
       RepositoryDTO repositoryDTO, String userId, String username, boolean generateUrl) {
-    try {
-      this.id = Long.valueOf(repositoryDTO.id());
-    } catch (NumberFormatException e) {
-      this.id = null;
-    }
-    this.repositoryName = repositoryDTO.repositoryName();
-    this.repositoryDescription = repositoryDTO.repositoryDescription();
+    this(
+        null,
+        repositoryDTO.repositoryName(),
+        repositoryDTO.repositoryDescription(),
+        repositoryDTO.isPrivate(),
+        null,
+        0,
+        0,
+        0,
+        null,
+        null,
+        null,
+        null,
+        null
+    );
+    this.id = TypeConversionUtil.convertToLong(repositoryDTO.id());
+    this.userId = TypeConversionUtil.convertToLong(userId);
     if (this.repositoryDescription == null) {
       this.repositoryDescription = "";
     }
-    this.isPrivate = repositoryDTO.isPrivate();
     if (this.isPrivate == null) {
       this.isPrivate = false;
-    }
-    try {
-      this.userId = Long.valueOf(userId);
-    } catch (NumberFormatException e) {
-      this.userId = null;
     }
     if (generateUrl) {
       this.generateUrl(username);

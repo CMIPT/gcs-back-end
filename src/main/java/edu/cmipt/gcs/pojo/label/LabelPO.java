@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.sql.Timestamp;
+
+import edu.cmipt.gcs.util.TypeConversionUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -41,15 +43,7 @@ public class LabelPO {
         null,
         null
     );
-    try {
-      this.id = Long.valueOf(labelDTO.id());
-    } catch (NumberFormatException e) {
-      this.id = null;
-    }
-    try {
-      this.repositoryId = Long.valueOf(labelDTO.repositoryId());
-    } catch (NumberFormatException e) {
-      this.repositoryId = null;
-    }
+    this.id = TypeConversionUtil.convertToLong(labelDTO.id());
+    this.repositoryId = TypeConversionUtil.convertToLong(labelDTO.repositoryId());
   }
 }

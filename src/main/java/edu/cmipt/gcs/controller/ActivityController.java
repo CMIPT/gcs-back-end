@@ -78,8 +78,7 @@ public class ActivityController {
     permissionService.checkRepositoryOperationValidity(
         repositoryId,
         idInToken,
-        OperationTypeEnum.WRITE,
-        new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId));
+        OperationTypeEnum.WRITE);
     int retry = 0;
     while (true) {
       try {
@@ -157,8 +156,7 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(
         activityId,
         idInToken,
-        OperationTypeEnum.WRITE,
-        new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, activityId));
+        OperationTypeEnum.WRITE);
     if (!activityService.updateById(new ActivityPO(activity))) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, activityId);
     }
@@ -197,8 +195,7 @@ public class ActivityController {
     permissionService.checkRepositoryOperationValidity(
         repositoryId,
         Long.valueOf(JwtUtil.getId(accessToken)),
-        OperationTypeEnum.READ,
-        new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId));
+        OperationTypeEnum.READ);
     var iPage = activityService.pageActivities(activityQueryDTO, new Page<>(page, size));
     return new PageVO<>(
         iPage.getTotal(), iPage.getRecords().stream().map(ActivityDetailVO::new).toList());
@@ -241,8 +238,7 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(
         id,
         idInToken,
-        OperationTypeEnum.READ,
-        new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, notFoundMessage));
+        OperationTypeEnum.READ);
     ActivityDetailDTO activityDetailDTO = activityService.getDetailedOneById(id);
     if (activityDetailDTO == null) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, notFoundMessage);
@@ -280,8 +276,7 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(
         commentPO.getActivityId(),
         idInToken,
-        OperationTypeEnum.WRITE,
-        new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, commentId));
+        OperationTypeEnum.WRITE);
     if (!commentService.updateById(new CommentPO(comment, idInToken))) {
       throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, comment);
     }
@@ -309,8 +304,7 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(
         commentPO.getActivityId(),
         idInToken,
-        OperationTypeEnum.WRITE,
-        new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id));
+        OperationTypeEnum.WRITE);
     if (!commentService.removeById(id)) {
       throw new GenericException(ErrorCodeEnum.COMMENT_DELETE_FAILED, id);
     }
@@ -341,8 +335,7 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(
         activityId,
         idInToken,
-        OperationTypeEnum.WRITE,
-        new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, comment.activityId()));
+        OperationTypeEnum.WRITE);
     if (!commentService.save(new CommentPO(comment, idInToken))) {
       throw new GenericException(ErrorCodeEnum.COMMENT_CREATE_FAILED, comment);
     }
@@ -369,8 +362,7 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(
         activityId,
         idInToken,
-        OperationTypeEnum.READ,
-        new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, activityId));
+        OperationTypeEnum.READ);
     var wrapper = new QueryWrapper<CommentPO>();
     wrapper.eq("activity_id", activityId);
     wrapper.orderBy(true, true, "gmt_created");
@@ -397,8 +389,7 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(
         activityId,
         idInToken,
-        OperationTypeEnum.WRITE,
-        new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, activityId));
+        OperationTypeEnum.WRITE);
     // 检查这个标签是否存在于当前活动对应的仓库中
     var activityPO = activityService.getById(activityId);
     if (activityPO == null) {
@@ -446,8 +437,7 @@ public class ActivityController {
     permissionService.checkRepositoryOperationValidity(
         activityPO.getRepositoryId(),
         idInToken,
-        OperationTypeEnum.WRITE,
-        new GenericException(ErrorCodeEnum.ACCESS_DENIED));
+        OperationTypeEnum.WRITE);
     if (!activityAssignLabelService.removeById(id)) {
       throw new GenericException(
           ErrorCodeEnum.ACTIVITY_DELETE_LABEL_FAILED, activityPO.getId(), id);
@@ -477,8 +467,7 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(
         activityId,
         idInToken,
-        OperationTypeEnum.READ,
-        new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, activityId));
+        OperationTypeEnum.READ);
     var iPage =
         activityAssignLabelService.pageActivityLabelsByActivityId(
             activityId, new Page<>(page, size));
@@ -508,8 +497,7 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(
         activityId,
         idInToken,
-        OperationTypeEnum.WRITE,
-        new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, activityId));
+        OperationTypeEnum.WRITE);
     if (activityDesignateAssigneeService.getOneByActivityIdAndAssigneeId(activityId, assigneeId)
         != null) {
       throw new GenericException(
@@ -544,8 +532,7 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(
         activityDesignateAssigneePO.getActivityId(),
         idInToken,
-        OperationTypeEnum.WRITE,
-        new GenericException(ErrorCodeEnum.ACTIVITY_ASSIGNEE_NOT_FOUND, id));
+        OperationTypeEnum.WRITE);
     if (!activityDesignateAssigneeService.removeById(id)) {
       throw new GenericException(
           ErrorCodeEnum.ACTIVITY_DELETE_ASSIGNEE_FAILED,
@@ -576,8 +563,7 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(
         activityId,
         Long.valueOf(JwtUtil.getId(accessToken)),
-        OperationTypeEnum.READ,
-        new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, activityId));
+        OperationTypeEnum.READ);
     var iPage =
         activityDesignateAssigneeService.pageActivityAssigneesByActivityId(
             activityId, new Page<>(page, size));
