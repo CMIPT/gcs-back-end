@@ -55,27 +55,10 @@ public class ActivityPO {
     this.id = TypeConversionUtil.convertToLong(activityDTO.id());
     this.repositoryId = TypeConversionUtil.convertToLong(activityDTO.repositoryId());
     this.userId = TypeConversionUtil.convertToLong(userId);
-    this.gmtClosed = getClosedTimeSinceEpoch(activityDTO.isClosed());
-    this.gmtLocked = getLockedTimeSinceEpoch(activityDTO.isLocked());
+    this.parentId = TypeConversionUtil.convertToLong(activityDTO.parentId());
   }
 
   public ActivityPO(ActivityDTO activityDTO) {
     this(activityDTO, null, null);
-  }
-
-  private Timestamp getClosedTimeSinceEpoch(Boolean closed) {
-    if (closed != null && closed) {
-      return this.gmtClosed != null ? this.gmtClosed : new Timestamp(System.currentTimeMillis());
-    } else {
-      return null;
-    }
-  }
-
-  private Timestamp getLockedTimeSinceEpoch(Boolean locked) {
-    if (locked != null && locked) {
-      return this.gmtLocked != null ? this.gmtLocked : new Timestamp(System.currentTimeMillis());
-    } else {
-      return null;
-    }
   }
 }

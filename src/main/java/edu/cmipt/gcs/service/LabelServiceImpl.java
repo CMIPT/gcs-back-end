@@ -47,13 +47,6 @@ public class LabelServiceImpl extends ServiceImpl<LabelMapper, LabelPO> implemen
             .apply("LOWER(name) = LOWER({0})", labelName));
   }
 
-  @Override
-  public LabelPO getOneByHexColorAndRepositoryId(String labelHexColor, Long repositoryId) {
-    return super.getOne(
-        new QueryWrapper<LabelPO>()
-            .eq("repository_id", repositoryId)
-            .apply("LOWER(hex_color) = LOWER({0})", labelHexColor));
-  }
 
   @Override
   public void removeByRepositoryId(Long repositoryId) {

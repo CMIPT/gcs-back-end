@@ -20,6 +20,8 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import edu.cmipt.gcs.util.TypeConversionUtil;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -82,9 +84,12 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
             .selectAs(UserPO::getUsername, ActivityDetailDTO::getUsername)
             .leftJoin(UserPO.class, UserPO::getId, ActivityPO::getUserId)
             .leftJoin(RepositoryPO.class, RepositoryPO::getId, ActivityPO::getRepositoryId)
-            .eq(RepositoryPO::getId, Long.valueOf(activityQueryDTO.repositoryId()))
+            .eq(RepositoryPO::getId, TypeConversionUtil.convertToLong(activityQueryDTO.repositoryId(),true,null))
             .eq(ActivityPO::getIsPullRequest, activityQueryDTO.isPullRequest());
 
+    if(activityQueryDTO.parentId()!= null) {
+      queryWrapper.eq(ActivityPO::getParentId, TypeConversionUtil.convertToLong(activityQueryDTO.parentId(),true,null));
+    }
     if (activityQueryDTO.labels() != null && !activityQueryDTO.labels().isEmpty()) {
       queryWrapper.in(
           ActivityPO::getId,
@@ -127,13 +132,10 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
     }
     Page<ActivityDetailDTO> activityDetailDTOPage =
         activityMapper.selectJoinPage(page, ActivityDetailDTO.class, queryWrapper);
-    logger.info("total activities: {}", activityDetailDTOPage.getTotal());
-    logger.info("record activities: {}", activityDetailDTOPage.getRecords());
     if (activityDetailDTOPage.getRecords().isEmpty()) return activityDetailDTOPage;
     // 提取ActivityPO的ID列表
     List<Long> activityIds =
         activityDetailDTOPage.getRecords().stream().map(ActivityDetailDTO::getId).toList();
-    logger.info("activityIds: {}", activityIds);
     //  批量查询每个Activity的标签、指定的参与者和评论数
     Map<Long, List<LabelVO>> labelMap =
         activityAssignLabelService.getLabelsByActivityIds(activityIds);

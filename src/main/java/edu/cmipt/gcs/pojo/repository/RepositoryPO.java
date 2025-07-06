@@ -54,12 +54,6 @@ public class RepositoryPO {
         null);
     this.id = TypeConversionUtil.convertToLong(repositoryDTO.id());
     this.userId = TypeConversionUtil.convertToLong(userId);
-    if (this.repositoryDescription == null) {
-      this.repositoryDescription = "";
-    }
-    if (this.isPrivate == null) {
-      this.isPrivate = false;
-    }
     if (generateUrl) {
       this.generateUrl(username);
     }

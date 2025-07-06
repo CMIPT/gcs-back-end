@@ -50,25 +50,5 @@ public class CommentPO {
     this.id = TypeConversionUtil.convertToLong(comment.id());
     this.activityId = TypeConversionUtil.convertToLong(comment.activityId());
     this.parentId = TypeConversionUtil.convertToLong(comment.parentId());
-    this.gmtResolved = getResolvedTimeSinceEpoch(comment.isResolved());
-    this.gmtHidden = getHiddenTimeSinceEpoch(comment.isHidden());
-  }
-
-  private Timestamp getHiddenTimeSinceEpoch(Boolean isHidden) {
-    if (isHidden != null && isHidden) {
-      return this.gmtHidden != null ? this.gmtHidden : new Timestamp(System.currentTimeMillis());
-    } else {
-      return null;
-    }
-  }
-
-  private Timestamp getResolvedTimeSinceEpoch(Boolean isResolved) {
-    if (isResolved != null && isResolved) {
-      return this.gmtResolved != null
-          ? this.gmtResolved
-          : new Timestamp(System.currentTimeMillis());
-    } else {
-      return null;
-    }
   }
 }

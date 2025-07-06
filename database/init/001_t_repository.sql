@@ -1,7 +1,7 @@
 CREATE TABLE public.t_repository (
   id bigint NOT NULL,
   repository_name character varying(255) NOT NULL,
-  repository_description character varying(255) NOT NULL,
+  repository_description character varying(255) DEFAULT '',
   is_private boolean DEFAULT false,
   user_id bigint NOT NULL,
   star integer DEFAULT 0 NOT NULL,

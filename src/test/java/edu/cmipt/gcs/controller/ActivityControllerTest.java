@@ -17,6 +17,7 @@ import edu.cmipt.gcs.enumeration.ActivityOrderByEnum;
 import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.pojo.activity.ActivityDetailVO;
 import edu.cmipt.gcs.pojo.assign.AssigneeVO;
+import edu.cmipt.gcs.pojo.comment.CommentPO;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.service.ActivityAssignLabelService;
 import edu.cmipt.gcs.service.ActivityDesignateAssigneeService;
@@ -346,7 +347,7 @@ public class ActivityControllerTest {
   public void testUpdateActivityValid() throws Exception {
     String newDescription = "This is an updated test description";
     mvc.perform(
-            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_API_PATH)
+            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CONTENT_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -366,7 +367,7 @@ public class ActivityControllerTest {
     // update other's public repository activity
     String newDescription = "This is an updated test description";
     mvc.perform(
-            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_API_PATH)
+            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CONTENT_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -381,7 +382,7 @@ public class ActivityControllerTest {
         .andExpect(status().isForbidden());
     // update other's private repository activity
     mvc.perform(
-            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_API_PATH)
+            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CONTENT_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -699,10 +700,10 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 8)
-  public void testUpdateActivityCommentValid() throws Exception {
+  public void testUpdateActivityCommentContentValid() throws Exception {
     String newContent = TestConstant.COMMENT_CONTENT + " updated";
     mvc.perform(
-            post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_API_PATH)
+            post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_CONTENT_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -720,10 +721,10 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testUpdateOtherActivityCommentInvalid() throws Exception {
+  public void testUpdateOtherActivityCommentContentInvalid() throws Exception {
     String newContent = TestConstant.COMMENT_CONTENT + " updated";
     mvc.perform(
-            post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_API_PATH)
+            post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_CONTENT_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -738,6 +739,69 @@ public class ActivityControllerTest {
                         .formatted(TestConstant.OTHER_PRIVATE_REPOSITORY_ACTIVITY_ID, newContent)))
         .andExpectAll(status().isNotFound());
   }
+
+  @Test
+  @Order(Ordered.HIGHEST_PRECEDENCE + 9)
+  public void testUpdateActivityCommentHiddenStatusValid() throws Exception {
+    mvc.perform(
+            post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_HIDDEN_STATE_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", TestConstant.COMMENT_ID)
+                .param("isHidden", "true"))
+        .andExpectAll(status().isOk());
+    // Verify method idempotency
+    CommentPO comment1 = commentService.getById(TestConstant.COMMENT_ID);
+    mvc.perform(
+                    post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_HIDDEN_STATE_API_PATH)
+                            .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                            .param("id", TestConstant.COMMENT_ID)
+                            .param("isHidden", "true"))
+            .andExpectAll(status().isOk());
+    CommentPO comment2 = commentService.getById(TestConstant.COMMENT_ID);
+    Assertions.assertEquals(comment1.getGmtHidden(), comment2.getGmtHidden());
+
+  }
+
+  @Test
+  public void testUpdateActivityCommentHiddenStatusInvalid() throws Exception {
+    mvc.perform(
+            post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_HIDDEN_STATE_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", "123")
+            .param("isHidden", "true"))
+        .andExpectAll(status().isNotFound());
+  }
+
+  @Test
+  @Order(Ordered.HIGHEST_PRECEDENCE + 10)
+  public void testUpdateActivityCommentResolvedStatusValid() throws Exception {
+    mvc.perform(
+            post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_RESOLVED_STATE_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", TestConstant.COMMENT_ID)
+                .param("isResolved", "true"))
+        .andExpectAll(status().isOk());
+    // Verify method idempotency
+    CommentPO comment1 = commentService.getById(TestConstant.COMMENT_ID);
+    mvc.perform(
+              post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_RESOLVED_STATE_API_PATH)
+                  .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                  .param("id", TestConstant.COMMENT_ID)
+                  .param("isResolved", "true"))
+            .andExpectAll(status().isOk());
+    CommentPO comment2 = commentService.getById(TestConstant.COMMENT_ID);
+    Assertions.assertEquals(comment1.getGmtResolved(), comment2.getGmtResolved());
+  }
+
+  @Test
+    public void testUpdateActivityCommentResolvedStatusInvalid() throws Exception {
+        mvc.perform(
+                post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_RESOLVED_STATE_API_PATH)
+                    .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                    .param("id", "123")
+                    .param("isResolved", "true"))
+            .andExpectAll(status().isNotFound());
+    }
 
   @Test
   @Order(Ordered.LOWEST_PRECEDENCE - 1)

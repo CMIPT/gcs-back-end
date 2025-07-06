@@ -9,7 +9,7 @@ import java.util.Objects;
 public record ActivityDetailVO(
     @Schema(description = "id") String id,
     @Schema(description = "Activity Number") String number,
-    @Schema(description = "RepositoryId") String repositoryId,
+    @Schema(description = "Repository Id") String repositoryId,
     @Schema(description = "Activity Title") String title,
     @Schema(description = "Activity Description") String description,
     @Schema(description = "Activity Labels") List<LabelVO> labels,
@@ -30,8 +30,8 @@ public record ActivityDetailVO(
         activityDetailDTO.getUsername(),
         activityDetailDTO.getAssignees(),
         activityDetailDTO.getCommentCnt().toString(),
-        Objects.toString(activityDetailDTO.getGmtCreated(), null),
-        Objects.toString(activityDetailDTO.getGmtClosed(), null),
-        Objects.toString(activityDetailDTO.getGmtLocked(), null));
+        String.valueOf(activityDetailDTO.getGmtCreated()),
+        String.valueOf(activityDetailDTO.getGmtClosed()),
+        String.valueOf(activityDetailDTO.getGmtLocked()));
   }
 }

@@ -595,11 +595,6 @@ public class RepositoryController {
       logger.info("Label[{}] already exists in repository[{}]", labelName, repositoryId);
       throw new GenericException(ErrorCodeEnum.LABEL_NAME_ALREADY_EXISTS, labelName, repositoryId);
     }
-    if (labelService.getOneByHexColorAndRepositoryId(labelHexColor, repositoryId) != null) {
-      logger.info("Label color[{}] already exists in repository[{}]", labelHexColor, repositoryId);
-      throw new GenericException(
-          ErrorCodeEnum.LABEL_HEX_COLOR_ALREADY_EXISTS, labelHexColor, repositoryId);
-    }
     if (!labelService.save(new LabelPO(idInToken, label))) {
       logger.error("Failed to create label in repository[{}]", repositoryId);
       throw new GenericException(

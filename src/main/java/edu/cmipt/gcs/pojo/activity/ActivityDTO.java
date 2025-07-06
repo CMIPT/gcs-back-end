@@ -36,8 +36,4 @@ public record ActivityDTO(
         String title,
     @Schema(description = "if the activity is a pull request,true: pull request, false: issue")
         @NotNull(groups = {CreateGroup.class, UpdateGroup.class})
-        Boolean isPullRequest,
-    @Schema(description = "whether or not the activity is locked", example = "false")
-        Boolean isClosed,
-    @Schema(description = "whether or not the activity is closed", example = "false")
-        Boolean isLocked) {}
+        Boolean isPullRequest) {}

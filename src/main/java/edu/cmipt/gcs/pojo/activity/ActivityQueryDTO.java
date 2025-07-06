@@ -25,6 +25,8 @@ public record ActivityQueryDTO(
     @Schema(description = "Whether or not the Activity is a Pull Request", example = "true")
         @NotNull(groups = QueryGroup.class)
         Boolean isPullRequest,
+    @Schema(description = "Parent Activity ID")
+        String parentId,
     @Schema(
             description = "Labels' names associated with the Activity",
             example = "[\"bug\", \"enhancement\"]")

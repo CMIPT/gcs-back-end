@@ -16,6 +16,7 @@ import edu.cmipt.gcs.pojo.ssh.SshKeyPO;
 import edu.cmipt.gcs.pojo.ssh.SshKeyVO;
 import edu.cmipt.gcs.service.SshKeyService;
 import edu.cmipt.gcs.util.JwtUtil;
+import edu.cmipt.gcs.util.TypeConversionUtil;
 import edu.cmipt.gcs.validation.group.CreateGroup;
 import edu.cmipt.gcs.validation.group.UpdateGroup;
 import io.swagger.v3.oas.annotations.Operation;
@@ -112,13 +113,14 @@ public class SshKeyController {
   public void updateSshKey(
       @Validated(UpdateGroup.class) @RequestBody SshKeyDTO sshKeyDTO,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long id = null;
-    try {
-      id = Long.valueOf(sshKeyDTO.id());
-    } catch (NumberFormatException e) {
-      logger.error(e.getMessage());
-      throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-    }
+//    Long id = null;
+//    try {
+//      id = Long.valueOf(sshKeyDTO.id());
+//    } catch (NumberFormatException e) {
+//      logger.error(e.getMessage());
+//      throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+//    }
+    Long id = TypeConversionUtil.convertToLong(sshKeyDTO.id(),true,null);
     var sshKeyPO = sshKeyService.getById(id);
     if (sshKeyPO == null) {
       throw new GenericException(ErrorCodeEnum.SSH_KEY_NOT_FOUND, id);

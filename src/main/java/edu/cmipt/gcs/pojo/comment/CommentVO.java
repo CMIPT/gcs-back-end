@@ -23,8 +23,8 @@ public record CommentVO(
         CommentPO.getContent(),
         CommentPO.getCodePath(),
         CommentPO.getCodeLine(),
-        Objects.toString(CommentPO.getParentId(), null),
-        Objects.toString(CommentPO.getGmtResolved(), null),
-        Objects.toString(CommentPO.getGmtHidden(), null));
+        String.valueOf(CommentPO.getParentId()),
+        String.valueOf(CommentPO.getGmtResolved()),
+        String.valueOf(CommentPO.getGmtHidden()));
   }
 }

@@ -1,6 +1,7 @@
 package edu.cmipt.gcs.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.ApplicationConstant;
@@ -35,6 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.sql.Timestamp;
 
 @Validated
 @RestController
@@ -78,6 +81,21 @@ public class ActivityController {
     }
     permissionService.checkRepositoryOperationValidity(
         repositoryId, idInToken, OperationTypeEnum.WRITE);
+    // 检查父活动是否存在
+    if(activity.parentId()!=null)
+    {
+      Long parentId = null;
+        try {
+            parentId = Long.valueOf(activity.parentId());
+        } catch (NumberFormatException e) {
+            logger.error(e.getMessage());
+            throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+        }
+        var parentActivityPO = activityService.getById(parentId);
+        if (parentActivityPO == null) {
+            throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, parentId);
+        }
+    }
     int retry = 0;
     while (true) {
       try {
@@ -129,19 +147,88 @@ public class ActivityController {
     //    }
   }
 
-  // 包括修改状态（关闭，锁定）
-  @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_API_PATH)
+  @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_LOCK_STATE_API_PATH)
+    @Operation(
+        summary = "Update an activity lock state",
+        description = "Update an activity lock state with the given information",
+        tags = {"Activity", "Post Method"})
+    @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Success"),
+      @ApiResponse(
+          description = "Update activity lock state failed",
+          content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    })
+    public void updateActivityLockState(
+        @RequestParam("id") Long id,
+        @RequestParam("is locked") Boolean isLocked,
+        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    permissionService.checkActivityOperationValidity(
+        id, idInToken, OperationTypeEnum.WRITE);
+    var activityPO = activityService.getById(id);
+    LambdaUpdateWrapper<ActivityPO> updateWrapper = new LambdaUpdateWrapper<>();
+    updateWrapper.eq(ActivityPO::getId, id);
+    if(!isLocked) {
+      updateWrapper.set(ActivityPO::getGmtClosed, null);;
+    }
+    else if(activityPO.getGmtClosed() == null) {
+      updateWrapper.set(ActivityPO::getGmtClosed, new Timestamp(System.currentTimeMillis()));
+    }
+    else {
+      return; // 如果活动已经被锁定，则不需要更新
+    }
+    if(!activityService.update(updateWrapper)) {
+      throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, id);
+    }
+  }
+
+  @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CLOSE_STATE_API_PATH)
+    @Operation(
+        summary = "Update an activity close state",
+        description = "Update an activity close state with the given information",
+        tags = {"Activity", "Post Method"})
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Success"),
+        @ApiResponse(
+            description = "Update activity close state failed",
+            content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    })
+    public void updateActivityCloseState(
+        @RequestParam("id") Long id,
+        @RequestParam("is closed") Boolean isClosed,
+        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    permissionService.checkActivityOperationValidity(
+        id, idInToken, OperationTypeEnum.WRITE);
+    var activityPO = activityService.getById(id);
+    LambdaUpdateWrapper<ActivityPO> updateWrapper = new LambdaUpdateWrapper<>();
+    updateWrapper.eq(ActivityPO::getId, id);
+    if(!isClosed) {
+      updateWrapper.set(ActivityPO::getGmtClosed, null);;
+    }
+    else if(activityPO.getGmtClosed() == null) {
+      updateWrapper.set(ActivityPO::getGmtClosed, new Timestamp(System.currentTimeMillis()));
+    }
+    else {
+      return; // 如果活动已经被关闭，则不需要更新
+    }
+    if(!activityService.update(updateWrapper)) {
+      throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, id);
+    }
+  }
+
+  @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CONTENT_API_PATH)
   @Operation(
-      summary = "Update an activity",
-      description = "Update an activity with the given information",
+      summary = "Update an activity content",
+      description = "Update an activity content with the given information",
       tags = {"Activity", "Post Method"})
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
-        description = "Update activity failed",
-        content = @Content(schema = @Schema(implementation = ErrorVO.class))),
+        description = "Update activity content failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
-  public void updateActivity(
+  public void updateActivityContent(
       @Validated(UpdateGroup.class) @RequestBody ActivityDTO activity,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
 
@@ -155,6 +242,21 @@ public class ActivityController {
     }
     permissionService.checkActivityOperationValidity(
         activityId, idInToken, OperationTypeEnum.WRITE);
+    // 检查父活动是否存在
+    if(activity.parentId()!=null)
+    {
+      Long parentId = null;
+      try {
+        parentId = Long.valueOf(activity.parentId());
+      } catch (NumberFormatException e) {
+        logger.error(e.getMessage());
+        throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+      }
+      var parentActivityPO = activityService.getById(parentId);
+      if (parentActivityPO == null) {
+        throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, parentId);
+      }
+    }
     if (!activityService.updateById(new ActivityPO(activity))) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, activityId);
     }
@@ -166,7 +268,7 @@ public class ActivityController {
       description =
           "Page a repository's activities. If the given token is trying to get other repository's"
               + " activities, only public repository's activities will be returned",
-      tags = {"Activity", "Get Method"})
+      tags = {"Activity", "Post Method"})
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
@@ -196,6 +298,27 @@ public class ActivityController {
     return new PageVO<>(
         iPage.getTotal(), iPage.getRecords().stream().map(ActivityDetailVO::new).toList());
   }
+
+  @PostMapping(ApiPathConstant.ACTIVITY_GET_SUB_ACTIVITY_API_PATH)
+    @Operation(
+        summary = "Page an activity's sub-activities",
+        description =
+            "Page an activity's sub-activities. If the given token is trying to get other activity's"
+                + " sub-activities, only public activity's sub-activities will be returned",
+        tags = {"Activity", "Post Method"})
+    @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "User activities page failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    })
+    public PageVO<ActivityDetailVO> pageSubActivity(
+        @RequestParam("page") @Min(1) Integer page,
+        @RequestParam("size") @Min(1) Integer size,
+        @Validated(QueryGroup.class) @RequestBody ActivityQueryDTO activityQueryDTO,
+        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+      return pageActivity(page, size, activityQueryDTO, accessToken);
+    }
 
   @GetMapping(ApiPathConstant.ACTIVITY_GET_ACTIVITY_API_PATH)
   @Operation(
@@ -239,19 +362,18 @@ public class ActivityController {
     return new ActivityDetailVO(activityDetailDTO);
   }
 
-  // 修改评论(内容 或者隐藏状态)
-  @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_API_PATH)
+  @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_CONTENT_API_PATH)
   @Operation(
-      summary = "Update an activity comment",
-      description = "Update an activity comment with the given information",
+      summary = "Update an activity comment content",
+      description = "Update an activity comment content with the given information",
       tags = {"Activity", "Post Method"})
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
-        description = "Update comment failed",
+        description = "Update comment content failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
-  public void updateActivityComment(
+  public void updateActivityCommentContent(
       @Validated(UpdateGroup.class) @RequestBody CommentDTO comment,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
@@ -272,6 +394,82 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, comment);
     }
   }
+
+  @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_HIDDEN_STATE_API_PATH)
+    @Operation(
+        summary = "Update an activity comment hidden state",
+        description = "Update an activity comment hidden state with the given information",
+        tags = {"Activity", "Post Method"})
+    @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Update comment hidden state failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    })
+    public void updateActivityCommentHiddenState(
+        @RequestParam("id") Long id,
+        @RequestParam("isHidden") Boolean isHidden,
+        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    var commentPO = commentService.getById(id);
+    if (commentPO == null) {
+      throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id);
+    }
+    permissionService.checkActivityOperationValidity(
+        commentPO.getActivityId(), idInToken, OperationTypeEnum.WRITE);
+    LambdaUpdateWrapper<CommentPO> updateWrapper = new LambdaUpdateWrapper<>();
+    updateWrapper.eq(CommentPO::getId, id);
+    if(!isHidden) {
+      updateWrapper.set(CommentPO::getGmtHidden, null);;
+    }
+    else if(commentPO.getGmtHidden() == null) {
+      updateWrapper.set(CommentPO::getGmtHidden, new Timestamp(System.currentTimeMillis()));
+    }
+    else {
+      return; // 如果评论已经被隐藏，则不需要更新
+    }
+    if(!commentService.update(updateWrapper)) {
+      throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, id);
+    }
+  }
+
+  @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_RESOLVED_STATE_API_PATH)
+  @Operation(
+      summary = "Update an activity comment resolved state",
+      description = "Update an activity comment resolved state with the given information",
+      tags = {"Activity", "Post Method"})
+  @ApiResponses({
+  @ApiResponse(responseCode = "200", description = "Success"),
+  @ApiResponse(
+      description = "Update comment resolved state failed",
+      content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public void updateActivityCommentResolvedState(
+      @RequestParam("id") Long id,
+      @RequestParam("isResolved") Boolean isResolved,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    var commentPO = commentService.getById(id);
+    if (commentPO == null) {
+      throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id);
+    }
+    permissionService.checkActivityOperationValidity(
+        commentPO.getActivityId(), idInToken, OperationTypeEnum.WRITE);
+    LambdaUpdateWrapper<CommentPO> updateWrapper = new LambdaUpdateWrapper<>();
+    updateWrapper.eq(CommentPO::getId, id);
+    if(!isResolved) {
+      updateWrapper.set(CommentPO::getGmtResolved, null);;
+    }
+    else if(commentPO.getGmtResolved() == null) {
+      updateWrapper.set(CommentPO::getGmtResolved, new Timestamp(System.currentTimeMillis()));
+    }
+    else {
+      return; // 如果评论已经被解决，则不需要更新
+    }
+    if(!commentService.update(updateWrapper)) {
+      throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, id);
+    }
+}
 
   @DeleteMapping(ApiPathConstant.ACTIVITY_DELETE_COMMENT_API_PATH)
   @Operation(
@@ -323,6 +521,20 @@ public class ActivityController {
     }
     permissionService.checkActivityOperationValidity(
         activityId, idInToken, OperationTypeEnum.WRITE);
+    if(comment.parentId()!=null) {
+      // 检查评论的父评论是否存在
+      Long parentId = null;
+      try {
+        parentId = Long.valueOf(comment.parentId());
+      } catch (NumberFormatException e) {
+        logger.error(e.getMessage());
+        throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
+      }
+      var parentCommentPO = commentService.getById(parentId);
+      if (parentCommentPO == null) {
+          throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, parentId);
+      }
+    }
     if (!commentService.save(new CommentPO(comment, idInToken))) {
       throw new GenericException(ErrorCodeEnum.COMMENT_CREATE_FAILED, comment);
     }
@@ -349,6 +561,35 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
     var wrapper = new QueryWrapper<CommentPO>();
     wrapper.eq("activity_id", activityId);
+    wrapper.isNull("parent_id"); // 默认查询根评论,子评论通过另外的 API查询
+    wrapper.orderBy(true, true, "gmt_created");
+    var iPage = commentService.page(new Page<>(page, size), wrapper);
+    return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(CommentVO::new).toList());
+  }
+
+  @GetMapping(ApiPathConstant.ACTIVITY_PAGE_SUB_COMMENT_API_PATH)
+  @Operation(
+          summary = "Page activity sub-comments",
+          description = "Page sub-comments of an activity",
+          tags = {"Activity", "Get Method"})
+  @ApiResponses({
+          @ApiResponse(responseCode = "200", description = "Success"),
+          @ApiResponse(
+                  description = "Activity not found",
+                  content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public PageVO<CommentVO> pageActivitySubComment(
+          @RequestParam("activityId") Long activityId,
+          @RequestParam("parentId") Long parentId,
+          @RequestParam("page") @Min(1) Integer page,
+          @RequestParam("size") @Min(1) Integer size,
+          @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+
+    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
+    var wrapper = new QueryWrapper<CommentPO>();
+    wrapper.eq("activity_id", activityId);
+    wrapper.eq("parent_id", parentId); // 查询子评论
     wrapper.orderBy(true, true, "gmt_created");
     var iPage = commentService.page(new Page<>(page, size), wrapper);
     return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(CommentVO::new).toList());
