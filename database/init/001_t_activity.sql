@@ -4,7 +4,7 @@ CREATE TABLE public.t_activity (
     repository_id bigint NOT NULL,
     parent_id bigint,
     title character varying(255) NOT NULL,
-    description text ,
+    description text default '',
     is_pull_request boolean NOT NULL, -- false: issue, true: pull_request
     user_id bigint NOT NULL,
     gmt_created timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,

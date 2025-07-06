@@ -97,9 +97,11 @@ public class UserCollaborateRepositoryServiceImpl
   @Override
   public Page<CollaboratorDTO> pageCollaboratorsByRepositoryId(
       Long repositoryId,
-      Page<CollaboratorDTO> page,
+      Integer pageNum,
+      Integer pageSize,
       CollaboratorOrderByEnum orderBy,
       Boolean isAsc) {
+    Page<CollaboratorDTO> page = new Page<>(pageNum, pageSize);
     var queryWrapper =
         JoinWrappers.lambda(UserPO.class)
             .selectAsClass(UserCollaborateRepositoryPO.class, CollaboratorDTO.class)

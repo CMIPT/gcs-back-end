@@ -3,6 +3,7 @@ package edu.cmipt.gcs.enumeration;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.service.UserService;
+import edu.cmipt.gcs.util.TypeConversionUtil;
 
 public enum AddCollaboratorTypeEnum {
   ID,
@@ -13,7 +14,7 @@ public enum AddCollaboratorTypeEnum {
     switch (this) {
       case ID:
         try {
-          return service.getById(Long.valueOf(collaborator));
+          return service.getById(TypeConversionUtil.convertToLong(collaborator, true));
         } catch (Exception e) {
           throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
         }

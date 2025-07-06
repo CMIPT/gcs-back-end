@@ -9,7 +9,8 @@ import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
 public interface UserCollaborateRepositoryService extends IService<UserCollaborateRepositoryPO> {
   Page<CollaboratorDTO> pageCollaboratorsByRepositoryId(
       Long repositoryId,
-      Page<CollaboratorDTO> page,
+      Integer pageNum,
+      Integer pageSize,
       CollaboratorOrderByEnum orderBy,
       Boolean isAsc);
 

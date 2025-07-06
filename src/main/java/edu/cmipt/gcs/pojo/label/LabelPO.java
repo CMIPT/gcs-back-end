@@ -32,16 +32,14 @@ public class LabelPO {
 
   public LabelPO(Long userId, LabelDTO labelDTO) {
     this(
-        null,
+        TypeConversionUtil.convertToLong(labelDTO.id()),
         userId,
-        null,
+        TypeConversionUtil.convertToLong(labelDTO.repositoryId()),
         labelDTO.name(),
         labelDTO.description(),
         labelDTO.hexColor(),
         null,
         null,
         null);
-    this.id = TypeConversionUtil.convertToLong(labelDTO.id());
-    this.repositoryId = TypeConversionUtil.convertToLong(labelDTO.repositoryId());
   }
 }

@@ -46,8 +46,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, CommentPO>
   }
 
   @Override
-  public void removeByActivityId(Serializable id) {
-    super.remove(new QueryWrapper<CommentPO>().eq("activity_id", id));
+  public void removeByActivityId(Serializable activityId) {
+    removeByActivityIds(List.of((Long) activityId));
   }
 
   @Override

@@ -29,7 +29,7 @@ public record CommentDTO(
         @NotBlank(groups = {CreateGroup.class, UpdateGroup.class})
         String content,
 
-    // TODO 检验？
+    // TODO: 检验
     @Schema(description = "Path of the code file where the comment is made. NULL if not applicable")
         String codePath,
     @Schema(

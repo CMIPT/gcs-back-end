@@ -29,9 +29,7 @@ public class SshKeyPO {
   @TableLogic private Timestamp gmtDeleted;
 
   public SshKeyPO(SshKeyDTO sshKeyDTO, String userId) {
-    this(null, null, sshKeyDTO.name(), sshKeyDTO.publicKey(), null, null, null);
-    this.id = TypeConversionUtil.convertToLong(sshKeyDTO.id());
-    this.userId = TypeConversionUtil.convertToLong(userId);
+    this(TypeConversionUtil.convertToLong(sshKeyDTO.id()), TypeConversionUtil.convertToLong(userId), sshKeyDTO.name(), sshKeyDTO.publicKey(), null, null, null);
   }
 
   public SshKeyPO(SshKeyDTO sshKeyDTO) {

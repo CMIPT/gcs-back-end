@@ -44,7 +44,7 @@ public class ActivityAssignLabelServiceImpl
 
   @Override
   public void removeByActivityId(Serializable activityId) {
-    super.remove(new QueryWrapper<ActivityAssignLabelPO>().eq("activity_id", activityId));
+    removeByActivityIds(List.of((Long) activityId));
   }
 
   @Override
@@ -84,7 +84,8 @@ public class ActivityAssignLabelServiceImpl
 
   @Override
   public Page<ActivityAssignLabelDTO> pageActivityLabelsByActivityId(
-      Long activityId, Page<ActivityAssignLabelDTO> Page) {
+      Long activityId, Integer pageNum, Integer pageSize) {
+    Page<ActivityAssignLabelDTO> page = new Page<>(pageNum, pageSize);
     var queryWrapper =
         JoinWrappers.lambda(ActivityAssignLabelPO.class)
             .selectAsClass(ActivityAssignLabelPO.class, ActivityAssignLabelDTO.class)
@@ -95,7 +96,7 @@ public class ActivityAssignLabelServiceImpl
             .innerJoin(LabelPO.class, LabelPO::getId, ActivityAssignLabelPO::getLabelId)
             .eq(ActivityAssignLabelPO::getActivityId, activityId);
     return activityAssignLabelMapper.selectJoinPage(
-        Page, ActivityAssignLabelDTO.class, queryWrapper);
+        page, ActivityAssignLabelDTO.class, queryWrapper);
   }
 
   @Override

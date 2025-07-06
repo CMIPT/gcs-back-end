@@ -36,26 +36,19 @@ public class ActivityPO {
 
   public ActivityPO(ActivityDTO activityDTO, Integer activityNumber, String userId) {
     this(
-        null,
+        TypeConversionUtil.convertToLong(activityDTO.id()),
         activityNumber,
-        null,
-        null,
+        TypeConversionUtil.convertToLong(activityDTO.repositoryId()),
+        TypeConversionUtil.convertToLong(userId),
         activityDTO.title(),
         activityDTO.description(),
         activityDTO.isPullRequest(),
-        null,
+        TypeConversionUtil.convertToLong(userId),
         null,
         null,
         null,
         null,
         null);
-    if (this.description == null) {
-      this.description = "";
-    }
-    this.id = TypeConversionUtil.convertToLong(activityDTO.id());
-    this.repositoryId = TypeConversionUtil.convertToLong(activityDTO.repositoryId());
-    this.userId = TypeConversionUtil.convertToLong(userId);
-    this.parentId = TypeConversionUtil.convertToLong(activityDTO.parentId());
   }
 
   public ActivityPO(ActivityDTO activityDTO) {

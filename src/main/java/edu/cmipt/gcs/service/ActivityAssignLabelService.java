@@ -11,7 +11,7 @@ import java.util.Map;
 
 public interface ActivityAssignLabelService extends IService<ActivityAssignLabelPO> {
   Page<ActivityAssignLabelDTO> pageActivityLabelsByActivityId(
-      Long activityId, Page<ActivityAssignLabelDTO> objectPage);
+      Long activityId, Integer pageNum, Integer pageSize);
 
   ActivityAssignLabelPO getOneByActivityIdAndLabelId(Long activityId, Long labelId);
 

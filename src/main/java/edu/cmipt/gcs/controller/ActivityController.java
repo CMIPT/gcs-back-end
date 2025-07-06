@@ -20,6 +20,7 @@ import edu.cmipt.gcs.pojo.label.ActivityAssignLabelVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.service.*;
 import edu.cmipt.gcs.util.JwtUtil;
+import edu.cmipt.gcs.util.TypeConversionUtil;
 import edu.cmipt.gcs.validation.group.CreateGroup;
 import edu.cmipt.gcs.validation.group.QueryGroup;
 import edu.cmipt.gcs.validation.group.UpdateGroup;
@@ -71,26 +72,14 @@ public class ActivityController {
       @Validated(CreateGroup.class) @RequestBody ActivityDTO activity,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken)
       throws InterruptedException {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    Long repositoryId = null;
-    try {
-      repositoryId = Long.valueOf(activity.repositoryId());
-    } catch (NumberFormatException e) {
-      logger.error(e.getMessage());
-      throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-    }
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long repositoryId = TypeConversionUtil.convertToLong(activity.repositoryId(), true);
     permissionService.checkRepositoryOperationValidity(
         repositoryId, idInToken, OperationTypeEnum.WRITE);
     // 检查父活动是否存在
     if(activity.parentId()!=null)
     {
-      Long parentId = null;
-        try {
-            parentId = Long.valueOf(activity.parentId());
-        } catch (NumberFormatException e) {
-            logger.error(e.getMessage());
-            throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-        }
+      Long parentId = TypeConversionUtil.convertToLong(activity.parentId(),true);
         var parentActivityPO = activityService.getById(parentId);
         if (parentActivityPO == null) {
             throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, parentId);
@@ -162,7 +151,7 @@ public class ActivityController {
         @RequestParam("id") Long id,
         @RequestParam("is locked") Boolean isLocked,
         @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(
         id, idInToken, OperationTypeEnum.WRITE);
     var activityPO = activityService.getById(id);
@@ -197,7 +186,7 @@ public class ActivityController {
         @RequestParam("id") Long id,
         @RequestParam("is closed") Boolean isClosed,
         @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(
         id, idInToken, OperationTypeEnum.WRITE);
     var activityPO = activityService.getById(id);
@@ -232,26 +221,14 @@ public class ActivityController {
       @Validated(UpdateGroup.class) @RequestBody ActivityDTO activity,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
 
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    Long activityId = null;
-    try {
-      activityId = Long.valueOf(activity.id());
-    } catch (NumberFormatException e) {
-      logger.error(e.getMessage());
-      throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-    }
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long activityId = TypeConversionUtil.convertToLong(activity.id(),true);
     permissionService.checkActivityOperationValidity(
         activityId, idInToken, OperationTypeEnum.WRITE);
     // 检查父活动是否存在
     if(activity.parentId()!=null)
     {
-      Long parentId = null;
-      try {
-        parentId = Long.valueOf(activity.parentId());
-      } catch (NumberFormatException e) {
-        logger.error(e.getMessage());
-        throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-      }
+      Long parentId = TypeConversionUtil.convertToLong(activity.parentId(),true);
       var parentActivityPO = activityService.getById(parentId);
       if (parentActivityPO == null) {
         throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, parentId);
@@ -275,26 +252,20 @@ public class ActivityController {
         description = "User activities page failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
-  public PageVO<ActivityDetailVO> pageActivity(
+  public PageVO<ActivityDetailVO> pageActivityDetail(
       @RequestParam("page") @Min(1) Integer page,
       @RequestParam("size") @Min(1) Integer size,
       @Validated(QueryGroup.class) @RequestBody ActivityQueryDTO activityQueryDTO,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long repositoryId = null;
-    try {
-      repositoryId = Long.valueOf(activityQueryDTO.repositoryId());
-    } catch (NumberFormatException e) {
-      logger.error(e.getMessage());
-      throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-    }
+    Long repositoryId = TypeConversionUtil.convertToLong(activityQueryDTO.repositoryId(), true);
     String user = activityQueryDTO.user();
     var userPO = activityQueryDTO.userType().getOne(userService, user);
     if (userPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user);
     }
     permissionService.checkRepositoryOperationValidity(
-        repositoryId, Long.valueOf(JwtUtil.getId(accessToken)), OperationTypeEnum.READ);
-    var iPage = activityService.pageActivities(activityQueryDTO, new Page<>(page, size));
+        repositoryId, TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true), OperationTypeEnum.READ);
+    var iPage = activityService.pageActivities(activityQueryDTO, page,size);
     return new PageVO<>(
         iPage.getTotal(), iPage.getRecords().stream().map(ActivityDetailVO::new).toList());
   }
@@ -317,7 +288,7 @@ public class ActivityController {
         @RequestParam("size") @Min(1) Integer size,
         @Validated(QueryGroup.class) @RequestBody ActivityQueryDTO activityQueryDTO,
         @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-      return pageActivity(page, size, activityQueryDTO, accessToken);
+      return pageActivityDetail(page, size, activityQueryDTO, accessToken);
     }
 
   @GetMapping(ApiPathConstant.ACTIVITY_GET_ACTIVITY_API_PATH)
@@ -353,9 +324,9 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, notFoundMessage);
     }
     id = activityPO.getId();
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(id, idInToken, OperationTypeEnum.READ);
-    ActivityDetailDTO activityDetailDTO = activityService.getDetailedOneById(id);
+    ActivityDetailDTO activityDetailDTO = activityService.getActivityDetailById(id);
     if (activityDetailDTO == null) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, notFoundMessage);
     }
@@ -376,14 +347,8 @@ public class ActivityController {
   public void updateActivityCommentContent(
       @Validated(UpdateGroup.class) @RequestBody CommentDTO comment,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    Long commentId = null;
-    try {
-      commentId = Long.valueOf(comment.id());
-    } catch (NumberFormatException e) {
-      logger.error(e.getMessage());
-      throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-    }
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long commentId = TypeConversionUtil.convertToLong(comment.id(), true);
     var commentPO = commentService.getById(commentId);
     if (commentPO == null) {
       throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, commentId);
@@ -410,7 +375,7 @@ public class ActivityController {
         @RequestParam("id") Long id,
         @RequestParam("isHidden") Boolean isHidden,
         @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     var commentPO = commentService.getById(id);
     if (commentPO == null) {
       throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id);
@@ -448,7 +413,7 @@ public class ActivityController {
       @RequestParam("id") Long id,
       @RequestParam("isResolved") Boolean isResolved,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     var commentPO = commentService.getById(id);
     if (commentPO == null) {
       throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id);
@@ -489,7 +454,7 @@ public class ActivityController {
     if (commentPO == null) {
       throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id);
     }
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(
         commentPO.getActivityId(), idInToken, OperationTypeEnum.WRITE);
     if (!commentService.removeById(id)) {
@@ -511,25 +476,13 @@ public class ActivityController {
   public void createActivityComment(
       @Validated(CreateGroup.class) @RequestBody CommentDTO comment,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
-    Long activityId = null;
-    try {
-      activityId = Long.valueOf(comment.activityId());
-    } catch (NumberFormatException e) {
-      logger.error(e.getMessage());
-      throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-    }
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long activityId = TypeConversionUtil.convertToLong(comment.activityId(), true);
     permissionService.checkActivityOperationValidity(
         activityId, idInToken, OperationTypeEnum.WRITE);
     if(comment.parentId()!=null) {
       // 检查评论的父评论是否存在
-      Long parentId = null;
-      try {
-        parentId = Long.valueOf(comment.parentId());
-      } catch (NumberFormatException e) {
-        logger.error(e.getMessage());
-        throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-      }
+      Long parentId = TypeConversionUtil.convertToLong(comment.parentId(), true);
       var parentCommentPO = commentService.getById(parentId);
       if (parentCommentPO == null) {
           throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, parentId);
@@ -557,7 +510,7 @@ public class ActivityController {
       @RequestParam("size") @Min(1) Integer size,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
 
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
     var wrapper = new QueryWrapper<CommentPO>();
     wrapper.eq("activity_id", activityId);
@@ -585,7 +538,7 @@ public class ActivityController {
           @RequestParam("size") @Min(1) Integer size,
           @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
 
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
     var wrapper = new QueryWrapper<CommentPO>();
     wrapper.eq("activity_id", activityId);
@@ -610,7 +563,7 @@ public class ActivityController {
       @RequestParam("activityId") Long activityId,
       @RequestParam("labelId") Long labelId,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(
         activityId, idInToken, OperationTypeEnum.WRITE);
     // 检查这个标签是否存在于当前活动对应的仓库中
@@ -646,7 +599,7 @@ public class ActivityController {
   public void deleteActivityLabel(
       @RequestParam("id") Long id,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
 
     var activityAssignLabelPO = activityAssignLabelService.getById(id);
     if (activityAssignLabelPO == null) {
@@ -684,11 +637,11 @@ public class ActivityController {
       @RequestParam("page") @Min(1) Integer page,
       @RequestParam("size") @Min(1) Integer size,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
     var iPage =
         activityAssignLabelService.pageActivityLabelsByActivityId(
-            activityId, new Page<>(page, size));
+            activityId, page, size);
     return new PageVO<>(
         iPage.getTotal(), iPage.getRecords().stream().map(ActivityAssignLabelVO::new).toList());
   }
@@ -707,7 +660,7 @@ public class ActivityController {
       @RequestParam("activityId") Long activityId,
       @RequestParam("assigneeId") Long assigneeId,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     var UserPO = userService.getById(assigneeId);
     if (UserPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, assigneeId);
@@ -740,7 +693,7 @@ public class ActivityController {
   public void deleteActivityAssignee(
       @RequestParam("id") Long id,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     var activityDesignateAssigneePO = activityDesignateAssigneeService.getById(id);
     if (activityDesignateAssigneePO == null) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_ASSIGNEE_NOT_FOUND, id);
@@ -775,10 +728,10 @@ public class ActivityController {
       @RequestParam("size") @Min(1) Integer size,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     permissionService.checkActivityOperationValidity(
-        activityId, Long.valueOf(JwtUtil.getId(accessToken)), OperationTypeEnum.READ);
+        activityId, TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true), OperationTypeEnum.READ);
     var iPage =
         activityDesignateAssigneeService.pageActivityAssigneesByActivityId(
-            activityId, new Page<>(page, size));
+            activityId, page, size);
     return new PageVO<>(
         iPage.getTotal(), iPage.getRecords().stream().map(AssigneeVO::new).toList());
   }

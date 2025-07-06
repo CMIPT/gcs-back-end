@@ -214,7 +214,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testPageActivityValid() throws Exception {
+  public void testPageActivityDetailValid() throws Exception {
     var result =
         activityPager.apply(
             TestConstant.ACCESS_TOKEN,

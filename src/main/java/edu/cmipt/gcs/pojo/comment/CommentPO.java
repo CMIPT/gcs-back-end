@@ -35,20 +35,17 @@ public class CommentPO {
 
   public CommentPO(CommentDTO comment, Long idInToken) {
     this(
-        null,
-        null,
+        TypeConversionUtil.convertToLong(comment.id()),
+        TypeConversionUtil.convertToLong(comment.activityId()),
         idInToken,
         comment.content(),
         comment.codePath(),
         comment.codeLine(),
-        null,
+        TypeConversionUtil.convertToLong(comment.parentId()),
         null,
         null,
         null,
         null,
         null);
-    this.id = TypeConversionUtil.convertToLong(comment.id());
-    this.activityId = TypeConversionUtil.convertToLong(comment.activityId());
-    this.parentId = TypeConversionUtil.convertToLong(comment.parentId());
   }
 }

@@ -45,12 +45,13 @@ public class ActivityDesignateAssigneeServiceImpl
 
   @Override
   public void removeByActivityId(Serializable activityId) {
-    super.remove(new QueryWrapper<ActivityDesignateAssigneePO>().eq("activity_id", activityId));
+    removeByActivityIds(List.of((Long) activityId));
   }
 
   @Override
   public Page<AssigneeDTO> pageActivityAssigneesByActivityId(
-      Long activityId, Page<AssigneeDTO> page) {
+      Long activityId, Integer pageNum, Integer pageSize) {
+    Page<AssigneeDTO> page = new Page<>(pageNum, pageSize);
     var queryWrapper =
         JoinWrappers.lambda(ActivityDesignateAssigneePO.class)
             .selectAsClass(ActivityDesignateAssigneePO.class, AssigneeDTO.class)

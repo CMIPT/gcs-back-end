@@ -39,11 +39,11 @@ public class RepositoryPO {
   public RepositoryPO(
       RepositoryDTO repositoryDTO, String userId, String username, boolean generateUrl) {
     this(
-        null,
+        TypeConversionUtil.convertToLong(repositoryDTO.id()),
         repositoryDTO.repositoryName(),
         repositoryDTO.repositoryDescription(),
         repositoryDTO.isPrivate(),
-        null,
+        TypeConversionUtil.convertToLong(userId),
         0,
         0,
         0,
@@ -52,8 +52,6 @@ public class RepositoryPO {
         null,
         null,
         null);
-    this.id = TypeConversionUtil.convertToLong(repositoryDTO.id());
-    this.userId = TypeConversionUtil.convertToLong(userId);
     if (generateUrl) {
       this.generateUrl(username);
     }

@@ -75,7 +75,8 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
 
   @Override
   public Page<ActivityDetailDTO> pageActivities(
-      ActivityQueryDTO activityQueryDTO, Page<ActivityDetailDTO> page) {
+      ActivityQueryDTO activityQueryDTO, Integer pageNum, Integer pageSize) {
+    Page<ActivityDetailDTO> page = new Page<>(pageNum, pageSize);
     // 连表分页查询
     var queryWrapper =
         JoinWrappers.lambda(ActivityPO.class)
@@ -84,11 +85,11 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
             .selectAs(UserPO::getUsername, ActivityDetailDTO::getUsername)
             .leftJoin(UserPO.class, UserPO::getId, ActivityPO::getUserId)
             .leftJoin(RepositoryPO.class, RepositoryPO::getId, ActivityPO::getRepositoryId)
-            .eq(RepositoryPO::getId, TypeConversionUtil.convertToLong(activityQueryDTO.repositoryId(),true,null))
+            .eq(RepositoryPO::getId, TypeConversionUtil.convertToLong(activityQueryDTO.repositoryId(),true))
             .eq(ActivityPO::getIsPullRequest, activityQueryDTO.isPullRequest());
 
     if(activityQueryDTO.parentId()!= null) {
-      queryWrapper.eq(ActivityPO::getParentId, TypeConversionUtil.convertToLong(activityQueryDTO.parentId(),true,null));
+      queryWrapper.eq(ActivityPO::getParentId, TypeConversionUtil.convertToLong(activityQueryDTO.parentId(),true));
     }
     if (activityQueryDTO.labels() != null && !activityQueryDTO.labels().isEmpty()) {
       queryWrapper.in(
@@ -108,8 +109,9 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
                   .leftJoin(UserPO.class, UserPO::getId, ActivityDesignateAssigneePO::getAssigneeId)
                   .in(UserPO::getUsername, activityQueryDTO.assignees()));
     }
-    if (activityQueryDTO.author() != null)
+    if (activityQueryDTO.author() != null) {
       queryWrapper.eq(UserPO::getUsername, activityQueryDTO.author());
+    }
     if (activityQueryDTO.isClosed() != null && activityQueryDTO.isClosed()) {
       queryWrapper.isNotNull(ActivityPO::getGmtClosed);
     }
@@ -156,7 +158,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
   }
 
   @Override
-  public ActivityDetailDTO getDetailedOneById(Long id) {
+  public ActivityDetailDTO getActivityDetailById(Long id) {
     var queryWrapper =
         JoinWrappers.lambda(ActivityPO.class)
             .selectAsClass(ActivityPO.class, ActivityDetailDTO.class)
@@ -207,6 +209,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
             .toList();
     if (!activityIds.isEmpty()) {
       // 删除活动相关的信息（标签、指定的参与者、评论等）
+      // 忽略返回值，因为允许删除时没有相关信息
       activityAssignLabelService.removeByActivityIds(activityIds);
       activityDesignateAssigneeService.removeByActivityIds(activityIds);
       commentService.removeByActivityIds(activityIds);

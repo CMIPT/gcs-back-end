@@ -29,6 +29,7 @@ import edu.cmipt.gcs.pojo.repository.RepositoryVO;
 import edu.cmipt.gcs.service.*;
 import edu.cmipt.gcs.util.JwtUtil;
 import edu.cmipt.gcs.util.RedisUtil;
+import edu.cmipt.gcs.util.TypeConversionUtil;
 import edu.cmipt.gcs.validation.group.CreateGroup;
 import edu.cmipt.gcs.validation.group.UpdateGroup;
 import io.swagger.v3.oas.annotations.Operation;
@@ -110,7 +111,7 @@ public class RepositoryController {
   public void createRepository(
       @Validated(CreateGroup.class) @RequestBody RepositoryDTO repository,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long userId = Long.valueOf(JwtUtil.getId(accessToken));
+    Long userId = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     checkRepositoryNameValidity(repository.repositoryName(), accessToken);
     String username = userService.getById(userId).getUsername();
     var repositoryPO = new RepositoryPO(repository, userId.toString(), username, true);
@@ -324,19 +325,13 @@ public class RepositoryController {
   public void updateRepository(
       @Validated(UpdateGroup.class) @RequestBody RepositoryDTO repository,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long id = null;
-    try {
-      id = Long.valueOf(repository.id());
-    } catch (NumberFormatException e) {
-      logger.error(e.getMessage());
-      throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-    }
+    Long id = TypeConversionUtil.convertToLong(repository.id(),true);
     var repositoryPO = repositoryService.getById(id);
     if (repositoryPO == null) {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, id);
     }
     Long userId = repositoryPO.getUserId();
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     if (!idInToken.equals(userId)) {
       logger.info(
           "User[{}] tried to update repository of user[{}]", idInToken, repositoryPO.getUserId());
@@ -378,7 +373,7 @@ public class RepositoryController {
               message = "{Pattern.repositoryController#checkRepositoryNameValidity.repositoryName}")
           String repositoryName,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     if (repositoryService.getOneByUserIdAndRepositoryName(idInToken, repositoryName) != null) {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_ALREADY_EXISTS, repositoryName);
     }
@@ -458,7 +453,7 @@ public class RepositoryController {
     }
     Long repositoryId = collaboration.getRepositoryId();
     var repositoryPO = repositoryService.getById(repositoryId);
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     if (!idInToken.equals(repositoryPO.getUserId())) {
       logger.info(
           "User[{}] tried to remove collaborator from repository[{}] whose creator is [{}]",
@@ -503,14 +498,14 @@ public class RepositoryController {
     if (repository == null) {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
     }
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     checkVisibility(
         repository,
         idInToken,
         new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId));
     var iPage =
         userCollaborateRepositoryService.pageCollaboratorsByRepositoryId(
-            repositoryId, new Page<>(page, size), orderBy, isAsc);
+            repositoryId, page, size, orderBy, isAsc);
     return new PageVO<>(
         iPage.getTotal(), iPage.getRecords().stream().map(CollaboratorVO::new).toList());
   }
@@ -579,14 +574,8 @@ public class RepositoryController {
   public void createLabel(
       @RequestBody LabelDTO label,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long repositoryId = null;
-    try {
-      repositoryId = Long.valueOf(label.repositoryId());
-    } catch (NumberFormatException e) {
-      logger.error(e.getMessage());
-      throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-    }
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long repositoryId = TypeConversionUtil.convertToLong(label.repositoryId(),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkRepositoryOperationValidity(
         repositoryId, idInToken, OperationTypeEnum.WRITE);
     String labelName = label.name();
@@ -616,18 +605,12 @@ public class RepositoryController {
   public void updateLabel(
       @RequestBody LabelDTO label,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long id = null;
-    try {
-      id = Long.valueOf(label.id());
-    } catch (NumberFormatException e) {
-      logger.error(e.getMessage());
-      throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-    }
+    Long id = TypeConversionUtil.convertToLong(label.id(),true);
     var labelPO = labelService.getById(id);
     if (labelPO == null) {
       throw new GenericException(ErrorCodeEnum.LABEL_NOT_FOUND, id);
     }
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkRepositoryOperationValidity(
         labelPO.getRepositoryId(), idInToken, OperationTypeEnum.WRITE);
     if (!labelService.updateById(new LabelPO(idInToken, label))) {
@@ -654,7 +637,7 @@ public class RepositoryController {
     if (labelPO == null) {
       throw new GenericException(ErrorCodeEnum.LABEL_NOT_FOUND, id);
     }
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkRepositoryOperationValidity(
         labelPO.getRepositoryId(), idInToken, OperationTypeEnum.WRITE);
     if (!labelService.removeById(id)) {
@@ -682,7 +665,7 @@ public class RepositoryController {
       @RequestParam("isAsc") Boolean isAsc,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
 
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkRepositoryOperationValidity(
         repositoryId, idInToken, OperationTypeEnum.READ);
     var wrapper = new QueryWrapper<LabelPO>();
@@ -1130,7 +1113,7 @@ public class RepositoryController {
     if (repositoryPO == null) {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage);
     }
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     checkVisibility(
         repositoryPO,
         idInToken,
@@ -1180,7 +1163,7 @@ public class RepositoryController {
     if (repositoryPO == null) {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
     }
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     Long repositoryUserId = repositoryPO.getUserId();
     if (!idInToken.equals(repositoryUserId)) {
       logger.info(

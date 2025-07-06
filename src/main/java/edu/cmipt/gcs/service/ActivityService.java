@@ -11,9 +11,9 @@ public interface ActivityService extends IService<ActivityPO> {
   ActivityPO getLatestActivityByRepositoryId(Long repositoryId);
 
   Page<ActivityDetailDTO> pageActivities(
-      ActivityQueryDTO activityQueryDTO, Page<ActivityDetailDTO> objectPage);
+      ActivityQueryDTO activityQueryDTO, Integer pageNum,Integer pageSize);
 
-  ActivityDetailDTO getDetailedOneById(Long id);
+  ActivityDetailDTO getActivityDetailById(Long id);
 
   ActivityPO getOneByActivityNumberAndRepositoryId(Long activityNumber, Long repositoryId);
 

@@ -17,6 +17,7 @@ import edu.cmipt.gcs.service.UserService;
 import edu.cmipt.gcs.util.EmailVerificationCodeUtil;
 import edu.cmipt.gcs.util.JwtUtil;
 import edu.cmipt.gcs.util.MD5Converter;
+import edu.cmipt.gcs.util.TypeConversionUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -113,7 +114,7 @@ public class UserController {
     if (user.username() != null) {
       throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
     }
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     // for the null fields, mybatis-plus will ignore by default
     if (!userService.updateById(new UserPO(user, idInToken))) {
       throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user);
@@ -134,7 +135,7 @@ public class UserController {
   public void updateUserPassword(
       @Validated @RequestBody UserUpdatePasswordDTO user,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     var userPO = userService.getById(idInToken);
     if (userPO == null
         || !userPO.getUserPassword().equals(MD5Converter.convertToMD5(user.oldPassword()))) {
