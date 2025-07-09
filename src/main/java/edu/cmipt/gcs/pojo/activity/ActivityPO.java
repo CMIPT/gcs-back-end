@@ -39,7 +39,7 @@ public class ActivityPO {
         TypeConversionUtil.convertToLong(activityDTO.id()),
         activityNumber,
         TypeConversionUtil.convertToLong(activityDTO.repositoryId()),
-        TypeConversionUtil.convertToLong(userId),
+        TypeConversionUtil.convertToLong(activityDTO.parentId()),
         activityDTO.title(),
         activityDTO.description(),
         activityDTO.isPullRequest(),

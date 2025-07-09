@@ -15,6 +15,7 @@ import edu.cmipt.gcs.pojo.comment.CommentDTO;
 import edu.cmipt.gcs.pojo.comment.CommentPO;
 import edu.cmipt.gcs.pojo.comment.CommentVO;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
+import edu.cmipt.gcs.pojo.issue.IssueVO;
 import edu.cmipt.gcs.pojo.label.ActivityAssignLabelPO;
 import edu.cmipt.gcs.pojo.label.ActivityAssignLabelVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
@@ -54,9 +55,6 @@ public class ActivityController {
   @Autowired private LabelService labelService;
   @Autowired private PermissionService permissionService;
 
-  // TODO 查询问题子问题
-  // TODO 查询评论子评论
-
   @PostMapping(ApiPathConstant.ACTIVITY_CREATE_ACTIVITY_API_PATH)
   @Operation(
       summary = "Create an activity",
@@ -75,18 +73,19 @@ public class ActivityController {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     Long repositoryId = TypeConversionUtil.convertToLong(activity.repositoryId(), true);
     permissionService.checkRepositoryOperationValidity(
-        repositoryId, idInToken, OperationTypeEnum.WRITE);
-    // 检查父活动是否存在
+        repositoryId, idInToken, OperationTypeEnum.MODIFY);
+    // 检查是否涉及sub-issue
     if(activity.parentId()!=null)
     {
+      // 只有issue可以有父活动
+      if(activity.isPullRequest()) {
+        throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
+      }
       Long parentId = TypeConversionUtil.convertToLong(activity.parentId(),true);
-        var parentActivityPO = activityService.getById(parentId);
-        if (parentActivityPO == null) {
-            throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, parentId);
-        }
+      permissionService.checkIssueOperationValidity(repositoryId,parentId);
     }
     int retry = 0;
-    while (true) {
+    while (retry< ApplicationConstant.CREATE_LABEL_MAX_RETRY_TIMES) {
       try {
         ActivityPO latestActivityPO = activityService.getLatestActivityByRepositoryId(repositoryId);
         int number = (latestActivityPO == null ? 1 : latestActivityPO.getNumber() + 1);
@@ -95,13 +94,11 @@ public class ActivityController {
         return;
       } catch (DuplicateKeyException e) {
         retry++;
-        if (retry >= ApplicationConstant.CREATE_LABEL_MAX_RETRY_TIMES) {
-          throw new GenericException(ErrorCodeEnum.ACTIVITY_CREATE_FAILED, activity);
-        }
         // 短暂 sleep 重试
         Thread.sleep(50);
       }
     }
+    throw new GenericException(ErrorCodeEnum.ACTIVITY_CREATE_FAILED, activity);
   }
 
   @DeleteMapping(ApiPathConstant.ACTIVITY_DELETE_ACTIVITY_API_PATH)
@@ -149,11 +146,11 @@ public class ActivityController {
     })
     public void updateActivityLockState(
         @RequestParam("id") Long id,
-        @RequestParam("is locked") Boolean isLocked,
+        @RequestParam("isLocked") Boolean isLocked,
         @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(
-        id, idInToken, OperationTypeEnum.WRITE);
+        id, idInToken, OperationTypeEnum.MODIFY);
     var activityPO = activityService.getById(id);
     LambdaUpdateWrapper<ActivityPO> updateWrapper = new LambdaUpdateWrapper<>();
     updateWrapper.eq(ActivityPO::getId, id);
@@ -184,11 +181,11 @@ public class ActivityController {
     })
     public void updateActivityCloseState(
         @RequestParam("id") Long id,
-        @RequestParam("is closed") Boolean isClosed,
+        @RequestParam("isClosed") Boolean isClosed,
         @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(
-        id, idInToken, OperationTypeEnum.WRITE);
+        id, idInToken, OperationTypeEnum.MODIFY);
     var activityPO = activityService.getById(id);
     LambdaUpdateWrapper<ActivityPO> updateWrapper = new LambdaUpdateWrapper<>();
     updateWrapper.eq(ActivityPO::getId, id);
@@ -224,15 +221,17 @@ public class ActivityController {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     Long activityId = TypeConversionUtil.convertToLong(activity.id(),true);
     permissionService.checkActivityOperationValidity(
-        activityId, idInToken, OperationTypeEnum.WRITE);
-    // 检查父活动是否存在
+        activityId, idInToken, OperationTypeEnum.MODIFY);
+    // 检查是否涉及sub-issue
     if(activity.parentId()!=null)
     {
       Long parentId = TypeConversionUtil.convertToLong(activity.parentId(),true);
-      var parentActivityPO = activityService.getById(parentId);
-      if (parentActivityPO == null) {
-        throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, parentId);
+      var activityPO = activityService.getById(activityId);
+      // 不能更新父活动为自己 并且 只有issue可以有父活动
+      if (parentId.equals(activityId) || activityPO.getIsPullRequest()) {
+        throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
       }
+      permissionService.checkIssueOperationValidity(activityPO.getRepositoryId(), parentId);
     }
     if (!activityService.updateById(new ActivityPO(activity))) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, activityId);
@@ -258,38 +257,108 @@ public class ActivityController {
       @Validated(QueryGroup.class) @RequestBody ActivityQueryDTO activityQueryDTO,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long repositoryId = TypeConversionUtil.convertToLong(activityQueryDTO.repositoryId(), true);
-    String user = activityQueryDTO.user();
-    var userPO = activityQueryDTO.userType().getOne(userService, user);
-    if (userPO == null) {
-      throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, user);
-    }
     permissionService.checkRepositoryOperationValidity(
         repositoryId, TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true), OperationTypeEnum.READ);
-    var iPage = activityService.pageActivities(activityQueryDTO, page,size);
+    var iPage = activityService.pageActivitiesDetail(activityQueryDTO, page,size);
     return new PageVO<>(
         iPage.getTotal(), iPage.getRecords().stream().map(ActivityDetailVO::new).toList());
   }
 
-  @PostMapping(ApiPathConstant.ACTIVITY_GET_SUB_ACTIVITY_API_PATH)
+  @PostMapping(ApiPathConstant.ACTIVITY_CREATE_SUB_ISSUE_API_PATH)
     @Operation(
-        summary = "Page an activity's sub-activities",
-        description =
-            "Page an activity's sub-activities. If the given token is trying to get other activity's"
-                + " sub-activities, only public activity's sub-activities will be returned",
+        summary = "Create a sub-issue for an activity",
+        description = "Create a sub-issue for an activity with the given information",
         tags = {"Activity", "Post Method"})
     @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
-        description = "User activities page failed",
+        description = "Create sub-issue failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public PageVO<ActivityDetailVO> pageSubActivity(
+    public void createSubIssue (
+        @Validated(CreateGroup.class) @RequestBody ActivityDTO activity,
+        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken)
+    throws InterruptedException {
+    if(activity.isPullRequest() || activity.parentId() == null) {
+      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
+    }
+    createActivity(activity, accessToken);
+    }
+
+  @PostMapping(ApiPathConstant.ACTIVITY_ADD_SUB_ISSUE_API_PATH)
+    @Operation(
+        summary = "Add a sub-issue to an activity",
+        description = "Add a sub-issue to an activity with the given information",
+        tags = {"Activity", "Post Method"})
+    @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Add sub-issue failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    })
+    public void addSubIssue(
+        @RequestParam("parentId") Long parentId,
+        @RequestParam("subIssueId") Long subIssueId,
+        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    ActivityDTO activity = new ActivityDTO(subIssueId,parentId);
+    updateActivityContent(activity, accessToken);
+    }
+
+  @DeleteMapping(ApiPathConstant.ACTIVITY_REMOVE_SUB_ISSUE_API_PATH)
+    @Operation(
+        summary = "Remove a sub-issue from an activity",
+        description = "Remove a sub-issue from an activity with the given id",
+        tags = {"Activity", "Delete Method"})
+    @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Delete sub-issue failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    })
+    public void removeSubIssue(
+        @RequestParam("subIssueId") Long subIssueId,
+        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    permissionService.checkActivityOperationValidity(
+            subIssueId, idInToken, OperationTypeEnum.MODIFY);
+    var activityPO = activityService.getById(subIssueId);
+    if(activityPO.getIsPullRequest()){
+        throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
+    }
+    if(!activityService.removeSubIssueById(subIssueId)) {
+      throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, subIssueId);
+    }
+  }
+
+  @GetMapping(ApiPathConstant.ACTIVITY_PAGE_SUB_ISSUE_API_PATH)
+    @Operation(
+        summary = "Page an activity's sub-issues",
+        description =
+            "Page an activity's sub-issues. If the given token is trying to get other activity's"
+                + " sub-issues, only public activity's sub-issues will be returned",
+        tags = {"Activity", "Get Method"})
+    @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "User issues page failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    })
+    public PageVO<IssueVO> pageSubIssue(
         @RequestParam("page") @Min(1) Integer page,
         @RequestParam("size") @Min(1) Integer size,
-        @Validated(QueryGroup.class) @RequestBody ActivityQueryDTO activityQueryDTO,
+        @RequestParam("parentId") Long parentId,
         @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-      return pageActivityDetail(page, size, activityQueryDTO, accessToken);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    permissionService.checkActivityOperationValidity(
+        parentId, idInToken, OperationTypeEnum.READ);
+    var activityPO = activityService.getById(parentId);
+    if (activityPO.getIsPullRequest()) {
+      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
     }
+    var iPage = activityService.pageSubIssue(parentId, page, size);
+    return new PageVO<>(
+        iPage.getTotal(), iPage.getRecords().stream().map(IssueVO::new).toList());
+  }
 
   @GetMapping(ApiPathConstant.ACTIVITY_GET_ACTIVITY_API_PATH)
   @Operation(
@@ -354,7 +423,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, commentId);
     }
     permissionService.checkActivityOperationValidity(
-        commentPO.getActivityId(), idInToken, OperationTypeEnum.WRITE);
+        commentPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
     if (!commentService.updateById(new CommentPO(comment, idInToken))) {
       throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, comment);
     }
@@ -381,7 +450,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id);
     }
     permissionService.checkActivityOperationValidity(
-        commentPO.getActivityId(), idInToken, OperationTypeEnum.WRITE);
+        commentPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
     LambdaUpdateWrapper<CommentPO> updateWrapper = new LambdaUpdateWrapper<>();
     updateWrapper.eq(CommentPO::getId, id);
     if(!isHidden) {
@@ -419,7 +488,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id);
     }
     permissionService.checkActivityOperationValidity(
-        commentPO.getActivityId(), idInToken, OperationTypeEnum.WRITE);
+        commentPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
     LambdaUpdateWrapper<CommentPO> updateWrapper = new LambdaUpdateWrapper<>();
     updateWrapper.eq(CommentPO::getId, id);
     if(!isResolved) {
@@ -435,7 +504,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, id);
     }
 }
-
+  //TODO: 在涉及回复评论时(pr的code view)，如果删除的是根评论，要更新新的根评论和reply_to_id
   @DeleteMapping(ApiPathConstant.ACTIVITY_DELETE_COMMENT_API_PATH)
   @Operation(
       summary = "Delete an activity comment",
@@ -456,7 +525,7 @@ public class ActivityController {
     }
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(
-        commentPO.getActivityId(), idInToken, OperationTypeEnum.WRITE);
+        commentPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
     if (!commentService.removeById(id)) {
       throw new GenericException(ErrorCodeEnum.COMMENT_DELETE_FAILED, id);
     }
@@ -479,10 +548,10 @@ public class ActivityController {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     Long activityId = TypeConversionUtil.convertToLong(comment.activityId(), true);
     permissionService.checkActivityOperationValidity(
-        activityId, idInToken, OperationTypeEnum.WRITE);
-    if(comment.parentId()!=null) {
+        activityId, idInToken, OperationTypeEnum.COMMENT);
+    if(comment.replyToId()!=null) {
       // 检查评论的父评论是否存在
-      Long parentId = TypeConversionUtil.convertToLong(comment.parentId(), true);
+      Long parentId = TypeConversionUtil.convertToLong(comment.replyToId(), true);
       var parentCommentPO = commentService.getById(parentId);
       if (parentCommentPO == null) {
           throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, parentId);
@@ -493,6 +562,7 @@ public class ActivityController {
     }
   }
 
+  //TODO: 在PR的code view中，评论的分页需要包含子评论
   @GetMapping(ApiPathConstant.ACTIVITY_PAGE_COMMENT_API_PATH)
   @Operation(
       summary = "Page activity comments",
@@ -514,7 +584,7 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
     var wrapper = new QueryWrapper<CommentPO>();
     wrapper.eq("activity_id", activityId);
-    wrapper.isNull("parent_id"); // 默认查询根评论,子评论通过另外的 API查询
+    wrapper.isNull("reply_to_id"); // 默认查询根评论,子评论通过另外的 API查询
     wrapper.orderBy(true, true, "gmt_created");
     var iPage = commentService.page(new Page<>(page, size), wrapper);
     return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(CommentVO::new).toList());
@@ -533,7 +603,7 @@ public class ActivityController {
   })
   public PageVO<CommentVO> pageActivitySubComment(
           @RequestParam("activityId") Long activityId,
-          @RequestParam("parentId") Long parentId,
+          @RequestParam("replyToId") Long replyToId,
           @RequestParam("page") @Min(1) Integer page,
           @RequestParam("size") @Min(1) Integer size,
           @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
@@ -542,7 +612,7 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
     var wrapper = new QueryWrapper<CommentPO>();
     wrapper.eq("activity_id", activityId);
-    wrapper.eq("parent_id", parentId); // 查询子评论
+    wrapper.eq("reply_to_id", replyToId); // 查询子评论
     wrapper.orderBy(true, true, "gmt_created");
     var iPage = commentService.page(new Page<>(page, size), wrapper);
     return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(CommentVO::new).toList());
@@ -565,7 +635,7 @@ public class ActivityController {
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(
-        activityId, idInToken, OperationTypeEnum.WRITE);
+        activityId, idInToken, OperationTypeEnum.MODIFY);
     // 检查这个标签是否存在于当前活动对应的仓库中
     var activityPO = activityService.getById(activityId);
     if (activityPO == null) {
@@ -611,7 +681,7 @@ public class ActivityController {
           ErrorCodeEnum.ACTIVITY_NOT_FOUND, activityAssignLabelPO.getActivityId());
     }
     permissionService.checkRepositoryOperationValidity(
-        activityPO.getRepositoryId(), idInToken, OperationTypeEnum.WRITE);
+        activityPO.getRepositoryId(), idInToken, OperationTypeEnum.MODIFY);
     if (!activityAssignLabelService.removeById(id)) {
       throw new GenericException(
           ErrorCodeEnum.ACTIVITY_DELETE_LABEL_FAILED, activityPO.getId(), id);
@@ -666,7 +736,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, assigneeId);
     }
     permissionService.checkActivityOperationValidity(
-        activityId, idInToken, OperationTypeEnum.WRITE);
+        activityId, idInToken, OperationTypeEnum.MODIFY);
     if (activityDesignateAssigneeService.getOneByActivityIdAndAssigneeId(activityId, assigneeId)
         != null) {
       throw new GenericException(
@@ -699,7 +769,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_ASSIGNEE_NOT_FOUND, id);
     }
     permissionService.checkActivityOperationValidity(
-        activityDesignateAssigneePO.getActivityId(), idInToken, OperationTypeEnum.WRITE);
+        activityDesignateAssigneePO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
     if (!activityDesignateAssigneeService.removeById(id)) {
       throw new GenericException(
           ErrorCodeEnum.ACTIVITY_DELETE_ASSIGNEE_FAILED,

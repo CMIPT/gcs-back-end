@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import edu.cmipt.gcs.pojo.label.ActivityAssignLabelDTO;
 import edu.cmipt.gcs.pojo.label.ActivityAssignLabelPO;
-import edu.cmipt.gcs.pojo.label.LabelVO;
+import edu.cmipt.gcs.pojo.label.LabelDTO;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +17,7 @@ public interface ActivityAssignLabelService extends IService<ActivityAssignLabel
 
   void removeByActivityId(Serializable id);
 
-  Map<Long, List<LabelVO>> getLabelsByActivityIds(List<Long> activityIds);
+  Map<Long, List<LabelDTO>> getLabelsByActivityIds(List<Long> activityIds);
 
   void removeByActivityIds(List<Long> activityIds);
 

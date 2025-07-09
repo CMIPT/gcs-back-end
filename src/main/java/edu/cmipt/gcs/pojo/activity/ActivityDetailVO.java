@@ -4,12 +4,12 @@ import edu.cmipt.gcs.pojo.assign.AssigneeVO;
 import edu.cmipt.gcs.pojo.label.LabelVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
-import java.util.Objects;
 
 public record ActivityDetailVO(
     @Schema(description = "id") String id,
     @Schema(description = "Activity Number") String number,
     @Schema(description = "Repository Id") String repositoryId,
+    @Schema(description = "Repository Name") String repositoryName,
     @Schema(description = "Activity Title") String title,
     @Schema(description = "Activity Description") String description,
     @Schema(description = "Activity Labels") List<LabelVO> labels,
@@ -19,19 +19,24 @@ public record ActivityDetailVO(
     @Schema(description = "Created timestamp, seconds since epoch") String gmtCreated,
     @Schema(description = "Closed timestamp, seconds since epoch") String gmtClosed,
     @Schema(description = "Locked timestamp, seconds since epoch") String gmtLocked) {
-  public ActivityDetailVO(ActivityDetailDTO activityDetailDTO) {
-    this(
-        activityDetailDTO.getId().toString(),
-        activityDetailDTO.getNumber().toString(),
-        activityDetailDTO.getRepositoryId().toString(),
-        activityDetailDTO.getTitle(),
-        activityDetailDTO.getDescription(),
-        activityDetailDTO.getLabels(),
-        activityDetailDTO.getUsername(),
-        activityDetailDTO.getAssignees(),
-        activityDetailDTO.getCommentCnt().toString(),
-        String.valueOf(activityDetailDTO.getGmtCreated()),
-        String.valueOf(activityDetailDTO.getGmtClosed()),
-        String.valueOf(activityDetailDTO.getGmtLocked()));
-  }
+    public ActivityDetailVO(ActivityDetailDTO activityDetailDTO) {
+        this(
+            activityDetailDTO.getId().toString(),
+            activityDetailDTO.getNumber().toString(),
+            activityDetailDTO.getRepositoryId().toString(),
+            activityDetailDTO.getRepositoryName(),
+            activityDetailDTO.getTitle(),
+            activityDetailDTO.getDescription(),
+            activityDetailDTO.getLabels().stream()
+                        .map(LabelVO::new)
+                        .toList(),
+            activityDetailDTO.getUsername(),
+            activityDetailDTO.getAssignees().stream()
+                        .map(AssigneeVO::new)
+                        .toList(),
+            activityDetailDTO.getCommentCnt().toString(),
+            String.valueOf(activityDetailDTO.getGmtCreated()),
+            String.valueOf(activityDetailDTO.getGmtClosed()),
+            String.valueOf(activityDetailDTO.getGmtLocked()));
+    }
 }

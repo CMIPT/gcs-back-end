@@ -11,4 +11,11 @@ public record LabelVO(String id, String name, String hexColor, String descriptio
         labelPO.getHexColor(),
         labelPO.getDescription());
   }
+  public LabelVO(LabelDTO labelDTO) {
+    this(
+        labelDTO.id(),
+        labelDTO.name(),
+        labelDTO.hexColor(),
+        labelDTO.description());
+  }
 }

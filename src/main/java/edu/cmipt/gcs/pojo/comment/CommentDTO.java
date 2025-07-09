@@ -36,6 +36,6 @@ public record CommentDTO(
             description =
                 "Line number in the code file where the comment is made. NULL if not applicable")
         Integer codeLine,
-    @Schema(description = "Parent Comment ID")
+    @Schema(description = "Comment ID of this comment reply. NULL if this is a root comment")
         @Null(groups = UpdateGroup.class)
-        String parentId) {}
+        String replyToId) {}

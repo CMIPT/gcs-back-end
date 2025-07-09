@@ -35,5 +35,17 @@ public record ActivityDTO(
         @NotBlank(groups = CreateGroup.class)
         String title,
     @Schema(description = "if the activity is a pull request,true: pull request, false: issue")
-        @NotNull(groups = {CreateGroup.class, UpdateGroup.class})
-        Boolean isPullRequest) {}
+        @NotNull(groups = CreateGroup.class)
+        @Null(groups = UpdateGroup.class)
+        Boolean isPullRequest) {
+    public ActivityDTO(Long id,Long parentId){
+        this(
+            String.valueOf(id),
+            null,
+            null,
+            String.valueOf(parentId),
+            null,
+            null,
+            null);
+    }
+}

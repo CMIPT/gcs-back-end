@@ -73,7 +73,7 @@ public class ActivityDesignateAssigneeServiceImpl
   }
 
   @Override
-  public Map<Long, List<AssigneeVO>> getAssigneesByActivityIds(List<Long> activityIds) {
+  public Map<Long, List<AssigneeDTO>> getAssigneesByActivityIds(List<Long> activityIds) {
     var queryWrapper =
         JoinWrappers.lambda(ActivityDesignateAssigneePO.class)
             .selectAsClass(ActivityDesignateAssigneePO.class, AssigneeDTO.class)
@@ -83,23 +83,14 @@ public class ActivityDesignateAssigneeServiceImpl
             .innerJoin(UserPO.class, UserPO::getId, ActivityDesignateAssigneePO::getAssigneeId)
             .in(ActivityDesignateAssigneePO::getActivityId, activityIds);
 
-    List<ActivityDesignateAssigneeDTO> assigneeDTOs =
+    List<AssigneeDTO> assigneeDTOs =
         activityDesignateAssigneeMapper.selectJoinList(
-            ActivityDesignateAssigneeDTO.class, queryWrapper);
+           AssigneeDTO.class, queryWrapper);
 
     return assigneeDTOs.stream()
         .collect(
             Collectors.groupingBy(
-                ActivityDesignateAssigneeDTO::getActivityId,
-                Collectors.mapping(
-                    dto ->
-                        new AssigneeVO(
-                            dto.getId().toString(),
-                            dto.getAssigneeId().toString(),
-                            dto.getUsername(),
-                            dto.getAvatarUrl(),
-                            dto.getEmail()),
-                    Collectors.toList())));
+                AssigneeDTO::getActivityId));
   }
 
   @Override

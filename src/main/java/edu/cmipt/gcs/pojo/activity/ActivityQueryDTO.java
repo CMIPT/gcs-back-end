@@ -9,15 +9,6 @@ import java.util.List;
 
 @Schema(description = "Activity Page Query Data Transfer Object")
 public record ActivityQueryDTO(
-    @Schema(
-            description = "User Information",
-            example =
-                "Name:author123/ID:1935328433259216897/"
-                    + "Token:eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3NTE0NTQzNzAsImlkIjoxOTM3MTE1ODc5Mjc3ODk5Nzc4LCJ0b2tlblR5cGUiOiJBQ0NFU1NfVE9LRU4ifQ.sEdCjIL--0IlEFlnM5qw_p4HLozCfxnth7EzOBNpbwo")
-        @NotNull(groups = QueryGroup.class)
-        String user,
-    @Schema(description = "Type of User", example = "Name") @NotNull(groups = QueryGroup.class)
-        UserQueryTypeEnum userType,
     @Schema(description = "Repository ID", example = "1936351319541448705")
         @NotNull(groups = QueryGroup.class)
         String repositoryId,
@@ -41,4 +32,18 @@ public record ActivityQueryDTO(
     @Schema(description = "Whether or not the activity is locked", example = "false")
         Boolean isLocked,
     @Schema(description = "Whether or not the activity is closed", example = "false")
-        Boolean isClosed) {}
+        Boolean isClosed) {
+    public ActivityQueryDTO(Long parentId) {
+            this(
+                null,
+                null,
+                false,
+                String.valueOf(parentId),
+                null,
+                null,
+               ActivityOrderByEnum.GMT_CREATED,
+                true,
+                null,
+                null);
+    }
+}

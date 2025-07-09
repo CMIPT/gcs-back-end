@@ -21,7 +21,7 @@ public class CommentPO {
   private String content;
   private String codePath;
   private Integer codeLine;
-  private Long parentId;
+  private Long replyToId;
   private Timestamp gmtResolved;
   private Timestamp gmtHidden;
 
@@ -41,7 +41,7 @@ public class CommentPO {
         comment.content(),
         comment.codePath(),
         comment.codeLine(),
-        TypeConversionUtil.convertToLong(comment.parentId()),
+        TypeConversionUtil.convertToLong(comment.replyToId()),
         null,
         null,
         null,

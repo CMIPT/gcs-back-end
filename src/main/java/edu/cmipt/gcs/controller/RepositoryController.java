@@ -577,7 +577,7 @@ public class RepositoryController {
     Long repositoryId = TypeConversionUtil.convertToLong(label.repositoryId(),true);
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkRepositoryOperationValidity(
-        repositoryId, idInToken, OperationTypeEnum.WRITE);
+        repositoryId, idInToken, OperationTypeEnum.MODIFY);
     String labelName = label.name();
     String labelHexColor = label.hexColor();
     if (labelService.getOneByNameAndRepositoryId(labelName, repositoryId) != null) {
@@ -612,7 +612,7 @@ public class RepositoryController {
     }
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkRepositoryOperationValidity(
-        labelPO.getRepositoryId(), idInToken, OperationTypeEnum.WRITE);
+        labelPO.getRepositoryId(), idInToken, OperationTypeEnum.MODIFY);
     if (!labelService.updateById(new LabelPO(idInToken, label))) {
       logger.error("Failed to update label[{}]", id);
       throw new GenericException(ErrorCodeEnum.LABEL_UPDATE_FAILED, label);
@@ -639,7 +639,7 @@ public class RepositoryController {
     }
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkRepositoryOperationValidity(
-        labelPO.getRepositoryId(), idInToken, OperationTypeEnum.WRITE);
+        labelPO.getRepositoryId(), idInToken, OperationTypeEnum.MODIFY);
     if (!labelService.removeById(id)) {
       logger.error("Failed to delete label[{}]", id);
       throw new GenericException(ErrorCodeEnum.LABEL_DELETE_FAILED, id);

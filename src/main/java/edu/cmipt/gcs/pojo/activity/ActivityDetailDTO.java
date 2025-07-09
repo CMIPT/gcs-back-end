@@ -1,7 +1,7 @@
 package edu.cmipt.gcs.pojo.activity;
 
-import edu.cmipt.gcs.pojo.assign.AssigneeVO;
-import edu.cmipt.gcs.pojo.label.LabelVO;
+import edu.cmipt.gcs.pojo.assign.AssigneeDTO;
+import edu.cmipt.gcs.pojo.label.LabelDTO;
 import java.sql.Timestamp;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -15,11 +15,12 @@ public class ActivityDetailDTO {
   private Long id; // activity id
   private Integer number;
   private Long repositoryId;
+  private String repositoryName;
   private String title;
   private String description;
   private String username;
-  private List<LabelVO> labels;
-  private List<AssigneeVO> assignees;
+  private List<LabelDTO> labels;
+  private List<AssigneeDTO> assignees;
   private Long commentCnt;
   private Timestamp gmtCreated;
   private Timestamp gmtClosed;

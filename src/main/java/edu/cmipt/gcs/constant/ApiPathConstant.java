@@ -88,7 +88,11 @@ public class ApiPathConstant {
   public static final String ACTIVITY_UPDATE_ACTIVITY_LOCK_STATE_API_PATH = ACTIVITY_API_PREFIX + "/update-lock-state";
   public static final String ACTIVITY_UPDATE_ACTIVITY_CLOSE_STATE_API_PATH = ACTIVITY_API_PREFIX + "/update-close-state";
   public static final String ACTIVITY_PAGE_ACTIVITY_API_PATH = ACTIVITY_API_PREFIX + "/page";
-  public static final String ACTIVITY_GET_SUB_ACTIVITY_API_PATH = ACTIVITY_API_PREFIX + "/get-sub-activity";
+  public static final String ACTIVITY_PAGE_SUB_ISSUE_API_PATH = ACTIVITY_API_PREFIX + "/page-sub-issue";
+  public static final String ACTIVITY_CREATE_SUB_ISSUE_API_PATH =
+      ACTIVITY_API_PREFIX + "/create-sub-issue";
+  public static final String ACTIVITY_ADD_SUB_ISSUE_API_PATH = ACTIVITY_API_PREFIX + "/add-sub-issue";
+  public static final String ACTIVITY_REMOVE_SUB_ISSUE_API_PATH = ACTIVITY_API_PREFIX + "/remove-sub-issue";
   public static final String ACTIVITY_CREATE_COMMENT_API_PATH =
       ACTIVITY_API_PREFIX + "/create-comment";
   public static final String ACTIVITY_UPDATE_COMMENT_CONTENT_API_PATH =

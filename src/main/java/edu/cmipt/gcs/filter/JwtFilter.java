@@ -69,6 +69,7 @@ public class JwtFilter extends OncePerRequestFilter {
                   ApiPathConstant.REPOSITORY_CHECK_REPOSITORY_NAME_VALIDITY_API_PATH,
                   ApiPathConstant.SSH_KEY_PAGE_SSH_KEY_API_PATH,
                   ApiPathConstant.ACTIVITY_GET_ACTIVITY_API_PATH,
+                  ApiPathConstant.ACTIVITY_PAGE_SUB_ISSUE_API_PATH,
                   ApiPathConstant.ACTIVITY_PAGE_COMMENT_API_PATH,
                   ApiPathConstant.ACTIVITY_PAGE_LABEL_API_PATH,
                   ApiPathConstant.ACTIVITY_PAGE_ASSIGNEE_API_PATH,
@@ -90,8 +91,9 @@ public class JwtFilter extends OncePerRequestFilter {
                   ApiPathConstant.ACTIVITY_UPDATE_COMMENT_HIDDEN_STATE_API_PATH,
                   ApiPathConstant.ACTIVITY_CREATE_COMMENT_API_PATH,
                   ApiPathConstant.ACTIVITY_PAGE_SUB_COMMENT_API_PATH,
+                  ApiPathConstant.ACTIVITY_CREATE_SUB_ISSUE_API_PATH,
+                  ApiPathConstant.ACTIVITY_ADD_SUB_ISSUE_API_PATH,
                   ApiPathConstant.ACTIVITY_PAGE_ACTIVITY_API_PATH,
-                  ApiPathConstant.ACTIVITY_GET_SUB_ACTIVITY_API_PATH,
                   ApiPathConstant.ACTIVITY_ADD_LABEL_API_PATH,
                   ApiPathConstant.ACTIVITY_ADD_ASSIGNEE_API_PATH,
                   ApiPathConstant.REPOSITORY_CREATE_LABEL_API_PATH,
@@ -107,6 +109,7 @@ public class JwtFilter extends OncePerRequestFilter {
                   ApiPathConstant.ACTIVITY_DELETE_COMMENT_API_PATH,
                   ApiPathConstant.ACTIVITY_DELETE_LABEL_API_PATH,
                   ApiPathConstant.ACTIVITY_DELETE_ASSIGNEE_API_PATH,
+                  ApiPathConstant.ACTIVITY_REMOVE_SUB_ISSUE_API_PATH,
                   ApiPathConstant.REPOSITORY_DELETE_LABEL_API_PATH));
 
   @Override

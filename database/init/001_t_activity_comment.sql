@@ -5,7 +5,7 @@ CREATE TABLE public.t_activity_comment (
     content text NOT NULL ,
     code_path character varying(255),
     code_line int,
-    parent_id bigint,
+    reply_to_id bigint,
     gmt_created timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     gmt_updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     gmt_resolved timestamp without time zone,
@@ -21,7 +21,7 @@ COMMENT ON COLUMN public.t_activity_comment.user_id IS 'ID of the user who poste
 COMMENT ON COLUMN public.t_activity_comment.content IS 'Content of the comment.';
 COMMENT ON COLUMN public.t_activity_comment.code_path IS 'Path of the code file where the comment is made. NULL if not applicable.';
 COMMENT ON COLUMN public.t_activity_comment.code_line IS 'Line number in the code file where the comment is made. NULL if not applicable.';
-COMMENT ON COLUMN public.t_activity_comment.parent_id IS 'ID of the parent comment. NULL if this comment is not a reply to another comment.';
+COMMENT ON COLUMN public.t_activity_comment.reply_to_id IS 'Comment ID of this comment replies. NULL if this comment is not a reply to another comment.';
 COMMENT ON COLUMN public.t_activity_comment.gmt_created IS 'Timestamp when the comment was created.';
 COMMENT ON COLUMN public.t_activity_comment.gmt_updated IS 'Timestamp when the comment was last updated.';
 COMMENT ON COLUMN public.t_activity_comment.gmt_resolved IS 'Timestamp when the comment was resolved. NULL if not resolved.';

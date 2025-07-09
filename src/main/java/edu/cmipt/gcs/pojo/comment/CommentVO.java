@@ -12,7 +12,7 @@ public record CommentVO(
     @Schema(description = "Name of the file where the comment is made. NULL if not applicable")
         String codePath,
     @Schema(description = "Selected line from code") Integer codeLine,
-    @Schema(description = "Parent Comment ID") String parentId,
+    @Schema(description = "Comment ID of this comment replies") String replyToId,
     @Schema(description = "Resolved timestamp, seconds since epoch") String gmtResolved,
     @Schema(description = "Hidden timestamp, seconds since epoch") String gmtHidden) {
   public CommentVO(CommentPO CommentPO) {
@@ -23,7 +23,7 @@ public record CommentVO(
         CommentPO.getContent(),
         CommentPO.getCodePath(),
         CommentPO.getCodeLine(),
-        String.valueOf(CommentPO.getParentId()),
+        String.valueOf(CommentPO.getReplyToId()),
         String.valueOf(CommentPO.getGmtResolved()),
         String.valueOf(CommentPO.getGmtHidden()));
   }

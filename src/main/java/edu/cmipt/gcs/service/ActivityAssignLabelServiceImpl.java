@@ -48,7 +48,7 @@ public class ActivityAssignLabelServiceImpl
   }
 
   @Override
-  public Map<Long, List<LabelVO>> getLabelsByActivityIds(List<Long> activityIds) {
+  public Map<Long, List<LabelDTO>> getLabelsByActivityIds(List<Long> activityIds) {
     var queryWrapper =
         JoinWrappers.lambda(ActivityAssignLabelPO.class)
             .select(ActivityAssignLabelPO::getActivityId)
@@ -64,8 +64,9 @@ public class ActivityAssignLabelServiceImpl
                 ActivityOwnLabelDTO::getActivityId,
                 Collectors.mapping(
                     label ->
-                        new LabelVO(
+                        new LabelDTO(
                             label.getId().toString(),
+                            null,
                             label.getName(),
                             label.getHexColor(),
                             label.getDescription()),
