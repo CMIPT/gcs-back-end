@@ -15,11 +15,11 @@ public interface ActivityAssignLabelService extends IService<ActivityAssignLabel
 
   ActivityAssignLabelPO getOneByActivityIdAndLabelId(Long activityId, Long labelId);
 
-  void removeByActivityId(Serializable id);
+  List<Long> removeByActivityId(Serializable id);
 
   Map<Long, List<LabelDTO>> getLabelsByActivityIds(List<Long> activityIds);
 
-  void removeByActivityIds(List<Long> activityIds);
+  List<Long> removeByActivityIds(List<Long> activityIds);
 
-  void removeByLabelId(Serializable LabelId);
+  List<Long> removeByLabelId(Serializable LabelId);
 }

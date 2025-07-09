@@ -1,7 +1,5 @@
 package edu.cmipt.gcs.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import edu.cmipt.gcs.constant.ApiPathConstant;
 import edu.cmipt.gcs.constant.ApplicationConstant;
@@ -38,8 +36,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.sql.Timestamp;
 
 @Validated
 @RestController
@@ -133,72 +129,48 @@ public class ActivityController {
     //    }
   }
 
-  @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_LOCK_STATE_API_PATH)
+  @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_LOCKED_STATE_API_PATH)
     @Operation(
-        summary = "Update an activity lock state",
-        description = "Update an activity lock state with the given information",
+        summary = "Update an activity locked state",
+        description = "Update an activity locked state with the given information",
         tags = {"Activity", "Post Method"})
     @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Success"),
       @ApiResponse(
-          description = "Update activity lock state failed",
+          description = "Update activity locked state failed",
           content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public void updateActivityLockState(
+    public void updateActivityLockedState(
         @RequestParam("id") Long id,
         @RequestParam("isLocked") Boolean isLocked,
         @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(
         id, idInToken, OperationTypeEnum.MODIFY);
-    var activityPO = activityService.getById(id);
-    LambdaUpdateWrapper<ActivityPO> updateWrapper = new LambdaUpdateWrapper<>();
-    updateWrapper.eq(ActivityPO::getId, id);
-    if(!isLocked) {
-      updateWrapper.set(ActivityPO::getGmtClosed, null);;
-    }
-    else if(activityPO.getGmtClosed() == null) {
-      updateWrapper.set(ActivityPO::getGmtClosed, new Timestamp(System.currentTimeMillis()));
-    }
-    else {
-      return; // 如果活动已经被锁定，则不需要更新
-    }
-    if(!activityService.update(updateWrapper)) {
+    if(!activityService.updateLockedState(id,isLocked)) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, id);
     }
   }
 
-  @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CLOSE_STATE_API_PATH)
+  @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CLOSED_STATE_API_PATH)
     @Operation(
-        summary = "Update an activity close state",
-        description = "Update an activity close state with the given information",
+        summary = "Update an activity closed state",
+        description = "Update an activity closed state with the given information",
         tags = {"Activity", "Post Method"})
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Success"),
         @ApiResponse(
-            description = "Update activity close state failed",
+            description = "Update activity closed state failed",
             content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public void updateActivityCloseState(
+    public void updateActivityClosedState(
         @RequestParam("id") Long id,
         @RequestParam("isClosed") Boolean isClosed,
         @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(
         id, idInToken, OperationTypeEnum.MODIFY);
-    var activityPO = activityService.getById(id);
-    LambdaUpdateWrapper<ActivityPO> updateWrapper = new LambdaUpdateWrapper<>();
-    updateWrapper.eq(ActivityPO::getId, id);
-    if(!isClosed) {
-      updateWrapper.set(ActivityPO::getGmtClosed, null);;
-    }
-    else if(activityPO.getGmtClosed() == null) {
-      updateWrapper.set(ActivityPO::getGmtClosed, new Timestamp(System.currentTimeMillis()));
-    }
-    else {
-      return; // 如果活动已经被关闭，则不需要更新
-    }
-    if(!activityService.update(updateWrapper)) {
+    if(!activityService.updateClosedState(id, isClosed)) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, id);
     }
   }
@@ -275,7 +247,7 @@ public class ActivityController {
         description = "Create sub-issue failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
     })
-    public void createSubIssue (
+    public void createSubIssue(
         @Validated(CreateGroup.class) @RequestBody ActivityDTO activity,
         @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken)
     throws InterruptedException {
@@ -451,18 +423,7 @@ public class ActivityController {
     }
     permissionService.checkActivityOperationValidity(
         commentPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
-    LambdaUpdateWrapper<CommentPO> updateWrapper = new LambdaUpdateWrapper<>();
-    updateWrapper.eq(CommentPO::getId, id);
-    if(!isHidden) {
-      updateWrapper.set(CommentPO::getGmtHidden, null);;
-    }
-    else if(commentPO.getGmtHidden() == null) {
-      updateWrapper.set(CommentPO::getGmtHidden, new Timestamp(System.currentTimeMillis()));
-    }
-    else {
-      return; // 如果评论已经被隐藏，则不需要更新
-    }
-    if(!commentService.update(updateWrapper)) {
+    if(!commentService.updateHiddenState(id, isHidden)) {
       throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, id);
     }
   }
@@ -489,18 +450,7 @@ public class ActivityController {
     }
     permissionService.checkActivityOperationValidity(
         commentPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
-    LambdaUpdateWrapper<CommentPO> updateWrapper = new LambdaUpdateWrapper<>();
-    updateWrapper.eq(CommentPO::getId, id);
-    if(!isResolved) {
-      updateWrapper.set(CommentPO::getGmtResolved, null);;
-    }
-    else if(commentPO.getGmtResolved() == null) {
-      updateWrapper.set(CommentPO::getGmtResolved, new Timestamp(System.currentTimeMillis()));
-    }
-    else {
-      return; // 如果评论已经被解决，则不需要更新
-    }
-    if(!commentService.update(updateWrapper)) {
+    if(!commentService.updateResolvedState(id, isResolved)) {
       throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, id);
     }
 }
@@ -582,11 +532,7 @@ public class ActivityController {
 
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
-    var wrapper = new QueryWrapper<CommentPO>();
-    wrapper.eq("activity_id", activityId);
-    wrapper.isNull("reply_to_id"); // 默认查询根评论,子评论通过另外的 API查询
-    wrapper.orderBy(true, true, "gmt_created");
-    var iPage = commentService.page(new Page<>(page, size), wrapper);
+    Page<CommentPO> iPage = commentService.pageCommentByActivityId(page,size,activityId);
     return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(CommentVO::new).toList());
   }
 
@@ -610,11 +556,7 @@ public class ActivityController {
 
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
-    var wrapper = new QueryWrapper<CommentPO>();
-    wrapper.eq("activity_id", activityId);
-    wrapper.eq("reply_to_id", replyToId); // 查询子评论
-    wrapper.orderBy(true, true, "gmt_created");
-    var iPage = commentService.page(new Page<>(page, size), wrapper);
+    Page<CommentPO> iPage = commentService.pageSubCommentByActivityIdAndReplyToId(page, size, activityId, replyToId);
     return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(CommentVO::new).toList());
   }
 

@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import edu.cmipt.gcs.dao.LabelMapper;
 import edu.cmipt.gcs.pojo.label.LabelPO;
 import java.io.Serializable;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,7 +51,13 @@ public class LabelServiceImpl extends ServiceImpl<LabelMapper, LabelPO> implemen
 
 
   @Override
-  public void removeByRepositoryId(Long repositoryId) {
+  public List<Long> removeByRepositoryId(Long repositoryId) {
+    List<Long> labelIds =
+        super.list(new QueryWrapper<LabelPO>().select("id").eq("repository_id", repositoryId))
+            .stream()
+            .map(LabelPO::getId)
+            .toList();
     super.remove(new QueryWrapper<LabelPO>().eq("repository_id", repositoryId));
+    return labelIds;
   }
 }

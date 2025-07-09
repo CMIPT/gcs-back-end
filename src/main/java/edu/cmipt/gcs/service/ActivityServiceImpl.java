@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yulichang.toolkit.JoinWrappers;
 import edu.cmipt.gcs.dao.ActivityMapper;
 import edu.cmipt.gcs.dao.CommentMapper;
+import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
+import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.activity.*;
 import edu.cmipt.gcs.pojo.assign.ActivityDesignateAssigneePO;
 import edu.cmipt.gcs.pojo.assign.AssigneeDTO;
@@ -22,10 +24,12 @@ import edu.cmipt.gcs.pojo.label.LabelVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import edu.cmipt.gcs.util.RedisUtil;
 import edu.cmipt.gcs.util.TypeConversionUtil;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -208,7 +212,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
 
   @Override
   @Transactional
-  public void removeByRepositoryId(Long repositoryId) {
+  public List<Long> removeByRepositoryId(Long repositoryId) {
     // 获取所有活动ID
     List<Long> activityIds =
         super.list(new QueryWrapper<ActivityPO>().select("id").eq("repository_id", repositoryId))
@@ -225,6 +229,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
 
     // 删除活动
     super.remove(new QueryWrapper<ActivityPO>().eq("repository_id", repositoryId));
+    return activityIds;
   }
 
   @Override
@@ -284,7 +289,43 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
     LambdaUpdateWrapper<ActivityPO> updateWrapper = new LambdaUpdateWrapper<>();
     updateWrapper.eq(ActivityPO::getId, subIssueId)
         .set(ActivityPO::getParentId, null);
+    redisTemplate.delete(RedisUtil.generateKey(ActivityServiceImpl.class,String.valueOf(subIssueId)));
     return super.update(updateWrapper);
 
+  }
+
+  @Override
+  public boolean updateLockedState(Long activityId, boolean isLocked) {
+    var activityPO = super.getById(activityId);
+    LambdaUpdateWrapper<ActivityPO> updateWrapper = new LambdaUpdateWrapper<>();
+    updateWrapper.eq(ActivityPO::getId, activityId);
+    if(!isLocked) {
+      updateWrapper.set(ActivityPO::getGmtLocked, null);;
+    }
+    else if(activityPO.getGmtLocked() == null) {
+      updateWrapper.set(ActivityPO::getGmtLocked, new Timestamp(System.currentTimeMillis()));
+    }
+    else {
+      return true; // already locked
+    }
+    return super.update(updateWrapper);
+
+  }
+
+  @Override
+  public boolean updateClosedState(Long activityId, Boolean isClosed) {
+    var activityPO = super.getById(activityId);
+    LambdaUpdateWrapper<ActivityPO> updateWrapper = new LambdaUpdateWrapper<>();
+    updateWrapper.eq(ActivityPO::getId, activityId);
+    if(!isClosed) {
+      updateWrapper.set(ActivityPO::getGmtClosed, null);;
+    }
+    else if(activityPO.getGmtClosed() == null) {
+      updateWrapper.set(ActivityPO::getGmtClosed, new Timestamp(System.currentTimeMillis()));
+    }
+    else {
+      return true; // already closed
+    }
+    return super.update(updateWrapper);
   }
 }

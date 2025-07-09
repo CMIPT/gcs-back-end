@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yulichang.toolkit.JoinWrappers;
 import edu.cmipt.gcs.dao.ActivityDesignateAssigneeMapper;
+import edu.cmipt.gcs.pojo.activity.ActivityPO;
 import edu.cmipt.gcs.pojo.assign.ActivityDesignateAssigneeDTO;
 import edu.cmipt.gcs.pojo.assign.ActivityDesignateAssigneePO;
 import edu.cmipt.gcs.pojo.assign.AssigneeDTO;
@@ -44,8 +45,8 @@ public class ActivityDesignateAssigneeServiceImpl
   }
 
   @Override
-  public void removeByActivityId(Serializable activityId) {
-    removeByActivityIds(List.of((Long) activityId));
+  public List<Long> removeByActivityId(Serializable activityId) {
+    return removeByActivityIds(List.of((Long) activityId));
   }
 
   @Override
@@ -94,7 +95,13 @@ public class ActivityDesignateAssigneeServiceImpl
   }
 
   @Override
-  public void removeByActivityIds(List<Long> activityIds) {
+  public List<Long> removeByActivityIds(List<Long> activityIds) {
+    List<Long> activityDesignateAssigneeIds = super.list(
+          new QueryWrapper<ActivityDesignateAssigneePO>().select("id").in("activity_id", activityIds))
+            .stream()
+            .map(ActivityDesignateAssigneePO::getId)
+            .toList();
     super.remove(new QueryWrapper<ActivityDesignateAssigneePO>().in("activity_id", activityIds));
+    return activityDesignateAssigneeIds;
   }
 }

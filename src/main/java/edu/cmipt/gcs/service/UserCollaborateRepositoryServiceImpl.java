@@ -15,6 +15,8 @@ import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.util.GitoliteUtil;
 import edu.cmipt.gcs.util.RedisUtil;
 import java.io.Serializable;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,8 +50,14 @@ public class UserCollaborateRepositoryServiceImpl
   }
 
   @Override
-  public void removeByRepositoryId(Long repositoryId) {
+  public List<Long> removeByRepositoryId(Long repositoryId) {
+    List<Long> collaboratorIds =
+        super.list(new QueryWrapper<UserCollaborateRepositoryPO>().select("collaborator_id").eq("repository_id", repositoryId))
+            .stream()
+            .map(UserCollaborateRepositoryPO::getCollaboratorId)
+            .toList();
     super.remove(new QueryWrapper<UserCollaborateRepositoryPO>().eq("repository_id", repositoryId));
+    return collaboratorIds;
   }
 
   @Override

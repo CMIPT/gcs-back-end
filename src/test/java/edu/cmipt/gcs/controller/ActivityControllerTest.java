@@ -751,14 +751,14 @@ public class ActivityControllerTest {
                 .param("isHidden", "true"))
         .andExpectAll(status().isOk());
     // verify method idempotency
-    CommentPO comment1 = commentService.getById(TestConstant.COMMENT_ID);
+    CommentPO comment1 = commentService.getById(Long.valueOf(TestConstant.COMMENT_ID));
     mvc.perform(
                     post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_HIDDEN_STATE_API_PATH)
                             .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                             .param("id", TestConstant.COMMENT_ID)
                             .param("isHidden", "true"))
             .andExpectAll(status().isOk());
-    CommentPO comment2 = commentService.getById(TestConstant.COMMENT_ID);
+    CommentPO comment2 = commentService.getById(Long.valueOf(TestConstant.COMMENT_ID));
     Assertions.assertEquals(comment1.getGmtHidden(), comment2.getGmtHidden());
 
   }
@@ -783,14 +783,14 @@ public class ActivityControllerTest {
                 .param("isResolved", "true"))
         .andExpectAll(status().isOk());
     // verify method idempotency
-    CommentPO comment1 = commentService.getById(TestConstant.COMMENT_ID);
+    CommentPO comment1 = commentService.getById(Long.valueOf(TestConstant.COMMENT_ID));
     mvc.perform(
               post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_RESOLVED_STATE_API_PATH)
                   .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                   .param("id", TestConstant.COMMENT_ID)
                   .param("isResolved", "true"))
             .andExpectAll(status().isOk());
-    CommentPO comment2 = commentService.getById(TestConstant.COMMENT_ID);
+    CommentPO comment2 = commentService.getById(Long.valueOf(TestConstant.COMMENT_ID));
     Assertions.assertEquals(comment1.getGmtResolved(), comment2.getGmtResolved());
   }
 
@@ -918,27 +918,27 @@ public class ActivityControllerTest {
   @Order(Ordered.HIGHEST_PRECEDENCE + 14)
   public void testUpdateActivityLockStateValid() throws Exception {
     mvc.perform(
-            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_LOCK_STATE_API_PATH)
+            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_LOCKED_STATE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("id", TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)
                 .param("isLocked", "true"))
         .andExpectAll(status().isOk());
     // verify method idempotency
-    ActivityPO activity1 = activityService.getById(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID);
+    ActivityPO activity1 = activityService.getById(Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID));
     mvc.perform(
-            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_LOCK_STATE_API_PATH)
+            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_LOCKED_STATE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("id", TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)
                 .param("isLocked", "true"))
         .andExpectAll(status().isOk());
-    ActivityPO activity2 = activityService.getById(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID);
+    ActivityPO activity2 = activityService.getById(Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID));
     Assertions.assertEquals(activity1.getGmtLocked(), activity2.getGmtLocked());
   }
 
   @Test
   public void testUpdateActivityLockStateInvalid() throws Exception {
       mvc.perform(
-              post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_LOCK_STATE_API_PATH)
+              post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_LOCKED_STATE_API_PATH)
                   .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                   .param("id", "123")
                   .param("isLocked", "true"))
@@ -949,27 +949,27 @@ public class ActivityControllerTest {
   @Order(Ordered.HIGHEST_PRECEDENCE + 15)
   public void testUpdateActivityClosedStateValid() throws Exception {
     mvc.perform(
-            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CLOSE_STATE_API_PATH)
+            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CLOSED_STATE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("id", TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)
                 .param("isClosed", "true"))
         .andExpectAll(status().isOk());
     // verify method idempotency
-    ActivityPO activity1 = activityService.getById(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID);
+    ActivityPO activity1 = activityService.getById(Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID));
     mvc.perform(
-            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CLOSE_STATE_API_PATH)
+            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CLOSED_STATE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("id", TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)
                 .param("isClosed", "true"))
         .andExpectAll(status().isOk());
-    ActivityPO activity2 = activityService.getById(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID);
+    ActivityPO activity2 = activityService.getById(Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID));
     Assertions.assertEquals(activity1.getGmtClosed(), activity2.getGmtClosed());
   }
 
   @Test
   public void testUpdateActivityClosedStateInvalid() throws Exception {
     mvc.perform(
-            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CLOSE_STATE_API_PATH)
+            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CLOSED_STATE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("id", "123")
                 .param("isClosed", "true"))

@@ -11,7 +11,7 @@ import java.util.Map;
 
 public interface ActivityDesignateAssigneeService extends IService<ActivityDesignateAssigneePO> {
 
-  void removeByActivityId(Serializable activityId);
+  List<Long> removeByActivityId(Serializable activityId);
 
   Page<AssigneeDTO> pageActivityAssigneesByActivityId(
       Long activityId, Integer pageNum, Integer pageSize);
@@ -20,5 +20,5 @@ public interface ActivityDesignateAssigneeService extends IService<ActivityDesig
 
   Map<Long, List<AssigneeDTO>> getAssigneesByActivityIds(List<Long> activityIds);
 
-  void removeByActivityIds(List<Long> activityIds);
+  List<Long> removeByActivityIds(List<Long> activityIds);
 }
