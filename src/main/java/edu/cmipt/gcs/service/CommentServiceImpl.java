@@ -6,8 +6,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yulichang.toolkit.JoinWrappers;
 import edu.cmipt.gcs.dao.CommentMapper;
-import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
-import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.comment.CommentCountDTO;
 import edu.cmipt.gcs.pojo.comment.CommentPO;
 import java.io.Serializable;
@@ -87,13 +85,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, CommentPO>
     CommentPO commentPO = super.getById(commentId);
     LambdaUpdateWrapper<CommentPO> updateWrapper = new LambdaUpdateWrapper<>();
     updateWrapper.eq(CommentPO::getId, commentId);
-    if(!isHidden) {
-      updateWrapper.set(CommentPO::getGmtHidden, null);;
-    }
-    else if(commentPO.getGmtHidden() == null) {
+    if (!isHidden) {
+      updateWrapper.set(CommentPO::getGmtHidden, null);
+      ;
+    } else if (commentPO.getGmtHidden() == null) {
       updateWrapper.set(CommentPO::getGmtHidden, new Timestamp(System.currentTimeMillis()));
-    }
-    else {
+    } else {
       return true; // already hidden
     }
     return super.update(updateWrapper);
@@ -104,13 +101,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, CommentPO>
     CommentPO commentPO = super.getById(commentId);
     LambdaUpdateWrapper<CommentPO> updateWrapper = new LambdaUpdateWrapper<>();
     updateWrapper.eq(CommentPO::getId, commentId);
-    if(!isResolved) {
-      updateWrapper.set(CommentPO::getGmtResolved, null);;
-    }
-    else if(commentPO.getGmtResolved() == null) {
+    if (!isResolved) {
+      updateWrapper.set(CommentPO::getGmtResolved, null);
+      ;
+    } else if (commentPO.getGmtResolved() == null) {
       updateWrapper.set(CommentPO::getGmtResolved, new Timestamp(System.currentTimeMillis()));
-    }
-    else {
+    } else {
       return true; // already resolved
     }
     return super.update(updateWrapper);
@@ -126,7 +122,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, CommentPO>
   }
 
   @Override
-  public Page<CommentPO> pageSubCommentByActivityIdAndReplyToId(Integer page, Integer size, Long activityId, Long replyToId) {
+  public Page<CommentPO> pageSubCommentByActivityIdAndReplyToId(
+      Integer page, Integer size, Long activityId, Long replyToId) {
     var wrapper = new QueryWrapper<CommentPO>();
     wrapper.eq("activity_id", activityId);
     wrapper.eq("reply_to_id", replyToId); // 查询子评论

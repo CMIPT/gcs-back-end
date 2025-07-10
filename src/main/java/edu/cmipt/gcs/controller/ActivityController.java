@@ -66,22 +66,21 @@ public class ActivityController {
       @Validated(CreateGroup.class) @RequestBody ActivityDTO activity,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken)
       throws InterruptedException {
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     Long repositoryId = TypeConversionUtil.convertToLong(activity.repositoryId(), true);
     permissionService.checkRepositoryOperationValidity(
         repositoryId, idInToken, OperationTypeEnum.MODIFY);
     // 检查是否涉及sub-issue
-    if(activity.parentId()!=null)
-    {
+    if (activity.parentId() != null) {
       // 只有issue可以有父活动
-      if(activity.isPullRequest()) {
+      if (activity.isPullRequest()) {
         throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
       }
-      Long parentId = TypeConversionUtil.convertToLong(activity.parentId(),true);
-      permissionService.checkIssueOperationValidity(repositoryId,parentId);
+      Long parentId = TypeConversionUtil.convertToLong(activity.parentId(), true);
+      permissionService.checkIssueOperationValidity(repositoryId, parentId);
     }
     int retry = 0;
-    while (retry< ApplicationConstant.CREATE_ACTIVITY_MAX_RETRY_TIMES) {
+    while (retry < ApplicationConstant.CREATE_ACTIVITY_MAX_RETRY_TIMES) {
       try {
         ActivityPO latestActivityPO = activityService.getLatestActivityByRepositoryId(repositoryId);
         int number = (latestActivityPO == null ? 1 : latestActivityPO.getNumber() + 1);
@@ -130,47 +129,45 @@ public class ActivityController {
   }
 
   @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_LOCKED_STATE_API_PATH)
-    @Operation(
-        summary = "Update an activity locked state",
-        description = "Update an activity locked state with the given information",
-        tags = {"Activity", "Post Method"})
-    @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Success"),
-      @ApiResponse(
-          description = "Update activity locked state failed",
-          content = @Content(schema = @Schema(implementation = ErrorVO.class)))
-    })
-    public void updateActivityLockedState(
-        @RequestParam("id") Long id,
-        @RequestParam("isLocked") Boolean isLocked,
-        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
-    permissionService.checkActivityOperationValidity(
-        id, idInToken, OperationTypeEnum.MODIFY);
-    if(!activityService.updateLockedState(id,isLocked)) {
+  @Operation(
+      summary = "Update an activity locked state",
+      description = "Update an activity locked state with the given information",
+      tags = {"Activity", "Post Method"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Update activity locked state failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public void updateActivityLockedState(
+      @RequestParam("id") Long id,
+      @RequestParam("isLocked") Boolean isLocked,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+    permissionService.checkActivityOperationValidity(id, idInToken, OperationTypeEnum.MODIFY);
+    if (!activityService.updateLockedState(id, isLocked)) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, id);
     }
   }
 
   @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CLOSED_STATE_API_PATH)
-    @Operation(
-        summary = "Update an activity closed state",
-        description = "Update an activity closed state with the given information",
-        tags = {"Activity", "Post Method"})
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Success"),
-        @ApiResponse(
-            description = "Update activity closed state failed",
-            content = @Content(schema = @Schema(implementation = ErrorVO.class)))
-    })
-    public void updateActivityClosedState(
-        @RequestParam("id") Long id,
-        @RequestParam("isClosed") Boolean isClosed,
-        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
-    permissionService.checkActivityOperationValidity(
-        id, idInToken, OperationTypeEnum.MODIFY);
-    if(!activityService.updateClosedState(id, isClosed)) {
+  @Operation(
+      summary = "Update an activity closed state",
+      description = "Update an activity closed state with the given information",
+      tags = {"Activity", "Post Method"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Update activity closed state failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public void updateActivityClosedState(
+      @RequestParam("id") Long id,
+      @RequestParam("isClosed") Boolean isClosed,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+    permissionService.checkActivityOperationValidity(id, idInToken, OperationTypeEnum.MODIFY);
+    if (!activityService.updateClosedState(id, isClosed)) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, id);
     }
   }
@@ -190,14 +187,13 @@ public class ActivityController {
       @Validated(UpdateGroup.class) @RequestBody ActivityDTO activity,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
 
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
-    Long activityId = TypeConversionUtil.convertToLong(activity.id(),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+    Long activityId = TypeConversionUtil.convertToLong(activity.id(), true);
     permissionService.checkActivityOperationValidity(
         activityId, idInToken, OperationTypeEnum.MODIFY);
     // 检查是否涉及sub-issue
-    if(activity.parentId()!=null)
-    {
-      Long parentId = TypeConversionUtil.convertToLong(activity.parentId(),true);
+    if (activity.parentId() != null) {
+      Long parentId = TypeConversionUtil.convertToLong(activity.parentId(), true);
       var activityPO = activityService.getById(activityId);
       // 不能更新父活动为自己 并且 只有issue可以有父活动
       if (parentId.equals(activityId) || activityPO.getIsPullRequest()) {
@@ -214,8 +210,9 @@ public class ActivityController {
   @Operation(
       summary = "Page a repository's activities full information",
       description =
-          "Page a repository's activities full information. If the given token is trying to get other repository's"
-              + " activities, only public repository's activities will be returned",
+          "Page a repository's activities full information. If the given token is trying to get"
+              + " other repository's activities, only public repository's activities will be"
+              + " returned",
       tags = {"Activity", "Post Method"})
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
@@ -233,109 +230,109 @@ public class ActivityController {
     }
     Long repositoryId = TypeConversionUtil.convertToLong(activityQueryDTO.repositoryId(), true);
     permissionService.checkRepositoryOperationValidity(
-        repositoryId, TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true), OperationTypeEnum.READ);
-    var iPage = activityService.pageActivityFullInfo(activityQueryDTO, page,size);
+        repositoryId,
+        TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true),
+        OperationTypeEnum.READ);
+    var iPage = activityService.pageActivityFullInfo(activityQueryDTO, page, size);
     return new PageVO<>(
         iPage.getTotal(), iPage.getRecords().stream().map(ActivityFullInfoVO::new).toList());
   }
 
   @PostMapping(ApiPathConstant.ACTIVITY_CREATE_SUB_ISSUE_API_PATH)
-    @Operation(
-        summary = "Create a sub-issue to an issue",
-        description = "Create a sub-issue to an issue with the given information",
-        tags = {"Activity", "Post Method"})
-    @ApiResponses({
+  @Operation(
+      summary = "Create a sub-issue to an issue",
+      description = "Create a sub-issue to an issue with the given information",
+      tags = {"Activity", "Post Method"})
+  @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
         description = "Create sub-issue failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
-    })
-    public void createSubIssueToIssue(
-        @Validated(CreateGroup.class) @RequestBody ActivityDTO activity,
-        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken)
-    throws InterruptedException {
-    if(activity.isPullRequest() || activity.parentId() == null) {
+  })
+  public void createSubIssueToIssue(
+      @Validated(CreateGroup.class) @RequestBody ActivityDTO activity,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken)
+      throws InterruptedException {
+    if (activity.isPullRequest() || activity.parentId() == null) {
       throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
     }
     createActivity(activity, accessToken);
-    }
+  }
 
   @PostMapping(ApiPathConstant.ACTIVITY_ADD_SUB_ISSUE_API_PATH)
-    @Operation(
-        summary = "Add a sub-issue to an issue",
-        description = "Add a sub-issue to an issue with the given information",
-        tags = {"Activity", "Post Method"})
-    @ApiResponses({
+  @Operation(
+      summary = "Add a sub-issue to an issue",
+      description = "Add a sub-issue to an issue with the given information",
+      tags = {"Activity", "Post Method"})
+  @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
         description = "Add sub-issue failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
-    })
-    public void addSubIssueToIssue(
-        @RequestParam("parentId") Long parentId,
-        @RequestParam("subIssueId") Long subIssueId,
-        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    ActivityDTO activity = new ActivityDTO(subIssueId,parentId);
+  })
+  public void addSubIssueToIssue(
+      @RequestParam("parentId") Long parentId,
+      @RequestParam("subIssueId") Long subIssueId,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    ActivityDTO activity = new ActivityDTO(subIssueId, parentId);
     updateActivityContent(activity, accessToken);
-    }
+  }
 
   @DeleteMapping(ApiPathConstant.ACTIVITY_REMOVE_SUB_ISSUE_API_PATH)
-    @Operation(
-        summary = "Remove a sub-issue from an activity",
-        description = "Remove a sub-issue from an activity with the given id",
-        tags = {"Activity", "Delete Method"})
-    @ApiResponses({
+  @Operation(
+      summary = "Remove a sub-issue from an activity",
+      description = "Remove a sub-issue from an activity with the given id",
+      tags = {"Activity", "Delete Method"})
+  @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
         description = "Delete sub-issue failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
-    })
-    public void removeSubIssue(
-        @RequestParam("subIssueId") Long subIssueId,
-        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+  })
+  public void removeSubIssue(
+      @RequestParam("subIssueId") Long subIssueId,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(
-            subIssueId, idInToken, OperationTypeEnum.MODIFY);
+        subIssueId, idInToken, OperationTypeEnum.MODIFY);
     var activityPO = activityService.getById(subIssueId);
-    if(activityPO.getIsPullRequest()){
-        throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
+    if (activityPO.getIsPullRequest()) {
+      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
     }
-    if(!activityService.removeSubIssueById(subIssueId)) {
+    if (!activityService.removeSubIssueById(subIssueId)) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, subIssueId);
     }
   }
 
   @GetMapping(ApiPathConstant.ACTIVITY_PAGE_SUB_ISSUE_API_PATH)
-    @Operation(
-        summary = "Page sub-issues of an issue",
-        description =
-            "Page sub-issues of an issue. If the given token is trying to get other activity's"
-                + " sub-issues, only public activity's sub-issues will be returned",
-        tags = {"Activity", "Get Method"})
-    @ApiResponses({
+  @Operation(
+      summary = "Page sub-issues of an issue",
+      description =
+          "Page sub-issues of an issue. If the given token is trying to get other activity's"
+              + " sub-issues, only public activity's sub-issues will be returned",
+      tags = {"Activity", "Get Method"})
+  @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
         description = "User issues page failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
-    })
-    public PageVO<IssueVO> pageSubIssueOfIssue(
-        @RequestParam("page") @Min(1) Integer page,
-        @RequestParam("size") @Min(1) Integer size,
-        @RequestParam("parentId") Long parentId,
-        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+  })
+  public PageVO<IssueVO> pageSubIssueOfIssue(
+      @RequestParam("page") @Min(1) Integer page,
+      @RequestParam("size") @Min(1) Integer size,
+      @RequestParam("parentId") Long parentId,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
       throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
     }
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
-    permissionService.checkActivityOperationValidity(
-        parentId, idInToken, OperationTypeEnum.READ);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+    permissionService.checkActivityOperationValidity(parentId, idInToken, OperationTypeEnum.READ);
     var activityPO = activityService.getById(parentId);
     if (activityPO.getIsPullRequest()) {
       throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
     }
     var iPage = activityService.pageSubIssueByParentId(parentId, page, size);
-    return new PageVO<>(
-        iPage.getTotal(), iPage.getRecords().stream().map(IssueVO::new).toList());
+    return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(IssueVO::new).toList());
   }
 
   @GetMapping(ApiPathConstant.ACTIVITY_GET_ACTIVITY_API_PATH)
@@ -371,7 +368,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, notFoundMessage);
     }
     id = activityPO.getId();
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(id, idInToken, OperationTypeEnum.READ);
     ActivityFullInfoDTO activityFullInfoDTO = activityService.getActivityFullInfoById(id);
     if (activityFullInfoDTO == null) {
@@ -394,7 +391,7 @@ public class ActivityController {
   public void updateCommentContentOfActivity(
       @Validated(UpdateGroup.class) @RequestBody CommentDTO comment,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     Long commentId = TypeConversionUtil.convertToLong(comment.id(), true);
     var commentPO = commentService.getById(commentId);
     if (commentPO == null) {
@@ -408,28 +405,28 @@ public class ActivityController {
   }
 
   @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_HIDDEN_STATE_API_PATH)
-    @Operation(
-        summary = "Update a comment hidden state of an activity",
-        description = "Update a comment hidden state of an activity with the given information",
-        tags = {"Activity", "Post Method"})
-    @ApiResponses({
+  @Operation(
+      summary = "Update a comment hidden state of an activity",
+      description = "Update a comment hidden state of an activity with the given information",
+      tags = {"Activity", "Post Method"})
+  @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
         description = "Update comment hidden state failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
-    })
-    public void updateCommentHiddenStateOfActivity(
-        @RequestParam("id") Long id,
-        @RequestParam("isHidden") Boolean isHidden,
-        @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+  })
+  public void updateCommentHiddenStateOfActivity(
+      @RequestParam("id") Long id,
+      @RequestParam("isHidden") Boolean isHidden,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     var commentPO = commentService.getById(id);
     if (commentPO == null) {
       throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id);
     }
     permissionService.checkActivityOperationValidity(
         commentPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
-    if(!commentService.updateHiddenState(id, isHidden)) {
+    if (!commentService.updateHiddenState(id, isHidden)) {
       throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, id);
     }
   }
@@ -440,27 +437,28 @@ public class ActivityController {
       description = "Update a comment resolved state of an activity with the given information",
       tags = {"Activity", "Post Method"})
   @ApiResponses({
-  @ApiResponse(responseCode = "200", description = "Success"),
-  @ApiResponse(
-      description = "Update comment resolved state failed",
-      content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Update comment resolved state failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public void updateCommentResolvedStateOfActivity(
       @RequestParam("id") Long id,
       @RequestParam("isResolved") Boolean isResolved,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     var commentPO = commentService.getById(id);
     if (commentPO == null) {
       throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id);
     }
     permissionService.checkActivityOperationValidity(
         commentPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
-    if(!commentService.updateResolvedState(id, isResolved)) {
+    if (!commentService.updateResolvedState(id, isResolved)) {
       throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, id);
     }
-}
-  //TODO: 在涉及回复评论时(pr的code view)，如果删除的是根评论，要更新新的根评论和reply_to_id
+  }
+
+  // TODO: 在涉及回复评论时(pr的code view)，如果删除的是根评论，要更新新的根评论和reply_to_id
   @DeleteMapping(ApiPathConstant.ACTIVITY_DELETE_COMMENT_API_PATH)
   @Operation(
       summary = "Delete a comment from an activity",
@@ -479,7 +477,7 @@ public class ActivityController {
     if (commentPO == null) {
       throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id);
     }
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(
         commentPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
     if (!commentService.removeById(id)) {
@@ -501,16 +499,16 @@ public class ActivityController {
   public void createCommentToActivity(
       @Validated(CreateGroup.class) @RequestBody CommentDTO comment,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     Long activityId = TypeConversionUtil.convertToLong(comment.activityId(), true);
     permissionService.checkActivityOperationValidity(
         activityId, idInToken, OperationTypeEnum.COMMENT);
-    if(comment.replyToId()!=null) {
+    if (comment.replyToId() != null) {
       // 检查评论的父评论是否存在
       Long parentId = TypeConversionUtil.convertToLong(comment.replyToId(), true);
       var parentCommentPO = commentService.getById(parentId);
       if (parentCommentPO == null) {
-          throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, parentId);
+        throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, parentId);
       }
     }
     if (!commentService.save(new CommentPO(comment, idInToken))) {
@@ -518,7 +516,7 @@ public class ActivityController {
     }
   }
 
-  //TODO: 在PR的code view中，评论的分页需要包含子评论
+  // TODO: 在PR的code view中，评论的分页需要包含子评论
   @GetMapping(ApiPathConstant.ACTIVITY_PAGE_COMMENT_API_PATH)
   @Operation(
       summary = "Page comments of an activity",
@@ -538,35 +536,36 @@ public class ActivityController {
     if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
       throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
     }
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
-    Page<CommentPO> iPage = commentService.pageCommentByActivityId(page,size,activityId);
+    Page<CommentPO> iPage = commentService.pageCommentByActivityId(page, size, activityId);
     return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(CommentVO::new).toList());
   }
 
   @GetMapping(ApiPathConstant.ACTIVITY_PAGE_SUB_COMMENT_API_PATH)
   @Operation(
-          summary = "Page sub-comments of an activity",
-          description = "Page sub-comments of an activity",
-          tags = {"Activity", "Get Method"})
+      summary = "Page sub-comments of an activity",
+      description = "Page sub-comments of an activity",
+      tags = {"Activity", "Get Method"})
   @ApiResponses({
-          @ApiResponse(responseCode = "200", description = "Success"),
-          @ApiResponse(
-                  description = "Activity not found",
-                  content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Activity not found",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public PageVO<CommentVO> pageSubCommentOfActivity(
-          @RequestParam("activityId") Long activityId,
-          @RequestParam("replyToId") Long replyToId,
-          @RequestParam("page") @Min(1) Integer page,
-          @RequestParam("size") @Min(1) Integer size,
-          @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+      @RequestParam("activityId") Long activityId,
+      @RequestParam("replyToId") Long replyToId,
+      @RequestParam("page") @Min(1) Integer page,
+      @RequestParam("size") @Min(1) Integer size,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
       throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
     }
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
-    Page<CommentPO> iPage = commentService.pageSubCommentByActivityIdAndReplyToId(page, size, activityId, replyToId);
+    Page<CommentPO> iPage =
+        commentService.pageSubCommentByActivityIdAndReplyToId(page, size, activityId, replyToId);
     return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(CommentVO::new).toList());
   }
 
@@ -585,7 +584,7 @@ public class ActivityController {
       @RequestParam("activityId") Long activityId,
       @RequestParam("labelId") Long labelId,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(
         activityId, idInToken, OperationTypeEnum.MODIFY);
     // 检查这个标签是否存在于当前活动对应的仓库中
@@ -621,7 +620,7 @@ public class ActivityController {
   public void removeLabelFromActivity(
       @RequestParam("id") Long id,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
 
     var activityAssignLabelPO = activityAssignLabelService.getById(id);
     if (activityAssignLabelPO == null) {
@@ -662,11 +661,9 @@ public class ActivityController {
     if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
       throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
     }
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
-    var iPage =
-        activityAssignLabelService.pageActivityLabelsByActivityId(
-            activityId, page, size);
+    var iPage = activityAssignLabelService.pageActivityLabelsByActivityId(activityId, page, size);
     return new PageVO<>(
         iPage.getTotal(), iPage.getRecords().stream().map(ActivityAssignLabelVO::new).toList());
   }
@@ -685,7 +682,7 @@ public class ActivityController {
       @RequestParam("activityId") Long activityId,
       @RequestParam("assigneeId") Long assigneeId,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     var UserPO = userService.getById(assigneeId);
     if (UserPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, assigneeId);
@@ -718,7 +715,7 @@ public class ActivityController {
   public void removeAssigneeFromActivity(
       @RequestParam("id") Long id,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     var activityDesignateAssigneePO = activityDesignateAssigneeService.getById(id);
     if (activityDesignateAssigneePO == null) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_ASSIGNEE_NOT_FOUND, id);
@@ -756,10 +753,11 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
     }
     permissionService.checkActivityOperationValidity(
-        activityId, TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true), OperationTypeEnum.READ);
+        activityId,
+        TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true),
+        OperationTypeEnum.READ);
     var iPage =
-        activityDesignateAssigneeService.pageActivityAssigneesByActivityId(
-            activityId, page, size);
+        activityDesignateAssigneeService.pageActivityAssigneesByActivityId(activityId, page, size);
     return new PageVO<>(
         iPage.getTotal(), iPage.getRecords().stream().map(AssigneeVO::new).toList());
   }

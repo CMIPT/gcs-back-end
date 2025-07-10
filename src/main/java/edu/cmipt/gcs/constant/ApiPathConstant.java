@@ -84,27 +84,34 @@ public class ApiPathConstant {
   public static final String ACTIVITY_GET_ACTIVITY_API_PATH = ACTIVITY_API_PREFIX + "/get";
   public static final String ACTIVITY_CREATE_ACTIVITY_API_PATH = ACTIVITY_API_PREFIX + "/create";
   public static final String ACTIVITY_DELETE_ACTIVITY_API_PATH = ACTIVITY_API_PREFIX + "/delete";
-  public static final String ACTIVITY_UPDATE_ACTIVITY_CONTENT_API_PATH = ACTIVITY_API_PREFIX + "/update-content";
-  public static final String ACTIVITY_UPDATE_ACTIVITY_LOCKED_STATE_API_PATH = ACTIVITY_API_PREFIX + "/update-lock-state";
-  public static final String ACTIVITY_UPDATE_ACTIVITY_CLOSED_STATE_API_PATH = ACTIVITY_API_PREFIX + "/update-close-state";
+  public static final String ACTIVITY_UPDATE_ACTIVITY_CONTENT_API_PATH =
+      ACTIVITY_API_PREFIX + "/update-content";
+  public static final String ACTIVITY_UPDATE_ACTIVITY_LOCKED_STATE_API_PATH =
+      ACTIVITY_API_PREFIX + "/update-lock-state";
+  public static final String ACTIVITY_UPDATE_ACTIVITY_CLOSED_STATE_API_PATH =
+      ACTIVITY_API_PREFIX + "/update-close-state";
   public static final String ACTIVITY_PAGE_ACTIVITY_API_PATH = ACTIVITY_API_PREFIX + "/page";
-  public static final String ACTIVITY_PAGE_SUB_ISSUE_API_PATH = ACTIVITY_API_PREFIX + "/page-sub-issue";
+  public static final String ACTIVITY_PAGE_SUB_ISSUE_API_PATH =
+      ACTIVITY_API_PREFIX + "/page-sub-issue";
   public static final String ACTIVITY_CREATE_SUB_ISSUE_API_PATH =
       ACTIVITY_API_PREFIX + "/create-sub-issue";
-  public static final String ACTIVITY_ADD_SUB_ISSUE_API_PATH = ACTIVITY_API_PREFIX + "/add-sub-issue";
-  public static final String ACTIVITY_REMOVE_SUB_ISSUE_API_PATH = ACTIVITY_API_PREFIX + "/remove-sub-issue";
+  public static final String ACTIVITY_ADD_SUB_ISSUE_API_PATH =
+      ACTIVITY_API_PREFIX + "/add-sub-issue";
+  public static final String ACTIVITY_REMOVE_SUB_ISSUE_API_PATH =
+      ACTIVITY_API_PREFIX + "/remove-sub-issue";
   public static final String ACTIVITY_CREATE_COMMENT_API_PATH =
       ACTIVITY_API_PREFIX + "/create-comment";
   public static final String ACTIVITY_UPDATE_COMMENT_CONTENT_API_PATH =
       ACTIVITY_API_PREFIX + "/update-comment-content";
   public static final String ACTIVITY_UPDATE_COMMENT_RESOLVED_STATE_API_PATH =
-          ACTIVITY_API_PREFIX + "/update-comment-resolved-state";
-    public static final String ACTIVITY_UPDATE_COMMENT_HIDDEN_STATE_API_PATH =
-          ACTIVITY_API_PREFIX + "/update-comment-hidden-state";
+      ACTIVITY_API_PREFIX + "/update-comment-resolved-state";
+  public static final String ACTIVITY_UPDATE_COMMENT_HIDDEN_STATE_API_PATH =
+      ACTIVITY_API_PREFIX + "/update-comment-hidden-state";
   public static final String ACTIVITY_DELETE_COMMENT_API_PATH =
       ACTIVITY_API_PREFIX + "/delete-comment";
   public static final String ACTIVITY_PAGE_COMMENT_API_PATH = ACTIVITY_API_PREFIX + "/page-comment";
-  public static final String ACTIVITY_PAGE_SUB_COMMENT_API_PATH = ACTIVITY_API_PREFIX + "/page-sub-comment";
+  public static final String ACTIVITY_PAGE_SUB_COMMENT_API_PATH =
+      ACTIVITY_API_PREFIX + "/page-sub-comment";
   public static final String ACTIVITY_ADD_ASSIGNEE_API_PATH = ACTIVITY_API_PREFIX + "/add-assignee";
   public static final String ACTIVITY_REMOVE_ASSIGNEE_API_PATH =
       ACTIVITY_API_PREFIX + "/delete-assignee";

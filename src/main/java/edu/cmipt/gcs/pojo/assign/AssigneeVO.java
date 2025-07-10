@@ -11,7 +11,8 @@ public record AssigneeVO(
     @Schema(description = "Email", example = "admin@cmipt.edu") String email,
     @Schema(description = "Avatar URL", example = "https://www.example.com/avatar.jpg")
         String avatarUrl,
-@Schema(description = "Created Timestamp",example = "2023-10-01T12:00:00Z") String gmtCreated) {
+    @Schema(description = "Created Timestamp", example = "2023-10-01T12:00:00Z")
+        String gmtCreated) {
   public AssigneeVO(AssigneeDTO assigneeDTO) {
     this(
         assigneeDTO.getId().toString(),

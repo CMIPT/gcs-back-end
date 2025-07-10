@@ -11,6 +11,7 @@ public class TypeConversionUtil {
   public static Long convertToLong(String value, boolean throwWhenFailed) {
     return convertToLong(value, throwWhenFailed, null);
   }
+
   public static Long convertToLong(String value) {
     return convertToLong(value, false, null);
   }

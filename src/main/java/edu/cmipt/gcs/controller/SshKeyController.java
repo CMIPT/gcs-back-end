@@ -113,7 +113,7 @@ public class SshKeyController {
   public void updateSshKey(
       @Validated(UpdateGroup.class) @RequestBody SshKeyDTO sshKeyDTO,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long id = TypeConversionUtil.convertToLong(sshKeyDTO.id(),true);
+    Long id = TypeConversionUtil.convertToLong(sshKeyDTO.id(), true);
     var sshKeyPO = sshKeyService.getById(id);
     if (sshKeyPO == null) {
       throw new GenericException(ErrorCodeEnum.SSH_KEY_NOT_FOUND, id);
@@ -154,7 +154,7 @@ public class SshKeyController {
     if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
       throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
     }
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     var wrapper = new QueryWrapper<SshKeyPO>();
     wrapper.eq("user_id", idInToken);
     wrapper.orderBy(true, isAsc, orderBy.getFieldName());
@@ -183,7 +183,7 @@ public class SshKeyController {
           @NotBlank(message = "{NotBlank.sshKeyController#checkSshKeyNameValidity.name}")
           String name,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     if (sshKeyService.getOneByUserIdAndName(idInToken, name) != null) {
       throw new GenericException(ErrorCodeEnum.SSH_KEY_NAME_ALREADY_EXISTS, name);
     }
@@ -227,7 +227,7 @@ public class SshKeyController {
     if (!ok) {
       throw new GenericException(ErrorCodeEnum.SSH_KEY_PUBLIC_KEY_INVALID, publicKey);
     }
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     if (sshKeyService.getOneByUserIdAndPublicKey(idInToken, publicKey) != null) {
       throw new GenericException(ErrorCodeEnum.SSH_KEY_PUBLIC_KEY_ALREADY_EXISTS, publicKey);
     }

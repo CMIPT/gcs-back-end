@@ -48,10 +48,11 @@ public class PermissionServiceImpl implements PermissionService {
     if (activityPO == null) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_NOT_FOUND, activityId);
     }
-    // If the activity is locked, the permission to create comment operations is downgraded to modify operations
+    // If the activity is locked, the permission to create comment operations is downgraded to
+    // modify operations
     // and only the repository creator and collaborators can perform comment operations.
-    if(operationTypeEnum == OperationTypeEnum.COMMENT && activityPO.getGmtLocked()!=null) {
-        operationTypeEnum = OperationTypeEnum.MODIFY;
+    if (operationTypeEnum == OperationTypeEnum.COMMENT && activityPO.getGmtLocked() != null) {
+      operationTypeEnum = OperationTypeEnum.MODIFY;
     }
     // whatever the repository is public or private,
     // the corresponding repository must be visible to activity creator,
@@ -71,14 +72,12 @@ public class PermissionServiceImpl implements PermissionService {
       throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
     }
     // The repository creators of the parent and sub activities must be the same
-    var subIssueRepositoryPO =
-        repositoryService.getById(subIssueRepositoryId);
-    var parentRepositoryPO =
-        repositoryService.getById(parentActivityPO.getRepositoryId());
-    if( subIssueRepositoryPO == null || parentRepositoryPO == null
+    var subIssueRepositoryPO = repositoryService.getById(subIssueRepositoryId);
+    var parentRepositoryPO = repositoryService.getById(parentActivityPO.getRepositoryId());
+    if (subIssueRepositoryPO == null
+        || parentRepositoryPO == null
         || !parentRepositoryPO.getUserId().equals(subIssueRepositoryPO.getUserId())) {
-      throw new GenericException(
-          ErrorCodeEnum.ACCESS_DENIED, subIssueRepositoryId);
+      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED, subIssueRepositoryId);
     }
   }
 }

@@ -571,7 +571,8 @@ public class ActivityControllerTest {
             .andReturn()
             .getResponse()
             .getContentAsString();
-    var pageVO = objectMapper.readValue(content, new TypeReference<PageVO<ActivityFullInfoVO>>() {});
+    var pageVO =
+        objectMapper.readValue(content, new TypeReference<PageVO<ActivityFullInfoVO>>() {});
     TestConstant.REPOSITORY_ACTIVITY_LABEL_ID = pageVO.records().get(0).id();
   }
 
@@ -753,14 +754,13 @@ public class ActivityControllerTest {
     // verify method idempotency
     CommentPO comment1 = commentService.getById(Long.valueOf(TestConstant.COMMENT_ID));
     mvc.perform(
-                    post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_HIDDEN_STATE_API_PATH)
-                            .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                            .param("id", TestConstant.COMMENT_ID)
-                            .param("isHidden", "true"))
-            .andExpectAll(status().isOk());
+            post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_HIDDEN_STATE_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", TestConstant.COMMENT_ID)
+                .param("isHidden", "true"))
+        .andExpectAll(status().isOk());
     CommentPO comment2 = commentService.getById(Long.valueOf(TestConstant.COMMENT_ID));
     Assertions.assertEquals(comment1.getGmtHidden(), comment2.getGmtHidden());
-
   }
 
   @Test
@@ -769,7 +769,7 @@ public class ActivityControllerTest {
             post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_HIDDEN_STATE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("id", "123")
-            .param("isHidden", "true"))
+                .param("isHidden", "true"))
         .andExpectAll(status().isNotFound());
   }
 
@@ -785,24 +785,24 @@ public class ActivityControllerTest {
     // verify method idempotency
     CommentPO comment1 = commentService.getById(Long.valueOf(TestConstant.COMMENT_ID));
     mvc.perform(
-              post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_RESOLVED_STATE_API_PATH)
-                  .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                  .param("id", TestConstant.COMMENT_ID)
-                  .param("isResolved", "true"))
-            .andExpectAll(status().isOk());
+            post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_RESOLVED_STATE_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", TestConstant.COMMENT_ID)
+                .param("isResolved", "true"))
+        .andExpectAll(status().isOk());
     CommentPO comment2 = commentService.getById(Long.valueOf(TestConstant.COMMENT_ID));
     Assertions.assertEquals(comment1.getGmtResolved(), comment2.getGmtResolved());
   }
 
   @Test
   public void testUpdateCommentResolvedStatusOfActivityInvalid() throws Exception {
-        mvc.perform(
-                post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_RESOLVED_STATE_API_PATH)
-                    .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                    .param("id", "123")
-                    .param("isResolved", "true"))
-            .andExpectAll(status().isNotFound());
-    }
+    mvc.perform(
+            post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_RESOLVED_STATE_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", "123")
+                .param("isResolved", "true"))
+        .andExpectAll(status().isNotFound());
+  }
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 11)
@@ -812,15 +812,15 @@ public class ActivityControllerTest {
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
-                        """
-              {
-                  "repositoryId": "%s",
-                  "title": "Test Sub Issue",
-                  "description": "This is a test sub issue",
-                  "isPullRequest": false,
-                  "parentId": "%s"
-              }
-              """
+                    """
+                    {
+                        "repositoryId": "%s",
+                        "title": "Test Sub Issue",
+                        "description": "This is a test sub issue",
+                        "isPullRequest": false,
+                        "parentId": "%s"
+                    }
+                    """
                         .formatted(
                             TestConstant.REPOSITORY_ID,
                             TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)))
@@ -835,18 +835,17 @@ public class ActivityControllerTest {
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
-              """
-              {
-                  "repositoryId": "%s",
-                  "title": "Test Sub Issue",
-                  "description": "This is a test sub issue",
-                  "isPullRequest": false,
-                  "parentId": "%s"
-              }
-              """
+                    """
+                    {
+                        "repositoryId": "%s",
+                        "title": "Test Sub Issue",
+                        "description": "This is a test sub issue",
+                        "isPullRequest": false,
+                        "parentId": "%s"
+                    }
+                    """
                         .formatted(
-                            TestConstant.REPOSITORY_ID,
-                            TestConstant.OTHER_REPOSITORY_ACTIVITY_ID)))
+                            TestConstant.REPOSITORY_ID, TestConstant.OTHER_REPOSITORY_ACTIVITY_ID)))
         .andExpectAll(status().isForbidden());
   }
 
@@ -873,45 +872,45 @@ public class ActivityControllerTest {
     // add itself as sub issue
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_ADD_SUB_ISSUE_API_PATH)
-                    .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                    .param("parentId", TestConstant.REPOSITORY_ACTIVITY_ID)
-                    .param("subIssueId", TestConstant.REPOSITORY_ACTIVITY_ID))
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("parentId", TestConstant.REPOSITORY_ACTIVITY_ID)
+                .param("subIssueId", TestConstant.REPOSITORY_ACTIVITY_ID))
         .andExpectAll(status().isBadRequest());
   }
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 13)
   public void testPageSubIssuesOfIssueValid() throws Exception {
-      mvc.perform(
-              get(ApiPathConstant.ACTIVITY_PAGE_SUB_ISSUE_API_PATH)
-                  .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                  .param("page", "1")
-                  .param("size", "10")
-                  .param("parentId", TestConstant.REPOSITORY_ACTIVITY_ID))
-          .andExpectAll(
-              status().isOk(),
-              jsonPath("$.total").value(greaterThan(0)),
-              jsonPath("$.records").isArray(),
-              jsonPath("$.records.length()").value(1),
-              jsonPath("$.records[0].id").value(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID),
-              jsonPath("$.records[0].number").isString(),
-              jsonPath("$.records[0].title").isString(),
-              jsonPath("$.records[0].description").isString(),
-              jsonPath("$.records[0].username").value(TestConstant.USERNAME),
-              jsonPath("$.records[0].subIssueTotalCount").value(1),
-              jsonPath("$.records[0].subIssueCompletedCount").value(0));
+    mvc.perform(
+            get(ApiPathConstant.ACTIVITY_PAGE_SUB_ISSUE_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("page", "1")
+                .param("size", "10")
+                .param("parentId", TestConstant.REPOSITORY_ACTIVITY_ID))
+        .andExpectAll(
+            status().isOk(),
+            jsonPath("$.total").value(greaterThan(0)),
+            jsonPath("$.records").isArray(),
+            jsonPath("$.records.length()").value(1),
+            jsonPath("$.records[0].id").value(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID),
+            jsonPath("$.records[0].number").isString(),
+            jsonPath("$.records[0].title").isString(),
+            jsonPath("$.records[0].description").isString(),
+            jsonPath("$.records[0].username").value(TestConstant.USERNAME),
+            jsonPath("$.records[0].subIssueTotalCount").value(1),
+            jsonPath("$.records[0].subIssueCompletedCount").value(0));
   }
 
   @Test
   public void testPageSubIssuesOfIssueInvalid() throws Exception {
     // page sub issues in other's private repository activity
     mvc.perform(
-                    get(ApiPathConstant.ACTIVITY_PAGE_SUB_ISSUE_API_PATH)
-                            .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                            .param("page", "1")
-                            .param("size", "10")
-                            .param("parentId", TestConstant.OTHER_PRIVATE_REPOSITORY_ACTIVITY_ID))
-            .andExpectAll(status().isNotFound());
+            get(ApiPathConstant.ACTIVITY_PAGE_SUB_ISSUE_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("page", "1")
+                .param("size", "10")
+                .param("parentId", TestConstant.OTHER_PRIVATE_REPOSITORY_ACTIVITY_ID))
+        .andExpectAll(status().isNotFound());
   }
 
   @Test
@@ -924,25 +923,27 @@ public class ActivityControllerTest {
                 .param("isLocked", "true"))
         .andExpectAll(status().isOk());
     // verify method idempotency
-    ActivityPO activity1 = activityService.getById(Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID));
+    ActivityPO activity1 =
+        activityService.getById(Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID));
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_LOCKED_STATE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("id", TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)
                 .param("isLocked", "true"))
         .andExpectAll(status().isOk());
-    ActivityPO activity2 = activityService.getById(Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID));
+    ActivityPO activity2 =
+        activityService.getById(Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID));
     Assertions.assertEquals(activity1.getGmtLocked(), activity2.getGmtLocked());
   }
 
   @Test
   public void testUpdateLockStateOfActivityInvalid() throws Exception {
-      mvc.perform(
-              post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_LOCKED_STATE_API_PATH)
-                  .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                  .param("id", "123")
-                  .param("isLocked", "true"))
-          .andExpectAll(status().isNotFound());
+    mvc.perform(
+            post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_LOCKED_STATE_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", "123")
+                .param("isLocked", "true"))
+        .andExpectAll(status().isNotFound());
   }
 
   @Test
@@ -955,14 +956,16 @@ public class ActivityControllerTest {
                 .param("isClosed", "true"))
         .andExpectAll(status().isOk());
     // verify method idempotency
-    ActivityPO activity1 = activityService.getById(Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID));
+    ActivityPO activity1 =
+        activityService.getById(Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID));
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CLOSED_STATE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("id", TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)
                 .param("isClosed", "true"))
         .andExpectAll(status().isOk());
-    ActivityPO activity2 = activityService.getById(Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID));
+    ActivityPO activity2 =
+        activityService.getById(Long.valueOf(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID));
     Assertions.assertEquals(activity1.getGmtClosed(), activity2.getGmtClosed());
   }
 
@@ -1000,23 +1003,23 @@ public class ActivityControllerTest {
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 17)
   public void testCreateCommentToLockedActivityInvalid() throws Exception {
-      // if user isn't repository or collaborators
-      // he is not allowed to create comment to closed activity
-      mvc.perform(
-              post(ApiPathConstant.ACTIVITY_CREATE_COMMENT_API_PATH)
-                  .header(HeaderParameter.ACCESS_TOKEN, TestConstant.OTHER_ACCESS_TOKEN)
-                  .contentType(MediaType.APPLICATION_JSON)
-                  .content(
-                      """
-                      {
-                          "activityId": "%s",
-                          "content": "%s"
-                      }
-                      """
-                          .formatted(
-                              TestConstant.REPOSITORY_DELETE_ACTIVITY_ID,
-                              TestConstant.COMMENT_CONTENT)))
-          .andExpectAll(status().isForbidden());
+    // if user isn't repository or collaborators
+    // he is not allowed to create comment to closed activity
+    mvc.perform(
+            post(ApiPathConstant.ACTIVITY_CREATE_COMMENT_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.OTHER_ACCESS_TOKEN)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                        "activityId": "%s",
+                        "content": "%s"
+                    }
+                    """
+                        .formatted(
+                            TestConstant.REPOSITORY_DELETE_ACTIVITY_ID,
+                            TestConstant.COMMENT_CONTENT)))
+        .andExpectAll(status().isForbidden());
   }
 
   @Test
@@ -1031,12 +1034,12 @@ public class ActivityControllerTest {
 
   @Test
   public void testRemoveSubIssueFromIssueInvalid() throws Exception {
-      // remove sub issue from other's public repository activity
-      mvc.perform(
-              delete(ApiPathConstant.ACTIVITY_REMOVE_SUB_ISSUE_API_PATH)
-                  .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                  .param("subIssueId", TestConstant.OTHER_REPOSITORY_ACTIVITY_ID))
-          .andExpectAll(status().isForbidden());
+    // remove sub issue from other's public repository activity
+    mvc.perform(
+            delete(ApiPathConstant.ACTIVITY_REMOVE_SUB_ISSUE_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("subIssueId", TestConstant.OTHER_REPOSITORY_ACTIVITY_ID))
+        .andExpectAll(status().isForbidden());
   }
 
   @Test

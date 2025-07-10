@@ -1,7 +1,6 @@
 package edu.cmipt.gcs.pojo.comment;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Objects;
 
 @Schema(description = "Comment Value Object")
 public record CommentVO(

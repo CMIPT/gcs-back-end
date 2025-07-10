@@ -20,25 +20,21 @@ public record ActivityFullInfoVO(
     @Schema(description = "Updated timestamp, seconds since epoch") String gmtUpdated,
     @Schema(description = "Closed timestamp, seconds since epoch") String gmtClosed,
     @Schema(description = "Locked timestamp, seconds since epoch") String gmtLocked) {
-    public ActivityFullInfoVO(ActivityFullInfoDTO activityDetailDTO) {
-        this(
-            activityDetailDTO.getId().toString(),
-            activityDetailDTO.getNumber().toString(),
-            activityDetailDTO.getRepositoryId().toString(),
-            activityDetailDTO.getRepositoryName(),
-            activityDetailDTO.getTitle(),
-            activityDetailDTO.getDescription(),
-            activityDetailDTO.getLabels().stream()
-                        .map(LabelVO::new)
-                        .toList(),
-            activityDetailDTO.getUsername(),
-            activityDetailDTO.getAssignees().stream()
-                        .map(AssigneeVO::new)
-                        .toList(),
-            activityDetailDTO.getCommentCnt().toString(),
-            String.valueOf(activityDetailDTO.getGmtCreated()),
-            String.valueOf(activityDetailDTO.getGmtUpdated()),
-            String.valueOf(activityDetailDTO.getGmtClosed()),
-            String.valueOf(activityDetailDTO.getGmtLocked()));
-    }
+  public ActivityFullInfoVO(ActivityFullInfoDTO activityDetailDTO) {
+    this(
+        activityDetailDTO.getId().toString(),
+        activityDetailDTO.getNumber().toString(),
+        activityDetailDTO.getRepositoryId().toString(),
+        activityDetailDTO.getRepositoryName(),
+        activityDetailDTO.getTitle(),
+        activityDetailDTO.getDescription(),
+        activityDetailDTO.getLabels().stream().map(LabelVO::new).toList(),
+        activityDetailDTO.getUsername(),
+        activityDetailDTO.getAssignees().stream().map(AssigneeVO::new).toList(),
+        activityDetailDTO.getCommentCnt().toString(),
+        String.valueOf(activityDetailDTO.getGmtCreated()),
+        String.valueOf(activityDetailDTO.getGmtUpdated()),
+        String.valueOf(activityDetailDTO.getGmtClosed()),
+        String.valueOf(activityDetailDTO.getGmtLocked()));
+  }
 }

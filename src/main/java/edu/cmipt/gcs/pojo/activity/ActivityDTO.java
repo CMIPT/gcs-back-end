@@ -38,14 +38,7 @@ public record ActivityDTO(
         @NotNull(groups = CreateGroup.class)
         @Null(groups = UpdateGroup.class)
         Boolean isPullRequest) {
-    public ActivityDTO(Long id,Long parentId){
-        this(
-            String.valueOf(id),
-            null,
-            null,
-            String.valueOf(parentId),
-            null,
-            null,
-            null);
-    }
+  public ActivityDTO(Long id, Long parentId) {
+    this(String.valueOf(id), null, null, String.valueOf(parentId), null, null, null);
+  }
 }

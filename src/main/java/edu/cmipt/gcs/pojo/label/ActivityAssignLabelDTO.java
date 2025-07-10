@@ -1,11 +1,10 @@
 package edu.cmipt.gcs.pojo.label;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.sql.Timestamp;
 
 @Schema(description = "Activity Assign Label Data Transfer Object")
 @Data

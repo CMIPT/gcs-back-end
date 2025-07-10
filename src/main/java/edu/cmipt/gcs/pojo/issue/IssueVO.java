@@ -2,7 +2,6 @@ package edu.cmipt.gcs.pojo.issue;
 
 import edu.cmipt.gcs.pojo.assign.AssigneeVO;
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.util.List;
 
 public record IssueVO(
@@ -17,18 +16,18 @@ public record IssueVO(
     @Schema(description = "Closed timestamp, seconds since epoch") String gmtClosed,
     @Schema(description = "Sub Issue Total Count") String subIssueTotalCount,
     @Schema(description = "Sub Issue Completed Count") String subIssueCompletedCount) {
-    public IssueVO(IssueDTO issueDTO) {
-        this(
-            issueDTO.getId().toString(),
-            issueDTO.getNumber().toString(),
-            issueDTO.getRepositoryId().toString(),
-            issueDTO.getRepositoryName(),
-            issueDTO.getTitle(),
-            issueDTO.getDescription(),
-            issueDTO.getUsername(),
-            issueDTO.getAssignees().stream().map(AssigneeVO::new).toList(),
-            String.valueOf(issueDTO.getGmtClosed()),
-            issueDTO.getSubIssueTotalCount().toString(),
-            issueDTO.getSubIssueCompletedCount().toString());
-    }
+  public IssueVO(IssueDTO issueDTO) {
+    this(
+        issueDTO.getId().toString(),
+        issueDTO.getNumber().toString(),
+        issueDTO.getRepositoryId().toString(),
+        issueDTO.getRepositoryName(),
+        issueDTO.getTitle(),
+        issueDTO.getDescription(),
+        issueDTO.getUsername(),
+        issueDTO.getAssignees().stream().map(AssigneeVO::new).toList(),
+        String.valueOf(issueDTO.getGmtClosed()),
+        issueDTO.getSubIssueTotalCount().toString(),
+        issueDTO.getSubIssueCompletedCount().toString());
+  }
 }

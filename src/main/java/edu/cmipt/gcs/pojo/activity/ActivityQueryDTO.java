@@ -1,7 +1,6 @@
 package edu.cmipt.gcs.pojo.activity;
 
 import edu.cmipt.gcs.enumeration.ActivityOrderByEnum;
-import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.validation.group.QueryGroup;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -16,8 +15,7 @@ public record ActivityQueryDTO(
     @Schema(description = "Whether or not the Activity is a Pull Request", example = "true")
         @NotNull(groups = QueryGroup.class)
         Boolean isPullRequest,
-    @Schema(description = "Parent Activity ID")
-        String parentId,
+    @Schema(description = "Parent Activity ID") String parentId,
     @Schema(
             description = "Labels' names associated with the Activity",
             example = "[\"bug\", \"enhancement\"]")
@@ -33,17 +31,17 @@ public record ActivityQueryDTO(
         Boolean isLocked,
     @Schema(description = "Whether or not the activity is closed", example = "false")
         Boolean isClosed) {
-    public ActivityQueryDTO(Long parentId) {
-            this(
-                null,
-                null,
-                false,
-                String.valueOf(parentId),
-                null,
-                null,
-               ActivityOrderByEnum.GMT_CREATED,
-                true,
-                null,
-                null);
-    }
+  public ActivityQueryDTO(Long parentId) {
+    this(
+        null,
+        null,
+        false,
+        String.valueOf(parentId),
+        null,
+        null,
+        ActivityOrderByEnum.GMT_CREATED,
+        true,
+        null,
+        null);
+  }
 }

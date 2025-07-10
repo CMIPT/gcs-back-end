@@ -114,7 +114,7 @@ public class UserController {
     if (user.username() != null) {
       throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
     }
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken),true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     // for the null fields, mybatis-plus will ignore by default
     if (!userService.updateById(new UserPO(user, idInToken))) {
       throw new GenericException(ErrorCodeEnum.USER_UPDATE_FAILED, user);

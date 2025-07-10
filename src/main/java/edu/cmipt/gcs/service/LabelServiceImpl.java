@@ -6,7 +6,6 @@ import edu.cmipt.gcs.dao.LabelMapper;
 import edu.cmipt.gcs.pojo.label.LabelPO;
 import java.io.Serializable;
 import java.util.List;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,7 +47,6 @@ public class LabelServiceImpl extends ServiceImpl<LabelMapper, LabelPO> implemen
             .eq("repository_id", repositoryId)
             .apply("LOWER(name) = LOWER({0})", labelName));
   }
-
 
   @Override
   public List<Long> removeByRepositoryId(Long repositoryId) {

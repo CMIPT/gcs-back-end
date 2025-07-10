@@ -16,12 +16,12 @@ public enum UserQueryTypeEnum {
     switch (this) {
       case ID:
         try {
-          return service.getById(TypeConversionUtil.convertToLong(user,true));
+          return service.getById(TypeConversionUtil.convertToLong(user, true));
         } catch (Exception e) {
           throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
         }
       case TOKEN:
-        Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(user),true);
+        Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(user), true);
         return service.getById(idInToken);
       case USERNAME:
         return service.getOneByUsername(user);

@@ -6,7 +6,6 @@ import edu.cmipt.gcs.pojo.activity.ActivityFullInfoDTO;
 import edu.cmipt.gcs.pojo.activity.ActivityPO;
 import edu.cmipt.gcs.pojo.activity.ActivityQueryDTO;
 import edu.cmipt.gcs.pojo.issue.IssueDTO;
-
 import java.util.List;
 
 public interface ActivityService extends IService<ActivityPO> {
@@ -14,7 +13,7 @@ public interface ActivityService extends IService<ActivityPO> {
   ActivityPO getLatestActivityByRepositoryId(Long repositoryId);
 
   Page<ActivityFullInfoDTO> pageActivityFullInfo(
-      ActivityQueryDTO activityQueryDTO, Integer pageNum,Integer pageSize);
+      ActivityQueryDTO activityQueryDTO, Integer pageNum, Integer pageSize);
 
   ActivityFullInfoDTO getActivityFullInfoById(Long id);
 

@@ -19,14 +19,13 @@ import edu.cmipt.gcs.pojo.label.LabelDTO;
 import edu.cmipt.gcs.pojo.label.LabelPO;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.user.UserPO;
+import edu.cmipt.gcs.util.RedisUtil;
+import edu.cmipt.gcs.util.TypeConversionUtil;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import edu.cmipt.gcs.util.RedisUtil;
-import edu.cmipt.gcs.util.TypeConversionUtil;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -93,11 +92,14 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
             .leftJoin(RepositoryPO.class, RepositoryPO::getId, ActivityPO::getRepositoryId)
             .eq(ActivityPO::getIsPullRequest, activityQueryDTO.isPullRequest());
     // issue的sub-issues可以来自不同仓库
-    if(activityQueryDTO.parentId()!= null) {
-      queryWrapper.eq(ActivityPO::getParentId, TypeConversionUtil.convertToLong(activityQueryDTO.parentId(),true));
-    }
-    else {
-      queryWrapper.eq(RepositoryPO::getId, TypeConversionUtil.convertToLong(activityQueryDTO.repositoryId(),true));
+    if (activityQueryDTO.parentId() != null) {
+      queryWrapper.eq(
+          ActivityPO::getParentId,
+          TypeConversionUtil.convertToLong(activityQueryDTO.parentId(), true));
+    } else {
+      queryWrapper.eq(
+          RepositoryPO::getId,
+          TypeConversionUtil.convertToLong(activityQueryDTO.repositoryId(), true));
     }
     if (activityQueryDTO.labels() != null && !activityQueryDTO.labels().isEmpty()) {
       queryWrapper.in(
@@ -233,38 +235,44 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
   public Page<IssueDTO> pageSubIssueByParentId(Long parentId, Integer page, Integer size) {
     ActivityQueryDTO activityQueryDTO = new ActivityQueryDTO(parentId);
 
-    Page<ActivityFullInfoDTO> activityDetailDTOPage = pageActivityFullInfo(
-            activityQueryDTO, page, size);// 先获取活动列表，确保活动存在
+    Page<ActivityFullInfoDTO> activityDetailDTOPage =
+        pageActivityFullInfo(activityQueryDTO, page, size); // 先获取活动列表，确保活动存在
     // 提取ActivityPO的ID列表
     List<Long> subIssueIds =
-            activityDetailDTOPage.getRecords().stream().map(ActivityFullInfoDTO::getId).toList();
-    if(subIssueIds.isEmpty()) {
+        activityDetailDTOPage.getRecords().stream().map(ActivityFullInfoDTO::getId).toList();
+    if (subIssueIds.isEmpty()) {
       return new Page<>(page, size, 0);
     }
     // 查询每个issue的sub-issues数量
     var wrapper =
-            JoinWrappers.lambda(ActivityPO.class)
-                    .selectAs(ActivityPO::getParentId, IssueCountDTO::getIssueId)
-                    .selectCount(ActivityPO::getParentId, IssueCountDTO::getCount)
-                    .in(ActivityPO::getParentId, subIssueIds)
-                    .groupBy(ActivityPO::getParentId);
-    List<IssueCountDTO> issueCountDTOPage = activityMapper.selectJoinList(IssueCountDTO.class, wrapper);
-    Map<Long,Long> issueCountMap =
-            issueCountDTOPage.stream().collect(
-                    java.util.stream.Collectors.toMap(IssueCountDTO::getIssueId, IssueCountDTO::getCount));
+        JoinWrappers.lambda(ActivityPO.class)
+            .selectAs(ActivityPO::getParentId, IssueCountDTO::getIssueId)
+            .selectCount(ActivityPO::getParentId, IssueCountDTO::getCount)
+            .in(ActivityPO::getParentId, subIssueIds)
+            .groupBy(ActivityPO::getParentId);
+    List<IssueCountDTO> issueCountDTOPage =
+        activityMapper.selectJoinList(IssueCountDTO.class, wrapper);
+    Map<Long, Long> issueCountMap =
+        issueCountDTOPage.stream()
+            .collect(
+                java.util.stream.Collectors.toMap(
+                    IssueCountDTO::getIssueId, IssueCountDTO::getCount));
 
     // 查询每个issue已完成的sub-issues数量
     wrapper.isNotNull(ActivityPO::getGmtClosed);
-    List<IssueCountDTO> closedIssueCountDTOPage = activityMapper.selectJoinList(IssueCountDTO.class, wrapper);
-    Map<Long,Long> closedIssueCountMap =
-            closedIssueCountDTOPage.stream().collect(
-                    java.util.stream.Collectors.toMap(IssueCountDTO::getIssueId, IssueCountDTO::getCount));
+    List<IssueCountDTO> closedIssueCountDTOPage =
+        activityMapper.selectJoinList(IssueCountDTO.class, wrapper);
+    Map<Long, Long> closedIssueCountMap =
+        closedIssueCountDTOPage.stream()
+            .collect(
+                java.util.stream.Collectors.toMap(
+                    IssueCountDTO::getIssueId, IssueCountDTO::getCount));
     // 组装结果
     Page<IssueDTO> issueDTOPage = new Page<>(page, size, activityDetailDTOPage.getTotal());
     issueDTOPage.setRecords(
         activityDetailDTOPage.getRecords().stream()
             .map(
-                    activityFullInfoDTO ->
+                activityFullInfoDTO ->
                     new IssueDTO(
                         activityFullInfoDTO.getId(),
                         activityFullInfoDTO.getNumber(),
@@ -284,11 +292,10 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
   @Override
   public boolean removeSubIssueById(Long subIssueId) {
     LambdaUpdateWrapper<ActivityPO> updateWrapper = new LambdaUpdateWrapper<>();
-    updateWrapper.eq(ActivityPO::getId, subIssueId)
-        .set(ActivityPO::getParentId, null);
-    redisTemplate.delete(RedisUtil.generateKey(ActivityServiceImpl.class,String.valueOf(subIssueId)));
+    updateWrapper.eq(ActivityPO::getId, subIssueId).set(ActivityPO::getParentId, null);
+    redisTemplate.delete(
+        RedisUtil.generateKey(ActivityServiceImpl.class, String.valueOf(subIssueId)));
     return super.update(updateWrapper);
-
   }
 
   @Override
@@ -296,17 +303,15 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
     var activityPO = super.getById(activityId);
     LambdaUpdateWrapper<ActivityPO> updateWrapper = new LambdaUpdateWrapper<>();
     updateWrapper.eq(ActivityPO::getId, activityId);
-    if(!isLocked) {
-      updateWrapper.set(ActivityPO::getGmtLocked, null);;
-    }
-    else if(activityPO.getGmtLocked() == null) {
+    if (!isLocked) {
+      updateWrapper.set(ActivityPO::getGmtLocked, null);
+      ;
+    } else if (activityPO.getGmtLocked() == null) {
       updateWrapper.set(ActivityPO::getGmtLocked, new Timestamp(System.currentTimeMillis()));
-    }
-    else {
+    } else {
       return true; // already locked
     }
     return super.update(updateWrapper);
-
   }
 
   @Override
@@ -314,13 +319,12 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
     var activityPO = super.getById(activityId);
     LambdaUpdateWrapper<ActivityPO> updateWrapper = new LambdaUpdateWrapper<>();
     updateWrapper.eq(ActivityPO::getId, activityId);
-    if(!isClosed) {
-      updateWrapper.set(ActivityPO::getGmtClosed, null);;
-    }
-    else if(activityPO.getGmtClosed() == null) {
+    if (!isClosed) {
+      updateWrapper.set(ActivityPO::getGmtClosed, null);
+      ;
+    } else if (activityPO.getGmtClosed() == null) {
       updateWrapper.set(ActivityPO::getGmtClosed, new Timestamp(System.currentTimeMillis()));
-    }
-    else {
+    } else {
       return true; // already closed
     }
     return super.update(updateWrapper);

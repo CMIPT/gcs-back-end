@@ -27,8 +27,6 @@ public interface PermissionService {
   void checkActivityOperationValidity(
       Long activityId, Long userId, OperationTypeEnum operationTypeEnum);
 
-  /**
-   * Check the validity of the issue operation.
-   */
+  /** Check the validity of the issue operation. */
   void checkIssueOperationValidity(Long subIssueRepositoryId, Long parentId);
 }

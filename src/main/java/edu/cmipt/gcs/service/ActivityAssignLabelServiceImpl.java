@@ -75,11 +75,12 @@ public class ActivityAssignLabelServiceImpl
 
   @Override
   public List<Long> removeByActivityIds(List<Long> activityIds) {
-    List<Long> activityAssignLabelIds = super.list(
-                    new QueryWrapper<ActivityAssignLabelPO>()
-                            .select("id")
-                            .in("activity_id", activityIds)
-            ).stream()
+    List<Long> activityAssignLabelIds =
+        super.list(
+                new QueryWrapper<ActivityAssignLabelPO>()
+                    .select("id")
+                    .in("activity_id", activityIds))
+            .stream()
             .map(ActivityAssignLabelPO::getId)
             .collect(Collectors.toList());
     super.remove(new QueryWrapper<ActivityAssignLabelPO>().in("activity_id", activityIds));
@@ -88,11 +89,9 @@ public class ActivityAssignLabelServiceImpl
 
   @Override
   public List<Long> removeByLabelId(Serializable LabelId) {
-    List<Long> activityAssignLabelIds = super.list(
-                    new QueryWrapper<ActivityAssignLabelPO>()
-                            .select("id")
-                            .eq("label_id", LabelId)
-            ).stream()
+    List<Long> activityAssignLabelIds =
+        super.list(new QueryWrapper<ActivityAssignLabelPO>().select("id").eq("label_id", LabelId))
+            .stream()
             .map(ActivityAssignLabelPO::getId)
             .toList();
     super.remove(new QueryWrapper<ActivityAssignLabelPO>().eq("label_id", LabelId));

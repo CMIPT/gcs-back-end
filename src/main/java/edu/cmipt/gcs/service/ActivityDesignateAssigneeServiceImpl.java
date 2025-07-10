@@ -84,19 +84,18 @@ public class ActivityDesignateAssigneeServiceImpl
             .in(ActivityDesignateAssigneePO::getActivityId, activityIds);
 
     List<AssigneeDTO> assigneeDTOs =
-        activityDesignateAssigneeMapper.selectJoinList(
-           AssigneeDTO.class, queryWrapper);
+        activityDesignateAssigneeMapper.selectJoinList(AssigneeDTO.class, queryWrapper);
 
-    return assigneeDTOs.stream()
-        .collect(
-            Collectors.groupingBy(
-                AssigneeDTO::getActivityId));
+    return assigneeDTOs.stream().collect(Collectors.groupingBy(AssigneeDTO::getActivityId));
   }
 
   @Override
   public List<Long> removeByActivityIds(List<Long> activityIds) {
-    List<Long> activityDesignateAssigneeIds = super.list(
-          new QueryWrapper<ActivityDesignateAssigneePO>().select("id").in("activity_id", activityIds))
+    List<Long> activityDesignateAssigneeIds =
+        super.list(
+                new QueryWrapper<ActivityDesignateAssigneePO>()
+                    .select("id")
+                    .in("activity_id", activityIds))
             .stream()
             .map(ActivityDesignateAssigneePO::getId)
             .toList();
