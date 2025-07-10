@@ -5,7 +5,7 @@ import edu.cmipt.gcs.pojo.label.LabelVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
-public record ActivityDetailVO(
+public record ActivityFullInfoVO(
     @Schema(description = "id") String id,
     @Schema(description = "Activity Number") String number,
     @Schema(description = "Repository Id") String repositoryId,
@@ -17,9 +17,10 @@ public record ActivityDetailVO(
     @Schema(description = "Activity Assignees") List<AssigneeVO> assignees,
     @Schema(description = "The count of comment") String commentCnt,
     @Schema(description = "Created timestamp, seconds since epoch") String gmtCreated,
+    @Schema(description = "Updated timestamp, seconds since epoch") String gmtUpdated,
     @Schema(description = "Closed timestamp, seconds since epoch") String gmtClosed,
     @Schema(description = "Locked timestamp, seconds since epoch") String gmtLocked) {
-    public ActivityDetailVO(ActivityDetailDTO activityDetailDTO) {
+    public ActivityFullInfoVO(ActivityFullInfoDTO activityDetailDTO) {
         this(
             activityDetailDTO.getId().toString(),
             activityDetailDTO.getNumber().toString(),
@@ -36,6 +37,7 @@ public record ActivityDetailVO(
                         .toList(),
             activityDetailDTO.getCommentCnt().toString(),
             String.valueOf(activityDetailDTO.getGmtCreated()),
+            String.valueOf(activityDetailDTO.getGmtUpdated()),
             String.valueOf(activityDetailDTO.getGmtClosed()),
             String.valueOf(activityDetailDTO.getGmtLocked()));
     }

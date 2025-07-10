@@ -16,7 +16,7 @@ public record CommentDTO(
             description = "Activity ID",
             requiredMode = Schema.RequiredMode.REQUIRED,
             example = "12")
-        @NotBlank(groups = CreateGroup.class)
+        @NotNull(groups = CreateGroup.class)
         String activityId,
     @Schema(
             description = "The content of comment",

@@ -8,19 +8,15 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yulichang.toolkit.JoinWrappers;
 import edu.cmipt.gcs.dao.ActivityMapper;
 import edu.cmipt.gcs.dao.CommentMapper;
-import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
-import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.activity.*;
 import edu.cmipt.gcs.pojo.assign.ActivityDesignateAssigneePO;
 import edu.cmipt.gcs.pojo.assign.AssigneeDTO;
-import edu.cmipt.gcs.pojo.assign.AssigneeVO;
 import edu.cmipt.gcs.pojo.comment.CommentPO;
 import edu.cmipt.gcs.pojo.issue.IssueCountDTO;
 import edu.cmipt.gcs.pojo.issue.IssueDTO;
 import edu.cmipt.gcs.pojo.label.ActivityAssignLabelPO;
 import edu.cmipt.gcs.pojo.label.LabelDTO;
 import edu.cmipt.gcs.pojo.label.LabelPO;
-import edu.cmipt.gcs.pojo.label.LabelVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import java.io.Serializable;
@@ -83,16 +79,16 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
   }
 
   @Override
-  public Page<ActivityDetailDTO> pageActivitiesDetail(
+  public Page<ActivityFullInfoDTO> pageActivityFullInfo(
       ActivityQueryDTO activityQueryDTO, Integer pageNum, Integer pageSize) {
-    Page<ActivityDetailDTO> page = new Page<>(pageNum, pageSize);
+    Page<ActivityFullInfoDTO> page = new Page<>(pageNum, pageSize);
     // 连表分页查询
     var queryWrapper =
         JoinWrappers.lambda(ActivityPO.class)
-            .selectAsClass(ActivityPO.class, ActivityDetailDTO.class)
-            .selectAs(RepositoryPO::getId, ActivityDetailDTO::getRepositoryId)
-            .selectAs(RepositoryPO::getRepositoryName, ActivityDetailDTO::getRepositoryName)
-            .selectAs(UserPO::getUsername, ActivityDetailDTO::getUsername)
+            .selectAsClass(ActivityPO.class, ActivityFullInfoDTO.class)
+            .selectAs(RepositoryPO::getId, ActivityFullInfoDTO::getRepositoryId)
+            .selectAs(RepositoryPO::getRepositoryName, ActivityFullInfoDTO::getRepositoryName)
+            .selectAs(UserPO::getUsername, ActivityFullInfoDTO::getUsername)
             .leftJoin(UserPO.class, UserPO::getId, ActivityPO::getUserId)
             .leftJoin(RepositoryPO.class, RepositoryPO::getId, ActivityPO::getRepositoryId)
             .eq(ActivityPO::getIsPullRequest, activityQueryDTO.isPullRequest());
@@ -140,16 +136,16 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
           break;
           //                case TOTAL_COMMENTS:
           //                    queryWrapper.orderBy(true, activityQueryDTO.isAsc(),
-          //                            ActivityDetailDTO::getCommentCnt);
+          //                            ActivityFullInfoDTO::getCommentCnt);
           //                    break; // todo 暂不支持按评论数排序
       }
     }
-    Page<ActivityDetailDTO> activityDetailDTOPage =
-        activityMapper.selectJoinPage(page, ActivityDetailDTO.class, queryWrapper);
+    Page<ActivityFullInfoDTO> activityDetailDTOPage =
+        activityMapper.selectJoinPage(page, ActivityFullInfoDTO.class, queryWrapper);
     if (activityDetailDTOPage.getRecords().isEmpty()) return activityDetailDTOPage;
     // 提取ActivityPO的ID列表
     List<Long> activityIds =
-        activityDetailDTOPage.getRecords().stream().map(ActivityDetailDTO::getId).toList();
+        activityDetailDTOPage.getRecords().stream().map(ActivityFullInfoDTO::getId).toList();
     //  批量查询每个Activity的标签、指定的参与者和评论数
     Map<Long, List<LabelDTO>> labelMap =
         activityAssignLabelService.getLabelsByActivityIds(activityIds);
@@ -170,19 +166,20 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
   }
 
   @Override
-  public ActivityDetailDTO getActivityDetailById(Long id) {
+  public ActivityFullInfoDTO getActivityFullInfoById(Long id) {
     var queryWrapper =
         JoinWrappers.lambda(ActivityPO.class)
-            .selectAsClass(ActivityPO.class, ActivityDetailDTO.class)
-            .selectAs(RepositoryPO::getId, ActivityDetailDTO::getRepositoryId)
-            .selectAs(UserPO::getUsername, ActivityDetailDTO::getUsername)
+            .selectAsClass(ActivityPO.class, ActivityFullInfoDTO.class)
+            .selectAs(RepositoryPO::getId, ActivityFullInfoDTO::getRepositoryId)
+            .selectAs(RepositoryPO::getRepositoryName, ActivityFullInfoDTO::getRepositoryName)
+            .selectAs(UserPO::getUsername, ActivityFullInfoDTO::getUsername)
             .leftJoin(UserPO.class, UserPO::getId, ActivityPO::getUserId)
             .leftJoin(RepositoryPO.class, RepositoryPO::getId, ActivityPO::getRepositoryId)
             .eq(ActivityPO::getId, id);
 
-    ActivityDetailDTO activityDetailDTO =
-        activityMapper.selectJoinOne(ActivityDetailDTO.class, queryWrapper);
-    if (activityDetailDTO != null) {
+    ActivityFullInfoDTO activityFullInfoDTO =
+        activityMapper.selectJoinOne(ActivityFullInfoDTO.class, queryWrapper);
+    if (activityFullInfoDTO != null) {
       Long commentCount =
           commentMapper.selectCount(
               Wrappers.lambdaQuery(CommentPO.class).eq(CommentPO::getActivityId, id));
@@ -195,11 +192,11 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
               .getAssigneesByActivityIds(List.of(id))
               .getOrDefault(id, Collections.emptyList());
 
-      activityDetailDTO.setCommentCnt(commentCount);
-      activityDetailDTO.setLabels(labelDTOList);
-      activityDetailDTO.setAssignees(assigneeDTOList);
+      activityFullInfoDTO.setCommentCnt(commentCount);
+      activityFullInfoDTO.setLabels(labelDTOList);
+      activityFullInfoDTO.setAssignees(assigneeDTOList);
     }
-    return activityDetailDTO;
+    return activityFullInfoDTO;
   }
 
   @Override
@@ -233,14 +230,14 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
   }
 
   @Override
-  public Page<IssueDTO> pageSubIssue(Long parentId, Integer page, Integer size) {
+  public Page<IssueDTO> pageSubIssueByParentId(Long parentId, Integer page, Integer size) {
     ActivityQueryDTO activityQueryDTO = new ActivityQueryDTO(parentId);
 
-    Page<ActivityDetailDTO> activityDetailDTOPage = pageActivitiesDetail(
+    Page<ActivityFullInfoDTO> activityDetailDTOPage = pageActivityFullInfo(
             activityQueryDTO, page, size);// 先获取活动列表，确保活动存在
     // 提取ActivityPO的ID列表
     List<Long> subIssueIds =
-            activityDetailDTOPage.getRecords().stream().map(ActivityDetailDTO::getId).toList();
+            activityDetailDTOPage.getRecords().stream().map(ActivityFullInfoDTO::getId).toList();
     if(subIssueIds.isEmpty()) {
       return new Page<>(page, size, 0);
     }
@@ -267,19 +264,19 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
     issueDTOPage.setRecords(
         activityDetailDTOPage.getRecords().stream()
             .map(
-                activityDetailDTO ->
+                    activityFullInfoDTO ->
                     new IssueDTO(
-                        activityDetailDTO.getId(),
-                        activityDetailDTO.getNumber(),
-                        activityDetailDTO.getRepositoryId(),
-                        activityDetailDTO.getRepositoryName(),
-                        activityDetailDTO.getTitle(),
-                        activityDetailDTO.getDescription(),
-                        activityDetailDTO.getUsername(),
-                        activityDetailDTO.getAssignees(),
-                        activityDetailDTO.getGmtClosed(),
-                        issueCountMap.getOrDefault(activityDetailDTO.getId(), 0L),
-                        closedIssueCountMap.getOrDefault(activityDetailDTO.getId(), 0L)))
+                        activityFullInfoDTO.getId(),
+                        activityFullInfoDTO.getNumber(),
+                        activityFullInfoDTO.getRepositoryId(),
+                        activityFullInfoDTO.getRepositoryName(),
+                        activityFullInfoDTO.getTitle(),
+                        activityFullInfoDTO.getDescription(),
+                        activityFullInfoDTO.getUsername(),
+                        activityFullInfoDTO.getAssignees(),
+                        activityFullInfoDTO.getGmtClosed(),
+                        issueCountMap.getOrDefault(activityFullInfoDTO.getId(), 0L),
+                        closedIssueCountMap.getOrDefault(activityFullInfoDTO.getId(), 0L)))
             .toList());
     return issueDTOPage;
   }

@@ -9,7 +9,8 @@ public record ActivityAssignLabelVO(
     String labelId,
     String labelName,
     String labelDescription,
-    String labelHexColor) {
+    String labelHexColor,
+    String gmtCreated) {
   public ActivityAssignLabelVO(ActivityAssignLabelDTO activityAssignLabelDTO) {
     this(
         activityAssignLabelDTO.getId().toString(),
@@ -17,6 +18,7 @@ public record ActivityAssignLabelVO(
         activityAssignLabelDTO.getLabelId().toString(),
         activityAssignLabelDTO.getLabelName(),
         activityAssignLabelDTO.getLabelDescription(),
-        activityAssignLabelDTO.getLabelHexColor());
+        activityAssignLabelDTO.getLabelHexColor(),
+        activityAssignLabelDTO.getGmtCreated().toString());
   }
 }

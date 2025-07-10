@@ -108,8 +108,8 @@ public class JwtFilter extends OncePerRequestFilter {
                   ApiPathConstant.USER_DELETE_USER_API_PATH,
                   ApiPathConstant.ACTIVITY_DELETE_ACTIVITY_API_PATH,
                   ApiPathConstant.ACTIVITY_DELETE_COMMENT_API_PATH,
-                  ApiPathConstant.ACTIVITY_DELETE_LABEL_API_PATH,
-                  ApiPathConstant.ACTIVITY_DELETE_ASSIGNEE_API_PATH,
+                  ApiPathConstant.ACTIVITY_REMOVE_LABEL_API_PATH,
+                  ApiPathConstant.ACTIVITY_REMOVE_ASSIGNEE_API_PATH,
                   ApiPathConstant.ACTIVITY_REMOVE_SUB_ISSUE_API_PATH,
                   ApiPathConstant.REPOSITORY_DELETE_LABEL_API_PATH));
 

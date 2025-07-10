@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ActivityDetailDTO {
+public class ActivityFullInfoDTO {
   private Long id; // activity id
   private Integer number;
   private Long repositoryId;
@@ -23,6 +23,7 @@ public class ActivityDetailDTO {
   private List<AssigneeDTO> assignees;
   private Long commentCnt;
   private Timestamp gmtCreated;
+  private Timestamp gmtUpdated;
   private Timestamp gmtClosed;
   private Timestamp gmtLocked;
 }

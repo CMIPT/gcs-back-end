@@ -13,6 +13,8 @@ public record CommentVO(
         String codePath,
     @Schema(description = "Selected line from code") Integer codeLine,
     @Schema(description = "Comment ID of this comment replies") String replyToId,
+    @Schema(description = "Created timestamp, seconds since epoch") String gmtCreated,
+    @Schema(description = "Updated timestamp, seconds since epoch") String gmtUpdated,
     @Schema(description = "Resolved timestamp, seconds since epoch") String gmtResolved,
     @Schema(description = "Hidden timestamp, seconds since epoch") String gmtHidden) {
   public CommentVO(CommentPO CommentPO) {
@@ -24,6 +26,8 @@ public record CommentVO(
         CommentPO.getCodePath(),
         CommentPO.getCodeLine(),
         String.valueOf(CommentPO.getReplyToId()),
+        String.valueOf(CommentPO.getGmtCreated()),
+        String.valueOf(CommentPO.getGmtUpdated()),
         String.valueOf(CommentPO.getGmtResolved()),
         String.valueOf(CommentPO.getGmtHidden()));
   }

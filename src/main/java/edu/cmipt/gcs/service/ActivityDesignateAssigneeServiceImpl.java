@@ -5,11 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yulichang.toolkit.JoinWrappers;
 import edu.cmipt.gcs.dao.ActivityDesignateAssigneeMapper;
-import edu.cmipt.gcs.pojo.activity.ActivityPO;
-import edu.cmipt.gcs.pojo.assign.ActivityDesignateAssigneeDTO;
 import edu.cmipt.gcs.pojo.assign.ActivityDesignateAssigneePO;
 import edu.cmipt.gcs.pojo.assign.AssigneeDTO;
-import edu.cmipt.gcs.pojo.assign.AssigneeVO;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import java.io.Serializable;
 import java.util.List;
@@ -59,6 +56,7 @@ public class ActivityDesignateAssigneeServiceImpl
             .selectAs(UserPO::getUsername, AssigneeDTO::getUsername)
             .selectAs(UserPO::getAvatarUrl, AssigneeDTO::getAvatarUrl)
             .selectAs(UserPO::getEmail, AssigneeDTO::getEmail)
+            .selectAs(ActivityDesignateAssigneePO::getGmtCreated, AssigneeDTO::getGmtCreated)
             .innerJoin(UserPO.class, UserPO::getId, ActivityDesignateAssigneePO::getAssigneeId)
             .eq(ActivityDesignateAssigneePO::getActivityId, activityId);
     return activityDesignateAssigneeMapper.selectJoinPage(page, AssigneeDTO.class, queryWrapper);
@@ -81,6 +79,7 @@ public class ActivityDesignateAssigneeServiceImpl
             .selectAs(UserPO::getUsername, AssigneeDTO::getUsername)
             .selectAs(UserPO::getAvatarUrl, AssigneeDTO::getAvatarUrl)
             .selectAs(UserPO::getEmail, AssigneeDTO::getEmail)
+            .selectAs(ActivityDesignateAssigneePO::getGmtCreated, AssigneeDTO::getGmtCreated)
             .innerJoin(UserPO.class, UserPO::getId, ActivityDesignateAssigneePO::getAssigneeId)
             .in(ActivityDesignateAssigneePO::getActivityId, activityIds);
 

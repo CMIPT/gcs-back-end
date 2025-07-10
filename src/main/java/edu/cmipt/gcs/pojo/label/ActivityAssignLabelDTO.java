@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.sql.Timestamp;
+
 @Schema(description = "Activity Assign Label Data Transfer Object")
 @Data
 @AllArgsConstructor
@@ -27,4 +29,7 @@ public class ActivityAssignLabelDTO {
 
   @Schema(description = "Label Hex Color", example = "#FF5733")
   private String labelHexColor;
+
+  @Schema(description = "Created Timestamp", example = "2023-10-01T12:00:00Z")
+  private Timestamp gmtCreated;
 }

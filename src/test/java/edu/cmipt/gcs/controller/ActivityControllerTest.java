@@ -15,7 +15,7 @@ import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.TestConstant;
 import edu.cmipt.gcs.enumeration.ActivityOrderByEnum;
 import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
-import edu.cmipt.gcs.pojo.activity.ActivityDetailVO;
+import edu.cmipt.gcs.pojo.activity.ActivityFullInfoVO;
 import edu.cmipt.gcs.pojo.activity.ActivityPO;
 import edu.cmipt.gcs.pojo.assign.AssigneeVO;
 import edu.cmipt.gcs.pojo.comment.CommentPO;
@@ -92,7 +92,7 @@ public class ActivityControllerTest {
                     .getResponse()
                     .getContentAsString();
             var pageVO =
-                objectMapper.readValue(content, new TypeReference<PageVO<ActivityDetailVO>>() {});
+                objectMapper.readValue(content, new TypeReference<PageVO<ActivityFullInfoVO>>() {});
             var repositoryId = pageVO.records().get(0).repositoryId();
             if (repositoryId.equals(TestConstant.REPOSITORY_ID)) {
               TestConstant.REPOSITORY_ACTIVITY_NUMBER = pageVO.records().get(0).number();
@@ -218,7 +218,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testPageActivityDetailValid() throws Exception {
+  public void testPageActivityFullInfoValid() throws Exception {
     var result =
         activityPager.apply(
             TestConstant.ACCESS_TOKEN,
@@ -247,7 +247,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testPageOtherUserRepositoryActivityValid() throws Exception {
+  public void testPageOtherUserRepositoryActivityFullInfoValid() throws Exception {
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_PAGE_ACTIVITY_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.OTHER_ACCESS_TOKEN)
@@ -300,7 +300,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testGetActivityDetailsValid() throws Exception {
+  public void testGetActivityFullInfoValid() throws Exception {
     mvc.perform(
             get(ApiPathConstant.ACTIVITY_GET_ACTIVITY_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -338,7 +338,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testGetActivityDetailsInvalid() throws Exception {
+  public void testGetActivityFullInfoInvalid() throws Exception {
     mvc.perform(
             get(ApiPathConstant.ACTIVITY_GET_ACTIVITY_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -366,7 +366,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testUpdateOtherRepositoryActivityInvalid() throws Exception {
+  public void testUpdateOtherRepositoryActivityFullInfoInvalid() throws Exception {
     // update other's public repository activity
     String newDescription = "This is an updated test description";
     mvc.perform(
@@ -401,7 +401,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 2)
-  public void testAddAssigneeValid() throws Exception {
+  public void testAddAssigneeToActivityValid() throws Exception {
     mvc.perform(
             MockMvcRequestBuilders.post(ApiPathConstant.ACTIVITY_ADD_ASSIGNEE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -419,7 +419,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testAddAssigneeInvalid() throws Exception {
+  public void testAddAssigneeToActivityInvalid() throws Exception {
     // add self to other's public repository activity
     mvc.perform(
             MockMvcRequestBuilders.post(ApiPathConstant.ACTIVITY_ADD_ASSIGNEE_API_PATH)
@@ -438,7 +438,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 3)
-  public void testPageActivityAssigneesValid() throws Exception {
+  public void testPageAssigneesOfActivityValid() throws Exception {
     var content =
         mvc.perform(
                 MockMvcRequestBuilders.get(ApiPathConstant.ACTIVITY_PAGE_ASSIGNEE_API_PATH)
@@ -462,7 +462,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testPageOtherActivityAssigneesInvalid() throws Exception {
+  public void testPageAssigneesOfOtherActivityInvalid() throws Exception {
     // page other's private repository activity assignees
     mvc.perform(
             MockMvcRequestBuilders.get(ApiPathConstant.ACTIVITY_PAGE_ASSIGNEE_API_PATH)
@@ -474,10 +474,10 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testRemoveActivityAssigneeInvalid() throws Exception {
+  public void testRemoveAssigneeFromActivityInvalid() throws Exception {
     // remove other's public repository activity assignee
     mvc.perform(
-            delete(ApiPathConstant.ACTIVITY_DELETE_ASSIGNEE_API_PATH)
+            delete(ApiPathConstant.ACTIVITY_REMOVE_ASSIGNEE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.OTHER_ACCESS_TOKEN)
                 .param("id", TestConstant.ASSIGNEE_ID))
         .andExpectAll(status().isForbidden());
@@ -485,9 +485,9 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.LOWEST_PRECEDENCE - 1)
-  public void testRemoveActivityAssigneeValid() throws Exception {
+  public void testRemoveAssigneeFromActivityValid() throws Exception {
     mvc.perform(
-            delete(ApiPathConstant.ACTIVITY_DELETE_ASSIGNEE_API_PATH)
+            delete(ApiPathConstant.ACTIVITY_REMOVE_ASSIGNEE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("id", TestConstant.ASSIGNEE_ID))
         .andExpect(status().isOk());
@@ -496,7 +496,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 4)
-  public void testAddLabelValid() throws Exception {
+  public void testAddLabelToActivityValid() throws Exception {
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_ADD_LABEL_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -506,7 +506,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testAddLabelInvalid() throws Exception {
+  public void testAddLabelToActivityInvalid() throws Exception {
     // label does not exist in repository
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_ADD_LABEL_API_PATH)
@@ -550,7 +550,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 5)
-  public void testPageActivityLabelValid() throws Exception {
+  public void testPageLabelOfActivityValid() throws Exception {
     var content =
         mvc.perform(
                 get(ApiPathConstant.ACTIVITY_PAGE_LABEL_API_PATH)
@@ -571,12 +571,12 @@ public class ActivityControllerTest {
             .andReturn()
             .getResponse()
             .getContentAsString();
-    var pageVO = objectMapper.readValue(content, new TypeReference<PageVO<ActivityDetailVO>>() {});
+    var pageVO = objectMapper.readValue(content, new TypeReference<PageVO<ActivityFullInfoVO>>() {});
     TestConstant.REPOSITORY_ACTIVITY_LABEL_ID = pageVO.records().get(0).id();
   }
 
   @Test
-  public void testPageActivityLabelInvalid() throws Exception {
+  public void testPageLabelOfActivityInvalid() throws Exception {
     mvc.perform(
             get(ApiPathConstant.ACTIVITY_PAGE_LABEL_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -587,9 +587,9 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testRemoveActivityLabelInvalid() throws Exception {
+  public void testRemoveLabelFromActivityInvalid() throws Exception {
     mvc.perform(
-            delete(ApiPathConstant.ACTIVITY_DELETE_LABEL_API_PATH)
+            delete(ApiPathConstant.ACTIVITY_REMOVE_LABEL_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.OTHER_ACCESS_TOKEN)
                 .param("id", TestConstant.REPOSITORY_ACTIVITY_LABEL_ID))
         .andExpectAll(status().isForbidden());
@@ -597,9 +597,9 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.LOWEST_PRECEDENCE - 1)
-  public void testRemoveActivityLabelValid() throws Exception {
+  public void testRemoveLabelFromActivityValid() throws Exception {
     mvc.perform(
-            delete(ApiPathConstant.ACTIVITY_DELETE_LABEL_API_PATH)
+            delete(ApiPathConstant.ACTIVITY_REMOVE_LABEL_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("id", TestConstant.REPOSITORY_ACTIVITY_LABEL_ID))
         .andExpectAll(status().isOk());
@@ -608,7 +608,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 6)
-  public void testCreateActivityCommentValid() throws Exception {
+  public void testCreateCommentToActivityValid() throws Exception {
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_CREATE_COMMENT_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -643,7 +643,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testCreateActivityCommentInvalid() throws Exception {
+  public void testCreateCommentToActivityInvalid() throws Exception {
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_CREATE_COMMENT_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -665,7 +665,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 7)
-  public void testPageActivityCommentValid() throws Exception {
+  public void testPageCommentOfActivityValid() throws Exception {
     var content =
         mvc.perform(
                 get(ApiPathConstant.ACTIVITY_PAGE_COMMENT_API_PATH)
@@ -689,7 +689,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testPageOtherPrivateActivityCommentInvalid() throws Exception {
+  public void testPageCommentToOtherPrivateActivityInvalid() throws Exception {
     mvc.perform(
             get(ApiPathConstant.ACTIVITY_PAGE_COMMENT_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -701,7 +701,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 8)
-  public void testUpdateActivityCommentContentValid() throws Exception {
+  public void testUpdateCommentContentOfActivityValid() throws Exception {
     String newContent = TestConstant.COMMENT_CONTENT + " updated";
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_CONTENT_API_PATH)
@@ -722,7 +722,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testUpdateOtherActivityCommentContentInvalid() throws Exception {
+  public void testUpdateCommentContentOfOtherActivityInvalid() throws Exception {
     String newContent = TestConstant.COMMENT_CONTENT + " updated";
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_CONTENT_API_PATH)
@@ -743,7 +743,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 9)
-  public void testUpdateActivityCommentHiddenStatusValid() throws Exception {
+  public void testUpdateCommentHiddenStatusOfActivityValid() throws Exception {
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_HIDDEN_STATE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -764,7 +764,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testUpdateActivityCommentHiddenStatusInvalid() throws Exception {
+  public void testUpdateCommentHiddenStatusOfActivityInvalid() throws Exception {
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_HIDDEN_STATE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -775,7 +775,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 10)
-  public void testUpdateActivityCommentResolvedStatusValid() throws Exception {
+  public void testUpdateCommentResolvedStatusOfActivityValid() throws Exception {
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_RESOLVED_STATE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -795,7 +795,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testUpdateActivityCommentResolvedStatusInvalid() throws Exception {
+  public void testUpdateCommentResolvedStatusOfActivityInvalid() throws Exception {
         mvc.perform(
                 post(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_RESOLVED_STATE_API_PATH)
                     .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -806,7 +806,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 11)
-  public void testCreateSubIssueValid() throws Exception {
+  public void testCreateSubIssueToIssueValid() throws Exception {
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_CREATE_SUB_ISSUE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -828,7 +828,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testCreateSubIssueInvalid() throws Exception {
+  public void testCreateSubIssueToIssueInvalid() throws Exception {
     // create sub issue in other's public repository activity
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_CREATE_SUB_ISSUE_API_PATH)
@@ -852,7 +852,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 12)
-  public void testAddSubIssueValid() throws Exception {
+  public void testAddSubIssueToIssueValid() throws Exception {
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_ADD_SUB_ISSUE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -862,7 +862,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testAddSubIssueInvalid() throws Exception {
+  public void testAddSubIssueToIssueInvalid() throws Exception {
     // add sub issue to other's public repository activity
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_ADD_SUB_ISSUE_API_PATH)
@@ -881,7 +881,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 13)
-  public void testPageSubIssuesValid() throws Exception {
+  public void testPageSubIssuesOfIssueValid() throws Exception {
       mvc.perform(
               get(ApiPathConstant.ACTIVITY_PAGE_SUB_ISSUE_API_PATH)
                   .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -903,7 +903,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testPageSubIssuesInvalid() throws Exception {
+  public void testPageSubIssuesOfIssueInvalid() throws Exception {
     // page sub issues in other's private repository activity
     mvc.perform(
                     get(ApiPathConstant.ACTIVITY_PAGE_SUB_ISSUE_API_PATH)
@@ -916,7 +916,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 14)
-  public void testUpdateActivityLockStateValid() throws Exception {
+  public void testUpdateLockStateOfActivityValid() throws Exception {
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_LOCKED_STATE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -936,7 +936,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testUpdateActivityLockStateInvalid() throws Exception {
+  public void testUpdateLockStateOfActivityInvalid() throws Exception {
       mvc.perform(
               post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_LOCKED_STATE_API_PATH)
                   .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -947,7 +947,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 15)
-  public void testUpdateActivityClosedStateValid() throws Exception {
+  public void testUpdateClosedStateOfActivityValid() throws Exception {
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CLOSED_STATE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -967,7 +967,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testUpdateActivityClosedStateInvalid() throws Exception {
+  public void testUpdateClosedStateOfActivityInvalid() throws Exception {
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_UPDATE_ACTIVITY_CLOSED_STATE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -1021,7 +1021,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.LOWEST_PRECEDENCE - 2)
-  public void testRemoveSubIssueValid() throws Exception {
+  public void testRemoveSubIssueFromIssueValid() throws Exception {
     mvc.perform(
             delete(ApiPathConstant.ACTIVITY_REMOVE_SUB_ISSUE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -1030,7 +1030,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testRemoveSubIssueInvalid() throws Exception {
+  public void testRemoveSubIssueFromIssueInvalid() throws Exception {
       // remove sub issue from other's public repository activity
       mvc.perform(
               delete(ApiPathConstant.ACTIVITY_REMOVE_SUB_ISSUE_API_PATH)
@@ -1041,7 +1041,7 @@ public class ActivityControllerTest {
 
   @Test
   @Order(Ordered.LOWEST_PRECEDENCE - 1)
-  public void testDeleteActivityCommentValid() throws Exception {
+  public void testDeleteCommentFromActivityValid() throws Exception {
     mvc.perform(
             delete(ApiPathConstant.ACTIVITY_DELETE_COMMENT_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
@@ -1051,7 +1051,7 @@ public class ActivityControllerTest {
   }
 
   @Test
-  public void testDeleteActivityCommentInvalid() throws Exception {
+  public void testDeleteCommentFromActivityInvalid() throws Exception {
     mvc.perform(
             delete(ApiPathConstant.ACTIVITY_DELETE_COMMENT_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)

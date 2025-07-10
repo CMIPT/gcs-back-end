@@ -106,12 +106,12 @@ public class ApiPathConstant {
   public static final String ACTIVITY_PAGE_COMMENT_API_PATH = ACTIVITY_API_PREFIX + "/page-comment";
   public static final String ACTIVITY_PAGE_SUB_COMMENT_API_PATH = ACTIVITY_API_PREFIX + "/page-sub-comment";
   public static final String ACTIVITY_ADD_ASSIGNEE_API_PATH = ACTIVITY_API_PREFIX + "/add-assignee";
-  public static final String ACTIVITY_DELETE_ASSIGNEE_API_PATH =
+  public static final String ACTIVITY_REMOVE_ASSIGNEE_API_PATH =
       ACTIVITY_API_PREFIX + "/delete-assignee";
   public static final String ACTIVITY_PAGE_ASSIGNEE_API_PATH =
       ACTIVITY_API_PREFIX + "/page-assignee";
 
-  public static final String ACTIVITY_DELETE_LABEL_API_PATH = ACTIVITY_API_PREFIX + "/delete-label";
+  public static final String ACTIVITY_REMOVE_LABEL_API_PATH = ACTIVITY_API_PREFIX + "/delete-label";
   public static final String ACTIVITY_ADD_LABEL_API_PATH = ACTIVITY_API_PREFIX + "/add-label";
   public static final String ACTIVITY_PAGE_LABEL_API_PATH = ACTIVITY_API_PREFIX + "/page-label";
 }

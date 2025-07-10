@@ -110,6 +110,7 @@ public class ActivityAssignLabelServiceImpl
             .selectAs(LabelPO::getName, ActivityAssignLabelDTO::getLabelName)
             .selectAs(LabelPO::getDescription, ActivityAssignLabelDTO::getLabelDescription)
             .selectAs(LabelPO::getHexColor, ActivityAssignLabelDTO::getLabelHexColor)
+            .selectAs(LabelPO::getGmtCreated, ActivityAssignLabelDTO::getGmtCreated)
             .innerJoin(LabelPO.class, LabelPO::getId, ActivityAssignLabelPO::getLabelId)
             .eq(ActivityAssignLabelPO::getActivityId, activityId);
     return activityAssignLabelMapper.selectJoinPage(
