@@ -9,6 +9,7 @@ CREATE TABLE public.t_activity_assign_label (
 );
 
 COMMENT ON TABLE public.t_activity_assign_label IS 'Association table between activity and label.';
+
 COMMENT ON COLUMN public.t_activity_assign_label.id IS 'Primary key of the activity_label table.';
 COMMENT ON COLUMN public.t_activity_assign_label.user_id IS 'User ID of the label creator.';
 COMMENT ON COLUMN public.t_activity_assign_label.activity_id IS 'ID of the activity.';
@@ -21,6 +22,6 @@ If set to NULL, it indicates that the relationship has not been deleted.';
 -- The constraint of t_activity_assign_label is added to the table.
 ALTER TABLE ONLY public.t_activity_assign_label
     ADD CONSTRAINT pk_activity_assign_label PRIMARY KEY (id);
-ALTER TABLE ONLY public.t_activity_assign_label
-    ADD CONSTRAINT t_activity_assign_label_activity_id_label_id
-    UNIQUE (activity_id, label_id, gmt_deleted);
+CREATE UNIQUE INDEX uniq_activity_id_label_id_when_gmt_deleted_null
+    ON public.t_activity_assign_label(activity_id, label_id)
+    WHERE gmt_deleted IS NULL;

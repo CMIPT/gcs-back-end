@@ -9,6 +9,7 @@ CREATE TABLE public.t_activity_designate_assignee (
 );
 
 COMMENT ON TABLE public.t_activity_designate_assignee IS 'Association table between activity and assignee.';
+
 COMMENT ON COLUMN public.t_activity_designate_assignee.id IS 'Primary key of the activity_designate_assignee table.';
 COMMENT ON COLUMN public.t_activity_designate_assignee.activity_id IS 'ID of the activity.';
 COMMENT ON COLUMN public.t_activity_designate_assignee.assigner_id IS 'ID of the user who designates the assignee.';
@@ -21,6 +22,6 @@ If set to NULL, it indicates that the relationship has not been deleted.';
 -- The constraint of t_activity_designate_assignee is added to the table.
 ALTER TABLE ONLY public.t_activity_designate_assignee
     ADD CONSTRAINT pk_activity_designate_assignee PRIMARY KEY (id);
-ALTER TABLE ONLY public.t_activity_designate_assignee
-    ADD CONSTRAINT t_activity_designate_assignee_activity_id_assignee_id
-    UNIQUE (activity_id, assignee_id, gmt_deleted);
+CREATE UNIQUE INDEX uniq_activity_id_assignee_id_when_gmt_deleted_null
+    ON public.t_activity_designate_assignee(activity_id, assignee_id)
+    WHERE gmt_deleted IS NULL;

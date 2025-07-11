@@ -1,7 +1,7 @@
 CREATE TABLE public.t_repository (
   id bigint NOT NULL,
   repository_name character varying(255) NOT NULL,
-  repository_description character varying(255) DEFAULT '',
+  repository_description character varying(255) DEFAULT '' NOT NULL ,
   is_private boolean DEFAULT false,
   user_id bigint NOT NULL,
   star integer DEFAULT 0 NOT NULL,
@@ -34,5 +34,6 @@ If set to NULL, it indicates that the repository has not been deleted.';
 -- -- The constraint of t_repository is added to the table.
 ALTER TABLE ONLY public.t_repository
     ADD CONSTRAINT pk_repository PRIMARY KEY (id);
-CREATE UNIQUE INDEX unique_t_repository_name_user_id ON public.t_repository
-    (LOWER(repository_name), user_id, gmt_deleted);
+CREATE UNIQUE INDEX unique_t_repository_https_url_user_id_when_gmt_deleted_null
+    ON public.t_repository(LOWER(repository_name), user_id)
+    WHERE gmt_deleted IS NULL;

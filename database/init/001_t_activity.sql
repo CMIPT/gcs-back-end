@@ -4,7 +4,7 @@ CREATE TABLE public.t_activity (
     repository_id bigint NOT NULL,
     parent_id bigint,
     title character varying(255) NOT NULL,
-    description text default '',
+    description text default '' NOT NULL,
     is_pull_request boolean NOT NULL, -- false: issue, true: pull_request
     user_id bigint NOT NULL,
     gmt_created timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -12,7 +12,6 @@ CREATE TABLE public.t_activity (
     gmt_closed timestamp without time zone,
     gmt_locked timestamp without time zone,
     gmt_deleted timestamp without time zone
-
 );
 
 COMMENT ON TABLE public.t_activity IS 'Table for storing issue or pull_request information in repositories.';
@@ -34,6 +33,5 @@ COMMENT ON COLUMN public.t_activity.gmt_deleted IS 'Timestamp when the activity 
 -- The constraint of t_activity is added to the table.
 ALTER TABLE ONLY public.t_activity
     ADD CONSTRAINT pk_activity PRIMARY KEY (id);
-ALTER TABLE ONLY public.t_activity
-    ADD CONSTRAINT t_activity_number_repository_id
-    UNIQUE (number, repository_id);
+CREATE UNIQUE INDEX uniq_t_activity_number_repository_id
+    ON public.t_activity(number, repository_id)

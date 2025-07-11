@@ -20,6 +20,6 @@ If set to NULL, it indicates that this relationship has not been deleted.';
 -- The constraint of t_user_star_repository is added to the table.
 ALTER TABLE ONLY public.t_user_star_repository
     ADD CONSTRAINT pk_user_star_repository PRIMARY KEY (id);
-ALTER TABLE ONLY public.t_user_star_repository
-    ADD CONSTRAINT unique_t_user_star_repository_user_id_repository_id
-    UNIQUE (user_id, repository_id, gmt_deleted);
+CREATE UNIQUE INDEX uniq_user_id_repository_id_when_gmt_deleted_null
+    ON public.t_user_star_repository(user_id, repository_id)
+    WHERE gmt_deleted IS NULL;

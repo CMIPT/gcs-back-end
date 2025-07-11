@@ -11,6 +11,7 @@ CREATE TABLE public.t_label (
 );
 
 COMMENT ON TABLE public.t_label IS 'Table for storing label information.';
+
 COMMENT ON COLUMN public.t_label.id IS 'Primary key of the label table.';
 COMMENT ON COLUMN public.t_label.user_id IS 'ID of the user who created the label.';
 COMMENT ON COLUMN public.t_label.repository_id IS 'ID of the repository to which the label belongs.';
@@ -25,9 +26,9 @@ COMMENT ON COLUMN public.t_label.gmt_deleted IS 'Timestamp when the label record
 -- The constraint of t_label added to the table.
 ALTER TABLE ONLY public.t_label
     ADD CONSTRAINT pk_label PRIMARY KEY (id);
-ALTER TABLE ONLY public.t_label
-    ADD CONSTRAINT unique_t_label_name_repository_id
-    UNIQUE (name, repository_id, gmt_deleted);
+CREATE UNIQUE INDEX uniq_t_label_name_repository_id_when_gmt_deleted_null
+    ON public.t_label(name, repository_id)
+    WHERE gmt_deleted IS NULL;
 ALTER TABLE ONLY public.t_label
     ADD CONSTRAINT ck_label_color
 CHECK (hex_color ~ '^#[0-9A-Fa-f]{6}$');
