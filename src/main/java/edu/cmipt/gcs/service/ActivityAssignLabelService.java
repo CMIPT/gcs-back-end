@@ -13,8 +13,6 @@ public interface ActivityAssignLabelService extends IService<ActivityAssignLabel
   Page<ActivityAssignLabelDTO> pageActivityLabelsByActivityId(
       Long activityId, Integer pageNum, Integer pageSize);
 
-  ActivityAssignLabelPO getOneByActivityIdAndLabelId(Long activityId, Long labelId);
-
   List<Long> removeByActivityId(Serializable id);
 
   Map<Long, List<LabelDTO>> getLabelsByActivityIds(List<Long> activityIds);

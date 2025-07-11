@@ -107,11 +107,11 @@ public class CacheAspect {
   @AfterReturning(
       pointcut =
           "execution(* edu.cmipt.gcs.service.*ServiceImpl.updateById(..)) || execution(*"
-              + " edu.cmipt.gcs.service.*ServiceImpl.removeById(java.io.Serializable))"
+              + " edu.cmipt.gcs.service.*ServiceImpl.removeBy*(..))"
               + " ||execution(* edu.cmipt.gcs.service.*ServiceImpl.update*State(..))",
       returning = "result")
   public void updateOrRemoveAdvice(JoinPoint joinPoint, Object result) throws Throwable {
-    if ((boolean) result) {
+    if (result instanceof Boolean) {
       String id;
       if (joinPoint.getSignature().getName().equals("removeById")) {
         id = joinPoint.getArgs()[0].toString();
@@ -125,23 +125,15 @@ public class CacheAspect {
       redisTemplate.delete(cacheKey);
       logger.debug("Cache deleted, key: {}", cacheKey);
     }
-  }
-
-  @AfterReturning(
-      pointcut =
-          "execution(* edu.cmipt.gcs.service.*ServiceImpl.removeBy*(..)) &&"
-              + "!execution(* edu.cmipt.gcs.service.*ServiceImpl.removeById(..))",
-      returning = "result")
-  public void removeByAdvice(JoinPoint joinPoint, Object result) {
-    if (!(result instanceof List<?> idList) || idList.isEmpty()) {
+    else if(result instanceof List<?> idList && !idList.isEmpty()) {
+      for (Object id : idList) {
+        if (id == null) continue;
+        String cacheKey = RedisUtil.generateKey(joinPoint.getTarget(), id.toString());
+        redisTemplate.delete(cacheKey);
+        logger.debug("Cache deleted, key: {}", cacheKey);
+      }
+    } else {
       logger.debug("No IDs to remove from cache, skipping cache deletion.");
-      return;
-    }
-    for (Object id : idList) {
-      if (id == null) continue;
-      String cacheKey = RedisUtil.generateKey(joinPoint.getTarget(), id.toString());
-      redisTemplate.delete(cacheKey);
-      logger.debug("Cache deleted, key: {}", cacheKey);
     }
   }
 }

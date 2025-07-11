@@ -8,12 +8,12 @@ import org.slf4j.LoggerFactory;
 public class TypeConversionUtil {
   private static final Logger logger = LoggerFactory.getLogger(TypeConversionUtil.class);
 
-  public static Long convertToLong(String value, boolean throwWhenFailed) {
-    return convertToLong(value, throwWhenFailed, null);
+  public static Long convertToLong(String value) {
+    return convertToLong(value, false);
   }
 
-  public static Long convertToLong(String value) {
-    return convertToLong(value, false, null);
+  public static Long convertToLong(String value, boolean throwWhenFailed) {
+    return convertToLong(value, throwWhenFailed, null);
   }
 
   public static Long convertToLong(String value, boolean throwWhenFailed, Long defaultValue) {

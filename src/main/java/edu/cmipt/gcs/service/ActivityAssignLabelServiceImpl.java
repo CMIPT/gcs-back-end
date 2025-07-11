@@ -115,12 +115,4 @@ public class ActivityAssignLabelServiceImpl
     return activityAssignLabelMapper.selectJoinPage(
         page, ActivityAssignLabelDTO.class, queryWrapper);
   }
-
-  @Override
-  public ActivityAssignLabelPO getOneByActivityIdAndLabelId(Long activityId, Long labelId) {
-    return super.getOne(
-        new QueryWrapper<ActivityAssignLabelPO>()
-            .eq("activity_id", activityId)
-            .eq("label_id", labelId));
-  }
 }

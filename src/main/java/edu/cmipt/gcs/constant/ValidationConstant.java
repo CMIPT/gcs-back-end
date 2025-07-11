@@ -16,6 +16,12 @@ public class ValidationConstant {
   public static final int MAX_REPOSITORY_NAME_LENGTH = 255;
   public static final int MIN_REPOSITORY_DESCRIPTION_LENGTH = 0;
   public static final int MAX_REPOSITORY_DESCRIPTION_LENGTH = 255;
+
+  public static final int MIN_LABEL_NAME_LENGTH = 1;
+  public static final int MAX_LABEL_NAME_LENGTH = 50;
+  public static final int MIN_LABEL_DESCRIPTION_LENGTH = 0;
+  public static final int MAX_LABEL_DESCRIPTION_LENGTH = 100;
+
   // the length will be checked by @Size
   public static final String REPOSITORY_NAME_PATTERN = "^[a-zA-Z0-9_-]*$";
 

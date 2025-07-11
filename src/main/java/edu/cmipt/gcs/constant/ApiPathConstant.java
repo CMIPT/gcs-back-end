@@ -69,6 +69,8 @@ public class ApiPathConstant {
   public static final String REPOSITORY_UPDATE_LABEL_API_PATH =
       REPOSITORY_API_PREFIX + "/update-label";
   public static final String REPOSITORY_PAGE_LABEL_API_PATH = REPOSITORY_API_PREFIX + "/page-label";
+  public static final String REPOSITORY_CHECK_LABEL_NAME_VALIDITY_API_PATH =
+        REPOSITORY_API_PREFIX + "/label-name";
 
   public static final String SSH_KEY_API_PREFIX = ALL_API_PREFIX + "/ssh";
   public static final String SSH_KEY_UPLOAD_SSH_KEY_API_PATH = SSH_KEY_API_PREFIX + "/upload";

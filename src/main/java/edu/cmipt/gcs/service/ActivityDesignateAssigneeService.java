@@ -15,8 +15,6 @@ public interface ActivityDesignateAssigneeService extends IService<ActivityDesig
   Page<AssigneeDTO> pageActivityAssigneesByActivityId(
       Long activityId, Integer pageNum, Integer pageSize);
 
-  ActivityDesignateAssigneePO getOneByActivityIdAndAssigneeId(Long activityId, Long assigneeId);
-
   Map<Long, List<AssigneeDTO>> getAssigneesByActivityIds(List<Long> activityIds);
 
   List<Long> removeByActivityIds(List<Long> activityIds);

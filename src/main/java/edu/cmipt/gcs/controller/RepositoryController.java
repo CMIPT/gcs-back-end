@@ -580,10 +580,8 @@ public class RepositoryController {
         repositoryId, idInToken, OperationTypeEnum.MODIFY);
     String labelName = label.name();
     String labelHexColor = label.hexColor();
-    if (labelService.getOneByNameAndRepositoryId(labelName, repositoryId) != null) {
-      logger.info("Label[{}] already exists in repository[{}]", labelName, repositoryId);
-      throw new GenericException(ErrorCodeEnum.LABEL_NAME_ALREADY_EXISTS, labelName, repositoryId);
-    }
+    checkLabelNameValidity(
+        labelName, repositoryId, accessToken);
     if (!labelService.save(new LabelPO(idInToken, label))) {
       logger.error("Failed to create label in repository[{}]", repositoryId);
       throw new GenericException(
@@ -673,6 +671,38 @@ public class RepositoryController {
     wrapper.orderBy(true, isAsc, orderBy.getFieldName());
     var iPage = labelService.page(new Page<>(page, size), wrapper);
     return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(LabelVO::new).toList());
+  }
+
+  @GetMapping(ApiPathConstant.REPOSITORY_CHECK_LABEL_NAME_VALIDITY_API_PATH)
+  @Operation(
+          summary = "Check label name validity",
+          description = "Check if the label name is valid",
+          tags = {"Repository", "Get Method"})
+  @ApiResponses({
+          @ApiResponse(responseCode = "200", description = "Success"),
+          @ApiResponse(
+                  responseCode = "400",
+                  description = "Label name is invalid",
+                  content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public void checkLabelNameValidity(
+          @RequestParam("labelName")
+          @Size(
+                  min = ValidationConstant.MIN_LABEL_NAME_LENGTH,
+                  max = ValidationConstant.MAX_LABEL_NAME_LENGTH,
+                  message = "{Size.repositoryController#checkLabelNameValidity.labelName}")
+          @NotBlank(
+                  message =
+                          "{NotBlank.repositoryController#LabelNameValidity.labelName}")
+          String labelName,
+          @RequestParam("repositoryId") Long repositoryId,
+          @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+    permissionService.checkRepositoryOperationValidity(
+        repositoryId, idInToken, OperationTypeEnum.READ);
+    if (labelService.getOneByNameAndRepositoryId(labelName, repositoryId) != null) {
+      throw new GenericException(ErrorCodeEnum.LABEL_NAME_ALREADY_EXISTS, labelName, repositoryId);
+    }
   }
 
   /**

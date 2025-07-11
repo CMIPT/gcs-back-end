@@ -63,15 +63,6 @@ public class ActivityDesignateAssigneeServiceImpl
   }
 
   @Override
-  public ActivityDesignateAssigneePO getOneByActivityIdAndAssigneeId(
-      Long activityId, Long assigneeId) {
-    return super.getOne(
-        new QueryWrapper<ActivityDesignateAssigneePO>()
-            .eq("activity_id", activityId)
-            .eq("assignee_id", assigneeId));
-  }
-
-  @Override
   public Map<Long, List<AssigneeDTO>> getAssigneesByActivityIds(List<Long> activityIds) {
     var queryWrapper =
         JoinWrappers.lambda(ActivityDesignateAssigneePO.class)

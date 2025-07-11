@@ -503,6 +503,14 @@ public class ActivityControllerTest {
                 .param("activityId", TestConstant.REPOSITORY_ACTIVITY_ID)
                 .param("labelId", TestConstant.LABEL_ID))
         .andExpectAll(status().isOk());
+
+    // Used to verify that the label is removed when the activity is deleted
+    mvc.perform(
+                    post(ApiPathConstant.ACTIVITY_ADD_LABEL_API_PATH)
+                            .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                            .param("activityId", TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)
+                            .param("labelId", TestConstant.LABEL_ID))
+            .andExpectAll(status().isOk());
   }
 
   @Test
@@ -521,7 +529,7 @@ public class ActivityControllerTest {
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("activityId", TestConstant.REPOSITORY_ACTIVITY_ID)
                 .param("labelId", TestConstant.LABEL_ID))
-        .andExpectAll(status().isBadRequest()); // ErrorCodeEnum.ACTIVITY_LABEL_ALREADY_EXISTS
+        .andExpectAll(status().isBadRequest());
 
     // add label to other's public repository activity
     mvc.perform(
@@ -538,14 +546,6 @@ public class ActivityControllerTest {
                 .param("activityId", TestConstant.OTHER_PRIVATE_REPOSITORY_ACTIVITY_ID)
                 .param("labelId", TestConstant.LABEL_ID))
         .andExpectAll(status().isNotFound());
-
-    // Used to verify that the label is removed when the activity is deleted
-    mvc.perform(
-            post(ApiPathConstant.ACTIVITY_ADD_LABEL_API_PATH)
-                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                .param("activityId", TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)
-                .param("labelId", TestConstant.LABEL_ID))
-        .andExpectAll(status().isOk());
   }
 
   @Test

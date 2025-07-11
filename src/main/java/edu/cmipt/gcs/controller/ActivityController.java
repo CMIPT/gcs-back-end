@@ -597,12 +597,12 @@ public class ActivityController {
     if (LabelPO == null || !repositoryId.equals(LabelPO.getRepositoryId())) {
       throw new GenericException(ErrorCodeEnum.LABEL_NOT_FOUND, labelId);
     }
-    if (activityAssignLabelService.getOneByActivityIdAndLabelId(activityId, labelId) != null) {
+    try{
+      if(!activityAssignLabelService.save(new ActivityAssignLabelPO(idInToken, activityId, labelId))) {
+        throw new GenericException(ErrorCodeEnum.ACTIVITY_ADD_LABEL_FAILED, activityId, labelId);
+      }
+    } catch (DuplicateKeyException e) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_LABEL_ALREADY_EXISTS, activityId, labelId);
-    }
-    if (!activityAssignLabelService.save(
-        new ActivityAssignLabelPO(idInToken, activityId, labelId))) {
-      throw new GenericException(ErrorCodeEnum.ACTIVITY_ADD_LABEL_FAILED, activityId, labelId);
     }
   }
 
@@ -689,15 +689,12 @@ public class ActivityController {
     }
     permissionService.checkActivityOperationValidity(
         activityId, idInToken, OperationTypeEnum.MODIFY);
-    if (activityDesignateAssigneeService.getOneByActivityIdAndAssigneeId(activityId, assigneeId)
-        != null) {
-      throw new GenericException(
-          ErrorCodeEnum.ACTIVITY_ASSIGNEE_ALREADY_EXISTS, activityId, assigneeId);
-    }
-    if (!activityDesignateAssigneeService.save(
-        new ActivityDesignateAssigneePO(idInToken, activityId, assigneeId))) {
-      throw new GenericException(
-          ErrorCodeEnum.ACTIVITY_ADD_ASSIGNEE_FAILED, activityId, assigneeId);
+    try {
+      if(!activityDesignateAssigneeService.save(new ActivityDesignateAssigneePO(idInToken, activityId, assigneeId))) {
+        throw new GenericException(ErrorCodeEnum.ACTIVITY_ADD_ASSIGNEE_FAILED, activityId, assigneeId);
+      }
+    } catch (DuplicateKeyException e) {
+      throw new GenericException(ErrorCodeEnum.ACTIVITY_ASSIGNEE_ALREADY_EXISTS, activityId, assigneeId);
     }
   }
 

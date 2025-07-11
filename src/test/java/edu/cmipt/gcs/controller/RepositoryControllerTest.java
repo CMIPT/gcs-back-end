@@ -670,6 +670,27 @@ public class RepositoryControllerTest {
   }
 
   @Test
+  @Order(Ordered.HIGHEST_PRECEDENCE + 12)
+  public void testCheckLabelNameValidityValid() throws Exception {
+    mvc.perform(
+            get(ApiPathConstant.REPOSITORY_CHECK_LABEL_NAME_VALIDITY_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("repositoryId", TestConstant.REPOSITORY_ID)
+                .param("labelName", "test"))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  public void testCheckLabelNameValidityInvalid() throws Exception {
+      mvc.perform(
+              get(ApiPathConstant.REPOSITORY_CHECK_LABEL_NAME_VALIDITY_API_PATH)
+                  .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                  .param("repositoryId", TestConstant.REPOSITORY_ID)
+                  .param("labelName", TestConstant.LABEL_NAME))
+          .andExpect(status().isBadRequest());
+  }
+
+  @Test
   @Order(Ordered.LOWEST_PRECEDENCE)
   public void testDeleteRepositoryValid() throws Exception {
     mvc.perform(
