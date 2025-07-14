@@ -37,6 +37,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
+
 @Validated
 @RestController
 @Tag(name = "Activity", description = "Activity Related API")
@@ -217,7 +219,7 @@ public class ActivityController {
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
-        description = "User activities page failed",
+        description = "repository activities page failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public PageVO<ActivityFullInfoVO> pageActivityFullInfo(
@@ -314,7 +316,7 @@ public class ActivityController {
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
-        description = "User issues page failed",
+        description = "activity sub-issues page failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public PageVO<IssueVO> pageSubIssueOfIssue(
@@ -337,8 +339,8 @@ public class ActivityController {
 
   @GetMapping(ApiPathConstant.ACTIVITY_GET_ACTIVITY_API_PATH)
   @Operation(
-      summary = "Get an activity detail",
-      description = "Get an activity detail by id or activity number and repository title",
+      summary = "Get an activity full information",
+      description = "Get an activity full information by id or activity number and repository id",
       tags = {"Activity", "Get Method"})
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
@@ -380,7 +382,7 @@ public class ActivityController {
   @PostMapping(ApiPathConstant.ACTIVITY_UPDATE_COMMENT_CONTENT_API_PATH)
   @Operation(
       summary = "Update a comment content of an activity",
-      description = "Update comment content of an activity with the given information",
+      description = "Update a comment content of an activity with the given information",
       tags = {"Activity", "Post Method"})
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
@@ -504,10 +506,10 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(
         activityId, idInToken, OperationTypeEnum.COMMENT);
     if (comment.replyToId() != null) {
-      // 检查评论的父评论是否存在
       Long parentId = TypeConversionUtil.convertToLong(comment.replyToId(), true);
       var parentCommentPO = commentService.getById(parentId);
-      if (parentCommentPO == null) {
+      // 检查评论的父评论是否存在 并且父评论的活动ID和当前评论的活动ID必须一致
+      if (parentCommentPO == null || !activityId.equals(parentCommentPO.getActivityId())) {
         throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, parentId);
       }
     }
@@ -525,7 +527,7 @@ public class ActivityController {
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
-        description = "Activity not found",
+        description = "Page comments failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public PageVO<CommentVO> pageCommentOfActivity(
@@ -544,13 +546,13 @@ public class ActivityController {
 
   @GetMapping(ApiPathConstant.ACTIVITY_PAGE_SUB_COMMENT_API_PATH)
   @Operation(
-      summary = "Page sub-comments of an activity",
-      description = "Page sub-comments of an activity",
+      summary = "Page sub-comments of an activity comment",
+      description = "Page sub-comments of an activity comment",
       tags = {"Activity", "Get Method"})
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
-        description = "Activity not found",
+        description = "Page sub-comments failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public PageVO<CommentVO> pageSubCommentOfActivity(
@@ -626,16 +628,11 @@ public class ActivityController {
     if (activityAssignLabelPO == null) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_LABEL_NOT_FOUND, id);
     }
-    var activityPO = activityService.getById(activityAssignLabelPO.getActivityId());
-    if (activityPO == null) {
-      throw new GenericException(
-          ErrorCodeEnum.ACTIVITY_NOT_FOUND, activityAssignLabelPO.getActivityId());
-    }
-    permissionService.checkRepositoryOperationValidity(
-        activityPO.getRepositoryId(), idInToken, OperationTypeEnum.MODIFY);
+    permissionService.checkActivityOperationValidity(
+        activityAssignLabelPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
     if (!activityAssignLabelService.removeById(id)) {
       throw new GenericException(
-          ErrorCodeEnum.ACTIVITY_REMOVE_LABEL_FAILED, activityPO.getId(), id);
+          ErrorCodeEnum.ACTIVITY_REMOVE_LABEL_FAILED, activityAssignLabelPO.getActivityId(), id);
     }
   }
 
@@ -647,7 +644,7 @@ public class ActivityController {
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
-        description = "Activity not found",
+        description = "Page labels of an activity failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class))),
     @ApiResponse(
         description = "Message conversion error",
@@ -683,12 +680,12 @@ public class ActivityController {
       @RequestParam("assigneeId") Long assigneeId,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+    permissionService.checkActivityOperationValidity(
+        activityId, idInToken, OperationTypeEnum.MODIFY);
     var UserPO = userService.getById(assigneeId);
     if (UserPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, assigneeId);
     }
-    permissionService.checkActivityOperationValidity(
-        activityId, idInToken, OperationTypeEnum.MODIFY);
     try {
       if(!activityDesignateAssigneeService.save(new ActivityDesignateAssigneePO(idInToken, activityId, assigneeId))) {
         throw new GenericException(ErrorCodeEnum.ACTIVITY_ADD_ASSIGNEE_FAILED, activityId, assigneeId);
@@ -735,7 +732,7 @@ public class ActivityController {
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
-        description = "Activity not found",
+        description = "Page assignees of an activity failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class))),
     @ApiResponse(
         description = "Message conversion error",

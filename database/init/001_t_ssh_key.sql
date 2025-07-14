@@ -22,9 +22,9 @@ If set to NULL, it indicates that the ssh_key record has not been deleted.';
 -- The constraint of t_ssh_key is added to the table.
 ALTER TABLE ONLY public.t_ssh_key
     ADD CONSTRAINT pk_ssh_key PRIMARY KEY (id);
-CREATE UNIQUE INDEX uniq_t_ssh_key_public_key_user_id_when_gmt_deleted_null
+CREATE UNIQUE INDEX uniq_public_key_user_id_when_gmt_deleted_null
     ON public.t_ssh_key(public_key, user_id)
     WHERE gmt_deleted IS NULL;
-CREATE UNIQUE INDEX uniq_t_ssh_key_name_user_id_when_gmt_deleted_null
+CREATE UNIQUE INDEX uniq_name_user_id_when_gmt_deleted_null
     ON public.t_ssh_key(name, user_id)
     WHERE gmt_deleted IS NULL;

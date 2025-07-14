@@ -11,14 +11,14 @@ import jakarta.validation.constraints.Size;
 
 @Schema(description = "Label Data Transfer Object")
 public record LabelDTO(
-    @Schema(description = "Primary Key ID", example = "12345")
+    @Schema(description = "Primary Key ID", example = "1943574477398933505")
         @Null(groups = CreateGroup.class)
         @NotNull(groups = UpdateGroup.class)
         String id,
-    @Schema(description = "Repository ID where the label is used", example = "repo123")
-        @NotNull(groups = {CreateGroup.class, UpdateGroup.class})
+    @Schema(description = "Repository ID where the label is used", example = "1943574088712781826")
+        @NotNull(groups = CreateGroup.class)
         String repositoryId,
-    @Schema(description = "Name of the label", example = "bug")
+    @Schema(description = "Name of the label", example = "Bug")
         @Size(
             groups = {CreateGroup.class, UpdateGroup.class},
             min = ValidationConstant.MIN_LABEL_NAME_LENGTH,

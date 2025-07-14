@@ -139,7 +139,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
           //                case TOTAL_COMMENTS:
           //                    queryWrapper.orderBy(true, activityQueryDTO.isAsc(),
           //                            ActivityFullInfoDTO::getCommentCnt);
-          //                    break; // todo 暂不支持按评论数排序
+          //                    break; // TODO: 暂不支持按评论数排序和按最新评论时间排序
       }
     }
     Page<ActivityFullInfoDTO> activityDetailDTOPage =
@@ -220,7 +220,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
             .toList();
     if (!activityIds.isEmpty()) {
       // 删除活动相关的信息（标签、指定的参与者、评论等）
-      // 忽略返回值，因为允许删除时没有相关信息
+      // 这里忽略返回值，由CacheAspect处理缓存删除
       activityAssignLabelService.removeByActivityIds(activityIds);
       activityDesignateAssigneeService.removeByActivityIds(activityIds);
       commentService.removeByActivityIds(activityIds);

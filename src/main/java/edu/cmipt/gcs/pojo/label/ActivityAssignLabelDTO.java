@@ -14,10 +14,10 @@ public class ActivityAssignLabelDTO {
   @Schema(description = "Primary Key ID", example = "1")
   private Long id;
 
-  @Schema(description = "User ID", example = "12345")
+  @Schema(description = "User ID", example = "1943572407488937985")
   private Long userId;
 
-  @Schema(description = "Label ID", example = "67890")
+  @Schema(description = "Label ID", example = "1943574546969853954")
   private Long labelId;
 
   @Schema(description = "Label Name", example = "bug")

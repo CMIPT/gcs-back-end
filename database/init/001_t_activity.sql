@@ -33,5 +33,5 @@ COMMENT ON COLUMN public.t_activity.gmt_deleted IS 'Timestamp when the activity 
 -- The constraint of t_activity is added to the table.
 ALTER TABLE ONLY public.t_activity
     ADD CONSTRAINT pk_activity PRIMARY KEY (id);
-CREATE UNIQUE INDEX uniq_t_activity_number_repository_id
+CREATE UNIQUE INDEX uniq_number_repository_id
     ON public.t_activity(number, repository_id)

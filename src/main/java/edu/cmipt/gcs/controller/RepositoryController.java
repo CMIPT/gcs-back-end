@@ -579,13 +579,12 @@ public class RepositoryController {
     permissionService.checkRepositoryOperationValidity(
         repositoryId, idInToken, OperationTypeEnum.MODIFY);
     String labelName = label.name();
-    String labelHexColor = label.hexColor();
     checkLabelNameValidity(
         labelName, repositoryId, accessToken);
     if (!labelService.save(new LabelPO(idInToken, label))) {
       logger.error("Failed to create label in repository[{}]", repositoryId);
       throw new GenericException(
-          ErrorCodeEnum.LABEL_CREATE_FAILED, labelName, labelHexColor, repositoryId);
+          ErrorCodeEnum.LABEL_CREATE_FAILED, labelName, repositoryId);
     }
   }
 
@@ -620,7 +619,7 @@ public class RepositoryController {
   @DeleteMapping(ApiPathConstant.REPOSITORY_DELETE_LABEL_API_PATH)
   @Operation(
       summary = "Delete a label",
-      description = "Delete a label in the repository",
+      description = "Delete a label from a repository",
       tags = {"Repository", "Delete Method"})
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
@@ -647,12 +646,12 @@ public class RepositoryController {
   @GetMapping(ApiPathConstant.REPOSITORY_PAGE_LABEL_API_PATH)
   @Operation(
       summary = "Page label",
-      description = "Page labels of the repository",
+      description = "Page labels of a repository",
       tags = {"Repository", "Get Method"})
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
-        description = "Label list get failed",
+        description = "page labels failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public PageVO<LabelVO> pageLabel(

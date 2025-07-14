@@ -26,7 +26,7 @@ COMMENT ON COLUMN public.t_label.gmt_deleted IS 'Timestamp when the label record
 -- The constraint of t_label added to the table.
 ALTER TABLE ONLY public.t_label
     ADD CONSTRAINT pk_label PRIMARY KEY (id);
-CREATE UNIQUE INDEX uniq_t_label_name_repository_id_when_gmt_deleted_null
+CREATE UNIQUE INDEX uniq_name_repository_id_when_gmt_deleted_null
     ON public.t_label(name, repository_id)
     WHERE gmt_deleted IS NULL;
 ALTER TABLE ONLY public.t_label

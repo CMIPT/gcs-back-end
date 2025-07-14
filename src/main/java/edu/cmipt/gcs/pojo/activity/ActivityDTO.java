@@ -15,7 +15,6 @@ public record ActivityDTO(
         @Null(groups = CreateGroup.class)
         @NotNull(groups = UpdateGroup.class)
         String id,
-    @Schema(description = "Activity Number") @Null(groups = CreateGroup.class) String number,
     @Schema(description = "Repository ID") @NotNull(groups = CreateGroup.class) String repositoryId,
     @Schema(description = "Parent Activity ID, NULL if this is a root activity") String parentId,
     @Schema(description = "Activity Description")
@@ -39,6 +38,6 @@ public record ActivityDTO(
         @Null(groups = UpdateGroup.class)
         Boolean isPullRequest) {
   public ActivityDTO(Long id, Long parentId) {
-    this(String.valueOf(id), null, null, String.valueOf(parentId), null, null, null);
+    this(String.valueOf(id), null, String.valueOf(parentId), null, null, null);
   }
 }

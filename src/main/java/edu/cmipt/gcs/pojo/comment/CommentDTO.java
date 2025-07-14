@@ -12,10 +12,7 @@ public record CommentDTO(
         @Null(groups = CreateGroup.class)
         @NotNull(groups = UpdateGroup.class)
         String id,
-    @Schema(
-            description = "Activity ID",
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            example = "12")
+    @Schema(description = "Activity ID", example = "12")
         @NotNull(groups = CreateGroup.class)
         String activityId,
     @Schema(
@@ -24,12 +21,12 @@ public record CommentDTO(
             example = "gcs")
         @Size(
             groups = {CreateGroup.class, UpdateGroup.class},
-            min = ValidationConstant.MIN_COMMENT_NAME_LENGTH,
-            max = ValidationConstant.MAX_COMMENT_NAME_LENGTH)
+            min = ValidationConstant.MIN_COMMENT_CONTENT_LENGTH,
+            max = ValidationConstant.MAX_COMMENT_CONTENT_LENGTH)
         @NotBlank(groups = {CreateGroup.class, UpdateGroup.class})
         String content,
 
-    // TODO: 检验
+    // TODO: 对pr的Code View功能检验
     @Schema(description = "Path of the code file where the comment is made. NULL if not applicable")
         String codePath,
     @Schema(

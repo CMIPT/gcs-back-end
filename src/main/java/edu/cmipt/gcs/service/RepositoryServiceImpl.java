@@ -92,7 +92,7 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
       repositoryPO = super.getById(id);
     }
     // 递归删除该仓库的所有活动、标签、合作者
-    // 忽略返回值，因为允许删除时没有相关信息
+    // 这里忽略返回值，由CacheAspect处理缓存删除
     activityService.removeByRepositoryId(repositoryPO.getId());
     labelService.removeByRepositoryId(repositoryPO.getId());
     userCollaborateRepositoryService.removeByRepositoryId(repositoryPO.getId());
