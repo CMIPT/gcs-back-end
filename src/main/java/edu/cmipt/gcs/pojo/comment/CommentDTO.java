@@ -28,6 +28,10 @@ public record CommentDTO(
 
     // TODO: 对pr的Code View功能检验
     @Schema(description = "Path of the code file where the comment is made. NULL if not applicable")
+    @Size(
+            groups = {CreateGroup.class, UpdateGroup.class},
+            min = ValidationConstant.MIN_COMMENT_CODE_PATH_LENGTH,
+            max = ValidationConstant.MAX_COMMENT_CODE_PATH_LENGTH)
         String codePath,
     @Schema(
             description =

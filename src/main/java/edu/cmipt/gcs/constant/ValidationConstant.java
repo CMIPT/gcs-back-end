@@ -38,4 +38,6 @@ public class ValidationConstant {
 
   public static final int MIN_COMMENT_CONTENT_LENGTH = 1;
   public static final int MAX_COMMENT_CONTENT_LENGTH = 65536;
+  public static final int MIN_COMMENT_CODE_PATH_LENGTH = 0;
+  public static final int MAX_COMMENT_CODE_PATH_LENGTH = 1024;
 }

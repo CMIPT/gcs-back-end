@@ -13,11 +13,7 @@ public enum AddCollaboratorTypeEnum {
   public UserPO getOne(UserService service, String collaborator) {
     switch (this) {
       case ID:
-        try {
           return service.getById(TypeConversionUtil.convertToLong(collaborator, true));
-        } catch (Exception e) {
-          throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-        }
       case USERNAME:
         return service.getOneByUsername(collaborator);
       case EMAIL:

@@ -98,7 +98,7 @@ public class ApiPathConstant {
   public static final String ACTIVITY_CREATE_SUB_ISSUE_API_PATH =
       ACTIVITY_API_PREFIX + "/create-sub-issue";
   public static final String ACTIVITY_ADD_SUB_ISSUE_API_PATH =
-      ACTIVITY_API_PREFIX + "/add-sub-issue";
+      ACTIVITY_API_PREFIX + "/add-sub-issue"; // change an already existing problem into a sub-problem of another problem
   public static final String ACTIVITY_REMOVE_SUB_ISSUE_API_PATH =
       ACTIVITY_API_PREFIX + "/remove-sub-issue";
   public static final String ACTIVITY_CREATE_COMMENT_API_PATH =

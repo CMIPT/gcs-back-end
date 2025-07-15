@@ -107,25 +107,21 @@ public class CacheAspect {
   @AfterReturning(
       pointcut =
           "execution(* edu.cmipt.gcs.service.*ServiceImpl.updateById(..)) || execution(*"
-              + " edu.cmipt.gcs.service.*ServiceImpl.removeBy*(..))"
-              + " ||execution(* edu.cmipt.gcs.service.*ServiceImpl.update*State(..))",
+              + " edu.cmipt.gcs.service.*ServiceImpl.removeBy*(..))",
       returning = "result")
   public void updateOrRemoveAdvice(JoinPoint joinPoint, Object result) throws Throwable {
     if (result instanceof Boolean) {
       String id;
       if (joinPoint.getSignature().getName().equals("removeById")) {
         id = joinPoint.getArgs()[0].toString();
-      } else if (joinPoint.getSignature().getName().equals("updateById")) {
+      } else{
         var po = joinPoint.getArgs()[0];
         id = po.getClass().getMethod("getId").invoke(po).toString();
-      } else {
-        id = joinPoint.getArgs()[0].toString(); // For update*State methods
       }
       String cacheKey = RedisUtil.generateKey(joinPoint.getTarget(), id);
       redisTemplate.delete(cacheKey);
       logger.debug("Cache deleted, key: {}", cacheKey);
-    }
-    else if(result instanceof List<?> idList && !idList.isEmpty()) {
+    } else if (result instanceof List<?> idList && !idList.isEmpty()) {
       for (Object id : idList) {
         if (id == null) continue;
         String cacheKey = RedisUtil.generateKey(joinPoint.getTarget(), id.toString());
@@ -134,6 +130,19 @@ public class CacheAspect {
       }
     } else {
       logger.debug("No IDs to remove from cache, skipping cache deletion.");
+    }
+  }
+
+  @AfterReturning(
+          pointcut = "execution(* edu.cmipt.gcs.service.*ServiceImpl.update*State(..))",
+          returning = "result")
+  public void updateOneStateAdvice(JoinPoint joinPoint, Object result){
+    if((boolean) result)
+    {
+      String id =joinPoint.getArgs()[0].toString();
+      String cacheKey = RedisUtil.generateKey(joinPoint.getTarget(), id);
+      redisTemplate.delete(cacheKey);
+      logger.debug("Cache deleted, key: {}", cacheKey);
     }
   }
 }

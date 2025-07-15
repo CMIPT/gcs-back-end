@@ -15,11 +15,7 @@ public enum UserQueryTypeEnum {
   public UserPO getOne(UserService service, String user) {
     switch (this) {
       case ID:
-        try {
           return service.getById(TypeConversionUtil.convertToLong(user, true));
-        } catch (Exception e) {
-          throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-        }
       case TOKEN:
         Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(user), true);
         return service.getById(idInToken);

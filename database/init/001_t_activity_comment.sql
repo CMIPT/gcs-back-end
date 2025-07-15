@@ -3,7 +3,7 @@ CREATE TABLE public.t_activity_comment (
     activity_id bigint NOT NULL,
     user_id bigint NOT NULL,
     content text NOT NULL ,
-    code_path character varying(255),
+    code_path character varying(1024),
     code_line int,
     reply_to_id bigint,
     gmt_created timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
