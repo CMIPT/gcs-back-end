@@ -134,7 +134,10 @@ public class CacheAspect {
   }
 
   @AfterReturning(
-          pointcut = "execution(* edu.cmipt.gcs.service.*ServiceImpl.update*State(..))",
+          pointcut = "execution(* edu.cmipt.gcs.service.ActivityServiceImpl.updateLockedState(..)) || " +
+          "execution(* edu.cmipt.gcs.service.ActivityServiceImpl.updateClosedState(..)) || " +
+          "execution(* edu.cmipt.gcs.service.CommentServiceImpl.updateHiddenState(..)) || " +
+          "execution(* edu.cmipt.gcs.service.CommentServiceImpl.updateResolvedState(..))",
           returning = "result")
   public void updateOneStateAdvice(JoinPoint joinPoint, Object result){
     if((boolean) result)
