@@ -122,11 +122,19 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
     if (activityQueryDTO.author() != null) {
       queryWrapper.eq(UserPO::getUsername, activityQueryDTO.author());
     }
-    if (activityQueryDTO.isClosed() != null && activityQueryDTO.isClosed()) {
-      queryWrapper.isNotNull(ActivityPO::getGmtClosed);
+    if (activityQueryDTO.isClosed() != null){
+      if(activityQueryDTO.isClosed()) {
+        queryWrapper.isNotNull(ActivityPO::getGmtClosed);
+      } else {
+        queryWrapper.isNull(ActivityPO::getGmtClosed);
+      }
     }
-    if (activityQueryDTO.isLocked() != null && activityQueryDTO.isLocked()) {
-      queryWrapper.isNotNull(ActivityPO::getGmtLocked);
+    if (activityQueryDTO.isLocked() != null) {
+      if (activityQueryDTO.isLocked()) {
+        queryWrapper.isNotNull(ActivityPO::getGmtLocked);
+      } else {
+        queryWrapper.isNull(ActivityPO::getGmtLocked);
+      }
     }
     if (activityQueryDTO.orderBy() != null) {
       switch (activityQueryDTO.orderBy()) {

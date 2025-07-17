@@ -7,7 +7,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yulichang.toolkit.JoinWrappers;
 import edu.cmipt.gcs.dao.CommentMapper;
 import edu.cmipt.gcs.pojo.comment.CommentCountDTO;
+import edu.cmipt.gcs.pojo.comment.CommentFullInfoDTO;
 import edu.cmipt.gcs.pojo.comment.CommentPO;
+import edu.cmipt.gcs.pojo.user.UserPO;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Collections;
@@ -112,22 +114,35 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, CommentPO>
     return super.update(updateWrapper);
   }
 
+
   @Override
-  public Page<CommentPO> pageCommentByActivityId(Integer page, Integer size, Long activityId) {
-    var wrapper = new QueryWrapper<CommentPO>();
-    wrapper.eq("activity_id", activityId);
-    wrapper.isNull("reply_to_id"); // 默认查询根评论,子评论通过另外的 API查询
-    wrapper.orderBy(true, true, "gmt_created");
-    return super.page(new Page<>(page, size), wrapper);
+  public Page<CommentFullInfoDTO> pageCommentFullInfoByActivityId(Integer page, Integer size, Long activityId) {
+    var wrapper = JoinWrappers.lambda(CommentPO.class)
+        .selectAsClass(CommentPO.class, CommentFullInfoDTO.class)
+        .selectAs(UserPO::getUsername, CommentFullInfoDTO::getUsername)
+        .selectAs(UserPO::getEmail, CommentFullInfoDTO::getEmail)
+        .selectAs(UserPO::getAvatarUrl, CommentFullInfoDTO::getAvatarUrl)
+        .leftJoin(UserPO.class, UserPO::getId, CommentPO::getUserId)
+        .eq(CommentPO::getActivityId, activityId)
+        .isNull(CommentPO::getReplyToId) // 默认查询根评论,子评论通过另外的 API查询
+        .orderBy(true, true, CommentPO::getGmtCreated);
+    
+    return commentMapper.selectJoinPage(new Page<>(page, size), CommentFullInfoDTO.class, wrapper);
   }
 
   @Override
-  public Page<CommentPO> pageSubCommentByActivityIdAndReplyToId(
+  public Page<CommentFullInfoDTO> pageSubCommentFullInfoByActivityIdAndReplyToId(
       Integer page, Integer size, Long activityId, Long replyToId) {
-    var wrapper = new QueryWrapper<CommentPO>();
-    wrapper.eq("activity_id", activityId);
-    wrapper.eq("reply_to_id", replyToId); // 查询子评论
-    wrapper.orderBy(true, true, "gmt_created");
-    return super.page(new Page<>(page, size), wrapper);
+    var wrapper = JoinWrappers.lambda(CommentPO.class)
+        .selectAsClass(CommentPO.class, CommentFullInfoDTO.class)
+        .selectAs(UserPO::getUsername, CommentFullInfoDTO::getUsername)
+        .selectAs(UserPO::getEmail, CommentFullInfoDTO::getEmail)
+        .selectAs(UserPO::getAvatarUrl, CommentFullInfoDTO::getAvatarUrl)
+        .leftJoin(UserPO.class, UserPO::getId, CommentPO::getUserId)
+        .eq(CommentPO::getActivityId, activityId)
+        .eq(CommentPO::getReplyToId, replyToId) // 查询子评论
+        .orderBy(true, true, CommentPO::getGmtCreated);
+    
+    return commentMapper.selectJoinPage(new Page<>(page, size), CommentFullInfoDTO.class, wrapper);
   }
 }

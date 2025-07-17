@@ -2,6 +2,7 @@ package edu.cmipt.gcs.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import edu.cmipt.gcs.pojo.comment.CommentFullInfoDTO;
 import edu.cmipt.gcs.pojo.comment.CommentPO;
 import java.io.Serializable;
 import java.util.List;
@@ -18,8 +19,8 @@ public interface CommentService extends IService<CommentPO> {
 
   boolean updateResolvedState(Long commentId, Boolean isResolved);
 
-  Page<CommentPO> pageCommentByActivityId(Integer page, Integer size, Long activityId);
+  Page<CommentFullInfoDTO> pageCommentFullInfoByActivityId(Integer page, Integer size, Long activityId);
 
-  Page<CommentPO> pageSubCommentByActivityIdAndReplyToId(
+  Page<CommentFullInfoDTO> pageSubCommentFullInfoByActivityIdAndReplyToId(
       Integer page, Integer size, Long activityId, Long replyToId);
 }

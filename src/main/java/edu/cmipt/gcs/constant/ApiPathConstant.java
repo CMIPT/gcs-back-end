@@ -119,8 +119,9 @@ public class ApiPathConstant {
       ACTIVITY_API_PREFIX + "/delete-assignee";
   public static final String ACTIVITY_PAGE_ASSIGNEE_API_PATH =
       ACTIVITY_API_PREFIX + "/page-assignee";
-
   public static final String ACTIVITY_REMOVE_LABEL_API_PATH = ACTIVITY_API_PREFIX + "/delete-label";
   public static final String ACTIVITY_ADD_LABEL_API_PATH = ACTIVITY_API_PREFIX + "/add-label";
   public static final String ACTIVITY_PAGE_LABEL_API_PATH = ACTIVITY_API_PREFIX + "/page-label";
+  public static final String ACTIVITY_CHECK_OPERATION_VALIDITY_API_PATH =
+      ACTIVITY_API_PREFIX + "/check-operation-validity";
 }

@@ -10,6 +10,8 @@ import edu.cmipt.gcs.pojo.activity.*;
 import edu.cmipt.gcs.pojo.assign.ActivityDesignateAssigneePO;
 import edu.cmipt.gcs.pojo.assign.AssigneeVO;
 import edu.cmipt.gcs.pojo.comment.CommentDTO;
+import edu.cmipt.gcs.pojo.comment.CommentFullInfoDTO;
+import edu.cmipt.gcs.pojo.comment.CommentFullInfoVO;
 import edu.cmipt.gcs.pojo.comment.CommentPO;
 import edu.cmipt.gcs.pojo.comment.CommentVO;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
@@ -71,7 +73,7 @@ public class ActivityController {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     Long repositoryId = TypeConversionUtil.convertToLong(activity.repositoryId(), true);
     permissionService.checkRepositoryOperationValidity(
-        repositoryId, idInToken, OperationTypeEnum.MODIFY);
+        repositoryId, idInToken, OperationTypeEnum.CREATE);
     // 检查是否涉及sub-issue
     if (activity.parentId() != null) {
       // 只有issue可以有父活动
@@ -480,8 +482,11 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id);
     }
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
-    permissionService.checkActivityOperationValidity(
+    // 不是评论的创建者，检查权限
+    if(!idInToken.equals(commentPO.getUserId())) {
+      permissionService.checkActivityOperationValidity(
         commentPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
+    }
     if (!commentService.removeById(id)) {
       throw new GenericException(ErrorCodeEnum.COMMENT_DELETE_FAILED, id);
     }
@@ -504,7 +509,7 @@ public class ActivityController {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     Long activityId = TypeConversionUtil.convertToLong(comment.activityId(), true);
     permissionService.checkActivityOperationValidity(
-        activityId, idInToken, OperationTypeEnum.COMMENT);
+        activityId, idInToken, OperationTypeEnum.CREATE);
     if (comment.replyToId() != null) {
       Long parentId = TypeConversionUtil.convertToLong(comment.replyToId(), true);
       var parentCommentPO = commentService.getById(parentId);
@@ -530,7 +535,7 @@ public class ActivityController {
         description = "Page comments failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
-  public PageVO<CommentVO> pageCommentOfActivity(
+  public PageVO<CommentFullInfoVO> pageCommentOfActivity(
       @RequestParam("activityId") Long activityId,
       @RequestParam("page") @Min(1) Integer page,
       @RequestParam("size") @Min(1) Integer size,
@@ -540,8 +545,8 @@ public class ActivityController {
     }
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
-    Page<CommentPO> iPage = commentService.pageCommentByActivityId(page, size, activityId);
-    return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(CommentVO::new).toList());
+    Page<CommentFullInfoDTO> iPage = commentService.pageCommentFullInfoByActivityId(page, size, activityId);
+    return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(CommentFullInfoVO::new).toList());
   }
 
   @GetMapping(ApiPathConstant.ACTIVITY_PAGE_SUB_COMMENT_API_PATH)
@@ -555,7 +560,7 @@ public class ActivityController {
         description = "Page sub-comments failed",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
-  public PageVO<CommentVO> pageSubCommentOfActivity(
+  public PageVO<CommentFullInfoVO> pageSubCommentOfActivity(
       @RequestParam("activityId") Long activityId,
       @RequestParam("replyToId") Long replyToId,
       @RequestParam("page") @Min(1) Integer page,
@@ -566,9 +571,9 @@ public class ActivityController {
     }
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
-    Page<CommentPO> iPage =
-        commentService.pageSubCommentByActivityIdAndReplyToId(page, size, activityId, replyToId);
-    return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(CommentVO::new).toList());
+    Page<CommentFullInfoDTO> iPage =
+        commentService.pageSubCommentFullInfoByActivityIdAndReplyToId(page, size, activityId, replyToId);
+    return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(CommentFullInfoVO::new).toList());
   }
 
   @PostMapping(ApiPathConstant.ACTIVITY_ADD_LABEL_API_PATH)
@@ -754,5 +759,24 @@ public class ActivityController {
         activityDesignateAssigneeService.pageActivityAssigneesByActivityId(activityId, page, size);
     return new PageVO<>(
         iPage.getTotal(), iPage.getRecords().stream().map(AssigneeVO::new).toList());
+  }
+
+  @GetMapping(ApiPathConstant.ACTIVITY_CHECK_OPERATION_VALIDITY_API_PATH)
+  @Operation(
+      summary = "Check if the operation on an activity is valid",
+      description = "Check if the operation on an activity is valid",
+      tags = {"Activity", "Get Method"})
+    @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Access denied",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    })
+  public void checkActivityOperationValidity(
+          @RequestParam Long id,
+          @RequestParam OperationTypeEnum operationType,
+          @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+    permissionService.checkActivityOperationValidity(id, idInToken, operationType);
   }
 }

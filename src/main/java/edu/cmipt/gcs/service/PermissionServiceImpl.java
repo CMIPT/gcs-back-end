@@ -51,7 +51,7 @@ public class PermissionServiceImpl implements PermissionService {
     // If the activity is locked, the permission to create comment operations is downgraded to
     // modify operations
     // and only the repository creator and collaborators can perform comment operations.
-    if (operationTypeEnum == OperationTypeEnum.COMMENT && activityPO.getGmtLocked() != null) {
+    if (operationTypeEnum == OperationTypeEnum.CREATE && activityPO.getGmtLocked() != null) {
       operationTypeEnum = OperationTypeEnum.MODIFY;
     }
     // whatever the repository is public or private,

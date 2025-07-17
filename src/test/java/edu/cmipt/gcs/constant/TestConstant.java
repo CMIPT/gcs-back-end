@@ -41,6 +41,7 @@ public class TestConstant {
   public static String LABEL_ID;
   public static String DELETE_LABEL_ID;
   public static String COMMENT_ID;
+  public static String OTHER_COMMENT_ID;
   public static String COMMENT_CONTENT = new Date().getTime() + "comment";
   public static String REPOSITORY_DELETE_ACTIVITY_ID;
 }

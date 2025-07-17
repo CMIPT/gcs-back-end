@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.cmipt.gcs.constant.ApiPathConstant;
@@ -18,6 +19,7 @@ import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
 import edu.cmipt.gcs.pojo.activity.ActivityFullInfoVO;
 import edu.cmipt.gcs.pojo.activity.ActivityPO;
 import edu.cmipt.gcs.pojo.assign.AssigneeVO;
+import edu.cmipt.gcs.pojo.comment.CommentFullInfoVO;
 import edu.cmipt.gcs.pojo.comment.CommentPO;
 import edu.cmipt.gcs.pojo.comment.CommentVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
@@ -280,6 +282,27 @@ public class ActivityControllerTest {
             jsonPath("$.records").isArray(),
             jsonPath("$.records.length()").value(TestConstant.ACTIVITY_SIZE));
   }
+
+  @Test
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  public void testCreateActivityInOtherUserPublicRepositoryValid() throws Exception {
+    mvc.perform(
+            post(ApiPathConstant.ACTIVITY_CREATE_ACTIVITY_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                        "repositoryId": "%s",
+                        "title": "Test Activity in Other User Public Repository",
+                        "description": "This is a test activity in other user public repository",
+                        "isPullRequest": false
+                    }
+                    """
+                        .formatted(TestConstant.OTHER_REPOSITORY_ID)))
+        .andExpect(status().isOk());
+  }
+
 
   @Test
   public void testCreateActivityInvalid() throws Exception {
@@ -665,6 +688,33 @@ public class ActivityControllerTest {
   }
 
   @Test
+  @Order(Ordered.HIGHEST_PRECEDENCE + 6)
+  public void testCreateCommentToOtherPublicRepositoryActivityValid() throws Exception {
+    mvc.perform(
+            post(ApiPathConstant.ACTIVITY_CREATE_COMMENT_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                        "activityId": "%s",
+                        "content": "%s"
+                    }
+                    """
+                        .formatted(
+                            TestConstant.OTHER_REPOSITORY_ACTIVITY_ID,
+                            TestConstant.COMMENT_CONTENT)))
+        .andExpectAll(status().isOk());
+    // get the comment id for testing delete own comment in other public repository activity
+    var wrapper = new QueryWrapper<CommentPO>()
+        .eq("activity_id", Long.valueOf(TestConstant.OTHER_REPOSITORY_ACTIVITY_ID))
+        .eq("user_id", Long.valueOf(TestConstant.ID))
+        .last("limit 1");
+    CommentPO commentPO = commentService.getOne(wrapper);
+    TestConstant.OTHER_COMMENT_ID = commentPO.getId().toString();
+  }
+
+  @Test
   @Order(Ordered.HIGHEST_PRECEDENCE + 7)
   public void testPageCommentOfActivityValid() throws Exception {
     var content =
@@ -685,7 +735,7 @@ public class ActivityControllerTest {
             .andReturn()
             .getResponse()
             .getContentAsString();
-    var pageVO = objectMapper.readValue(content, new TypeReference<PageVO<CommentVO>>() {});
+    var pageVO = objectMapper.readValue(content, new TypeReference<PageVO<CommentFullInfoVO>>() {});
     TestConstant.COMMENT_ID = pageVO.records().get(0).id();
   }
 
@@ -1051,6 +1101,17 @@ public class ActivityControllerTest {
                 .param("id", TestConstant.COMMENT_ID))
         .andExpectAll(status().isOk());
     TestConstant.COMMENT_ID = null;
+  }
+
+  @Test
+  @Order(Ordered.LOWEST_PRECEDENCE - 1)
+  public void testDeleteOtherCommentFromOtherPublicRepositoryActivityValid() throws Exception {
+    mvc.perform(
+            delete(ApiPathConstant.ACTIVITY_DELETE_COMMENT_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", TestConstant.OTHER_COMMENT_ID))
+        .andExpectAll(status().isOk());
+    TestConstant.OTHER_COMMENT_ID = null;
   }
 
   @Test
