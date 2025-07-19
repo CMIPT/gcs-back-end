@@ -232,9 +232,7 @@ public class ActivityControllerTest {
                 "author": "%s",
                 "isPullRequest": false,
                 "orderBy": "%s",
-                "isAsc": true,
-                "isLocked": false,
-                "isClosed": false
+                "isAsc": true
             }
             """
                 .formatted(
@@ -265,9 +263,7 @@ public class ActivityControllerTest {
                         "author": "%s",
                         "isPullRequest": false,
                         "orderBy": "%s",
-                        "isAsc": true,
-                        "isLocked": false,
-                        "isClosed": false
+                        "isAsc": true
                     }
                     """
                         .formatted(
@@ -874,7 +870,8 @@ public class ActivityControllerTest {
                         .formatted(
                             TestConstant.REPOSITORY_ID,
                             TestConstant.REPOSITORY_DELETE_ACTIVITY_ID)))
-        .andExpectAll(status().isOk());
+            .andExpectAll(status().isNotImplemented());
+//        .andExpectAll(status().isOk());
   }
 
   @Test
@@ -896,7 +893,8 @@ public class ActivityControllerTest {
                     """
                         .formatted(
                             TestConstant.REPOSITORY_ID, TestConstant.OTHER_REPOSITORY_ACTIVITY_ID)))
-        .andExpectAll(status().isForbidden());
+            .andExpectAll(status().isNotImplemented());
+//        .andExpectAll(status().isForbidden());
   }
 
   @Test
@@ -907,7 +905,8 @@ public class ActivityControllerTest {
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("parentId", TestConstant.REPOSITORY_ACTIVITY_ID)
                 .param("subIssueId", TestConstant.REPOSITORY_DELETE_ACTIVITY_ID))
-        .andExpectAll(status().isOk());
+            .andExpectAll(status().isNotImplemented());
+//        .andExpectAll(status().isOk());
   }
 
   @Test
@@ -918,14 +917,16 @@ public class ActivityControllerTest {
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("parentId", TestConstant.OTHER_REPOSITORY_ACTIVITY_ID)
                 .param("subIssueId", TestConstant.REPOSITORY_DELETE_ACTIVITY_ID))
-        .andExpectAll(status().isForbidden());
+            .andExpectAll(status().isNotImplemented());
+//        .andExpectAll(status().isForbidden());
     // add itself as sub issue
     mvc.perform(
             post(ApiPathConstant.ACTIVITY_ADD_SUB_ISSUE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("parentId", TestConstant.REPOSITORY_ACTIVITY_ID)
                 .param("subIssueId", TestConstant.REPOSITORY_ACTIVITY_ID))
-        .andExpectAll(status().isBadRequest());
+            .andExpectAll(status().isNotImplemented());
+//        .andExpectAll(status().isBadRequest());
   }
 
   @Test
@@ -937,18 +938,19 @@ public class ActivityControllerTest {
                 .param("page", "1")
                 .param("size", "10")
                 .param("parentId", TestConstant.REPOSITORY_ACTIVITY_ID))
-        .andExpectAll(
-            status().isOk(),
-            jsonPath("$.total").value(greaterThan(0)),
-            jsonPath("$.records").isArray(),
-            jsonPath("$.records.length()").value(1),
-            jsonPath("$.records[0].id").value(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID),
-            jsonPath("$.records[0].number").isString(),
-            jsonPath("$.records[0].title").isString(),
-            jsonPath("$.records[0].description").isString(),
-            jsonPath("$.records[0].username").value(TestConstant.USERNAME),
-            jsonPath("$.records[0].subIssueTotalCount").value(1),
-            jsonPath("$.records[0].subIssueCompletedCount").value(0));
+            .andExpectAll(status().isNotImplemented());
+//        .andExpectAll(
+//            status().isOk(),
+//            jsonPath("$.total").value(greaterThan(0)),
+//            jsonPath("$.records").isArray(),
+//            jsonPath("$.records.length()").value(1),
+//            jsonPath("$.records[0].id").value(TestConstant.REPOSITORY_DELETE_ACTIVITY_ID),
+//            jsonPath("$.records[0].number").isString(),
+//            jsonPath("$.records[0].title").isString(),
+//            jsonPath("$.records[0].description").isString(),
+//            jsonPath("$.records[0].username").value(TestConstant.USERNAME),
+//            jsonPath("$.records[0].subIssueTotalCount").value(1),
+//            jsonPath("$.records[0].subIssueCompletedCount").value(0));
   }
 
   @Test
@@ -960,7 +962,8 @@ public class ActivityControllerTest {
                 .param("page", "1")
                 .param("size", "10")
                 .param("parentId", TestConstant.OTHER_PRIVATE_REPOSITORY_ACTIVITY_ID))
-        .andExpectAll(status().isNotFound());
+            .andExpectAll(status().isNotImplemented());
+//        .andExpectAll(status().isNotFound());
   }
 
   @Test
@@ -1079,7 +1082,8 @@ public class ActivityControllerTest {
             delete(ApiPathConstant.ACTIVITY_REMOVE_SUB_ISSUE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("subIssueId", TestConstant.REPOSITORY_DELETE_ACTIVITY_ID))
-        .andExpectAll(status().isOk());
+            .andExpectAll(status().isNotImplemented());
+//        .andExpectAll(status().isOk());
   }
 
   @Test
@@ -1089,7 +1093,8 @@ public class ActivityControllerTest {
             delete(ApiPathConstant.ACTIVITY_REMOVE_SUB_ISSUE_API_PATH)
                 .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
                 .param("subIssueId", TestConstant.OTHER_REPOSITORY_ACTIVITY_ID))
-        .andExpectAll(status().isForbidden());
+            .andExpectAll(status().isNotImplemented());
+//        .andExpectAll(status().isForbidden());
   }
 
   @Test

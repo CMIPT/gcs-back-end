@@ -1,8 +1,10 @@
 package edu.cmipt.gcs.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import edu.cmipt.gcs.dao.LabelMapper;
+import edu.cmipt.gcs.enumeration.LabelOrderByEnum;
 import edu.cmipt.gcs.pojo.label.LabelPO;
 import java.io.Serializable;
 import java.util.List;
@@ -57,5 +59,14 @@ public class LabelServiceImpl extends ServiceImpl<LabelMapper, LabelPO> implemen
             .toList();
     super.remove(new QueryWrapper<LabelPO>().eq("repository_id", repositoryId));
     return labelIds;
+  }
+
+  @Override
+  public Page<LabelPO> pageLabelsByRepositoryId(Long repositoryId, Boolean isAsc, LabelOrderByEnum orderBy, Integer pageNum, Integer pageSize) {
+    Page<LabelPO> labelPage = new Page<>(pageNum, pageSize);
+    var wrapper = new QueryWrapper<LabelPO>();
+    wrapper.eq("repository_id", repositoryId);
+    wrapper.orderBy(true, isAsc, orderBy.getFieldName());
+    return super.page(labelPage, wrapper);
   }
 }

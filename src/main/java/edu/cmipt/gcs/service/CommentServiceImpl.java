@@ -116,7 +116,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, CommentPO>
 
 
   @Override
-  public Page<CommentFullInfoDTO> pageCommentFullInfoByActivityId(Integer page, Integer size, Long activityId) {
+   public Page<CommentFullInfoDTO> pageCommentFullInfoByActivityId(Integer page, Integer size, Long activityId) {
     var wrapper = JoinWrappers.lambda(CommentPO.class)
         .selectAsClass(CommentPO.class, CommentFullInfoDTO.class)
         .selectAs(UserPO::getUsername, CommentFullInfoDTO::getUsername)
@@ -131,15 +131,14 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, CommentPO>
   }
 
   @Override
-  public Page<CommentFullInfoDTO> pageSubCommentFullInfoByActivityIdAndReplyToId(
-      Integer page, Integer size, Long activityId, Long replyToId) {
+  public Page<CommentFullInfoDTO> pageSubCommentFullInfoByReplyToId(
+      Integer page, Integer size, Long replyToId) {
     var wrapper = JoinWrappers.lambda(CommentPO.class)
         .selectAsClass(CommentPO.class, CommentFullInfoDTO.class)
         .selectAs(UserPO::getUsername, CommentFullInfoDTO::getUsername)
         .selectAs(UserPO::getEmail, CommentFullInfoDTO::getEmail)
         .selectAs(UserPO::getAvatarUrl, CommentFullInfoDTO::getAvatarUrl)
         .leftJoin(UserPO.class, UserPO::getId, CommentPO::getUserId)
-        .eq(CommentPO::getActivityId, activityId)
         .eq(CommentPO::getReplyToId, replyToId) // 查询子评论
         .orderBy(true, true, CommentPO::getGmtCreated);
     

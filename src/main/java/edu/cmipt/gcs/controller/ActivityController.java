@@ -13,7 +13,6 @@ import edu.cmipt.gcs.pojo.comment.CommentDTO;
 import edu.cmipt.gcs.pojo.comment.CommentFullInfoDTO;
 import edu.cmipt.gcs.pojo.comment.CommentFullInfoVO;
 import edu.cmipt.gcs.pojo.comment.CommentPO;
-import edu.cmipt.gcs.pojo.comment.CommentVO;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
 import edu.cmipt.gcs.pojo.issue.IssueVO;
 import edu.cmipt.gcs.pojo.label.ActivityAssignLabelPO;
@@ -39,8 +38,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Objects;
-
 @Validated
 @RestController
 @Tag(name = "Activity", description = "Activity Related API")
@@ -54,6 +51,7 @@ public class ActivityController {
   @Autowired private ActivityDesignateAssigneeService activityDesignateAssigneeService;
   @Autowired private LabelService labelService;
   @Autowired private PermissionService permissionService;
+  @Autowired private RepositoryService repositoryService;
 
   @PostMapping(ApiPathConstant.ACTIVITY_CREATE_ACTIVITY_API_PATH)
   @Operation(
@@ -73,7 +71,7 @@ public class ActivityController {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     Long repositoryId = TypeConversionUtil.convertToLong(activity.repositoryId(), true);
     permissionService.checkRepositoryOperationValidity(
-        repositoryId, idInToken, OperationTypeEnum.CREATE);
+        repositoryId, idInToken, OperationTypeEnum.ATTACH);
     // 检查是否涉及sub-issue
     if (activity.parentId() != null) {
       // 只有issue可以有父活动
@@ -81,7 +79,7 @@ public class ActivityController {
         throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
       }
       Long parentId = TypeConversionUtil.convertToLong(activity.parentId(), true);
-      permissionService.checkIssueOperationValidity(repositoryId, parentId);
+      checkSubIssueCreationValidity(repositoryId, parentId);
     }
     int retry = 0;
     while (retry < ApplicationConstant.CREATE_ACTIVITY_MAX_RETRY_TIMES) {
@@ -203,7 +201,7 @@ public class ActivityController {
       if (parentId.equals(activityId) || activityPO.getIsPullRequest()) {
         throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
       }
-      permissionService.checkIssueOperationValidity(activityPO.getRepositoryId(), parentId);
+      checkSubIssueCreationValidity(activityPO.getRepositoryId(), parentId);
     }
     if (!activityService.updateById(new ActivityPO(activity))) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, activityId);
@@ -257,10 +255,12 @@ public class ActivityController {
       @Validated(CreateGroup.class) @RequestBody ActivityDTO activity,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken)
       throws InterruptedException {
-    if (activity.isPullRequest() || activity.parentId() == null) {
-      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
-    }
-    createActivity(activity, accessToken);
+    // do not support issue module now
+    throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
+//    if (activity.isPullRequest() || activity.parentId() == null) {
+//      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
+//    }
+//    createActivity(activity, accessToken);
   }
 
   @PostMapping(ApiPathConstant.ACTIVITY_ADD_SUB_ISSUE_API_PATH)
@@ -278,8 +278,10 @@ public class ActivityController {
       @RequestParam("parentId") Long parentId,
       @RequestParam("subIssueId") Long subIssueId,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    ActivityDTO activity = new ActivityDTO(subIssueId, parentId);
-    updateActivityContent(activity, accessToken);
+    // do not support issue module now
+    throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
+//    ActivityDTO activity = new ActivityDTO(subIssueId, parentId);
+//    updateActivityContent(activity, accessToken);
   }
 
   @DeleteMapping(ApiPathConstant.ACTIVITY_REMOVE_SUB_ISSUE_API_PATH)
@@ -296,16 +298,18 @@ public class ActivityController {
   public void removeSubIssue(
       @RequestParam("subIssueId") Long subIssueId,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
-    permissionService.checkActivityOperationValidity(
-        subIssueId, idInToken, OperationTypeEnum.MODIFY);
-    var activityPO = activityService.getById(subIssueId);
-    if (activityPO.getIsPullRequest()) {
-      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
-    }
-    if (!activityService.removeSubIssueById(subIssueId)) {
-      throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, subIssueId);
-    }
+    // do not support issue module now
+    throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
+//    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+//    permissionService.checkActivityOperationValidity(
+//        subIssueId, idInToken, OperationTypeEnum.MODIFY);
+//    var activityPO = activityService.getById(subIssueId);
+//    if (activityPO.getIsPullRequest()) {
+//      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
+//    }
+//    if (!activityService.removeSubIssueById(subIssueId)) {
+//      throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, subIssueId);
+//    }
   }
 
   @GetMapping(ApiPathConstant.ACTIVITY_PAGE_SUB_ISSUE_API_PATH)
@@ -326,17 +330,19 @@ public class ActivityController {
       @RequestParam("size") @Min(1) Integer size,
       @RequestParam("parentId") Long parentId,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
-      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
-    }
-    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
-    permissionService.checkActivityOperationValidity(parentId, idInToken, OperationTypeEnum.READ);
-    var activityPO = activityService.getById(parentId);
-    if (activityPO.getIsPullRequest()) {
-      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
-    }
-    var iPage = activityService.pageSubIssueByParentId(parentId, page, size);
-    return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(IssueVO::new).toList());
+    // do not support issue module now
+    throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
+//    if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
+//      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+//    }
+//    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+//    permissionService.checkActivityOperationValidity(parentId, idInToken, OperationTypeEnum.READ);
+//    var activityPO = activityService.getById(parentId);
+//    if (activityPO.getIsPullRequest()) {
+//      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
+//    }
+//    var iPage = activityService.pageSubIssueByParentId(parentId, page, size);
+//    return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(IssueVO::new).toList());
   }
 
   @GetMapping(ApiPathConstant.ACTIVITY_GET_ACTIVITY_API_PATH)
@@ -509,7 +515,7 @@ public class ActivityController {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     Long activityId = TypeConversionUtil.convertToLong(comment.activityId(), true);
     permissionService.checkActivityOperationValidity(
-        activityId, idInToken, OperationTypeEnum.CREATE);
+        activityId, idInToken, OperationTypeEnum.ATTACH);
     if (comment.replyToId() != null) {
       Long parentId = TypeConversionUtil.convertToLong(comment.replyToId(), true);
       var parentCommentPO = commentService.getById(parentId);
@@ -572,7 +578,7 @@ public class ActivityController {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
     Page<CommentFullInfoDTO> iPage =
-        commentService.pageSubCommentFullInfoByActivityIdAndReplyToId(page, size, activityId, replyToId);
+        commentService.pageSubCommentFullInfoByReplyToId(page, size, replyToId);
     return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(CommentFullInfoVO::new).toList());
   }
 
@@ -778,5 +784,21 @@ public class ActivityController {
           @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(id, idInToken, operationType);
+  }
+
+  public void checkSubIssueCreationValidity(Long subIssueRepositoryId, Long parentId) {
+    var parentActivityPO = activityService.getById(parentId);
+    // the parent activity cannot be pr
+    if (parentActivityPO == null || parentActivityPO.getIsPullRequest()) {
+      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
+    }
+    // The repository creators of the parent and sub activities must be the same
+    var subIssueRepositoryPO = repositoryService.getById(subIssueRepositoryId);
+    var parentRepositoryPO = repositoryService.getById(parentActivityPO.getRepositoryId());
+    if (subIssueRepositoryPO == null
+            || parentRepositoryPO == null
+            || !parentRepositoryPO.getUserId().equals(subIssueRepositoryPO.getUserId())) {
+      throw new GenericException(ErrorCodeEnum.SUB_ISSUE_CREATE_FAILED, subIssueRepositoryId);
+    }
   }
 }

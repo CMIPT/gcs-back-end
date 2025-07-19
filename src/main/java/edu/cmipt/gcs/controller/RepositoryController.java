@@ -610,6 +610,10 @@ public class RepositoryController {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkRepositoryOperationValidity(
         labelPO.getRepositoryId(), idInToken, OperationTypeEnum.MODIFY);
+    // if the label name is changed after ignoring the case, check the validity of the new name
+    if(label.name() != null && !label.name().equalsIgnoreCase(labelPO.getName())) {
+      checkLabelNameValidity(label.name(), labelPO.getRepositoryId(), accessToken);
+    }
     if (!labelService.updateById(new LabelPO(idInToken, label))) {
       logger.error("Failed to update label[{}]", id);
       throw new GenericException(ErrorCodeEnum.LABEL_UPDATE_FAILED, label);
@@ -661,14 +665,13 @@ public class RepositoryController {
       @RequestParam("orderBy") LabelOrderByEnum orderBy,
       @RequestParam("isAsc") Boolean isAsc,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-
+    if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
+      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+    }
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkRepositoryOperationValidity(
         repositoryId, idInToken, OperationTypeEnum.READ);
-    var wrapper = new QueryWrapper<LabelPO>();
-    wrapper.eq("repository_id", repositoryId);
-    wrapper.orderBy(true, isAsc, orderBy.getFieldName());
-    var iPage = labelService.page(new Page<>(page, size), wrapper);
+    var iPage = labelService.pageLabelsByRepositoryId(repositoryId,isAsc,orderBy,page,size);
     return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(LabelVO::new).toList());
   }
 

@@ -21,6 +21,6 @@ public interface CommentService extends IService<CommentPO> {
 
   Page<CommentFullInfoDTO> pageCommentFullInfoByActivityId(Integer page, Integer size, Long activityId);
 
-  Page<CommentFullInfoDTO> pageSubCommentFullInfoByActivityIdAndReplyToId(
-      Integer page, Integer size, Long activityId, Long replyToId);
+  Page<CommentFullInfoDTO> pageSubCommentFullInfoByReplyToId(
+      Integer page, Integer size, Long replyToId);
 }
