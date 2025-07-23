@@ -26,4 +26,15 @@ public interface PermissionService {
    */
   void checkActivityOperationValidity(
       Long activityId, Long userId, OperationTypeEnum operationTypeEnum);
+
+  /**
+   * Check the validity of the comment operation.
+   *
+   * @param commentId the comment id
+   * @param userId the user id
+   * @param operationTypeEnum the operation type
+   * @throws GenericException if comment not found or check activity operation validity failed
+   */
+  void checkCommentOperationValidity(
+      Long commentId, Long userId, OperationTypeEnum operationTypeEnum);
 }

@@ -99,6 +99,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(new ErrorVO(e.getCode(), e.getMessage()));
       case ACCESS_DENIED:
+      case ACTIVITY_LOCKED:
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
             .body(new ErrorVO(e.getCode(), e.getMessage()));
       case USER_NOT_FOUND:

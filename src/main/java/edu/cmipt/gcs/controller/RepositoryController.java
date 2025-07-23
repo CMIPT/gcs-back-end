@@ -577,7 +577,7 @@ public class RepositoryController {
     Long repositoryId = TypeConversionUtil.convertToLong(label.repositoryId(), true);
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkRepositoryOperationValidity(
-        repositoryId, idInToken, OperationTypeEnum.MODIFY);
+        repositoryId, idInToken, OperationTypeEnum.MODIFY_REPOSITORY);
     String labelName = label.name();
     checkLabelNameValidity(
         labelName, repositoryId, accessToken);
@@ -609,7 +609,7 @@ public class RepositoryController {
     }
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkRepositoryOperationValidity(
-        labelPO.getRepositoryId(), idInToken, OperationTypeEnum.MODIFY);
+        labelPO.getRepositoryId(), idInToken, OperationTypeEnum.MODIFY_REPOSITORY);
     // if the label name is changed after ignoring the case, check the validity of the new name
     if(label.name() != null && !label.name().equalsIgnoreCase(labelPO.getName())) {
       checkLabelNameValidity(label.name(), labelPO.getRepositoryId(), accessToken);
@@ -640,7 +640,7 @@ public class RepositoryController {
     }
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkRepositoryOperationValidity(
-        labelPO.getRepositoryId(), idInToken, OperationTypeEnum.MODIFY);
+        labelPO.getRepositoryId(), idInToken, OperationTypeEnum.MODIFY_REPOSITORY);
     if (!labelService.removeById(id)) {
       logger.error("Failed to delete label[{}]", id);
       throw new GenericException(ErrorCodeEnum.LABEL_DELETE_FAILED, id);

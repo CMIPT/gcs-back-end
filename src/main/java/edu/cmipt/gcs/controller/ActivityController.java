@@ -71,7 +71,7 @@ public class ActivityController {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     Long repositoryId = TypeConversionUtil.convertToLong(activity.repositoryId(), true);
     permissionService.checkRepositoryOperationValidity(
-        repositoryId, idInToken, OperationTypeEnum.ATTACH);
+        repositoryId, idInToken, OperationTypeEnum.ATTACH_ACTIVITY);
     // 检查是否涉及sub-issue
     if (activity.parentId() != null) {
       // 只有issue可以有父活动
@@ -146,7 +146,7 @@ public class ActivityController {
       @RequestParam("isLocked") Boolean isLocked,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
-    permissionService.checkActivityOperationValidity(id, idInToken, OperationTypeEnum.MODIFY);
+    permissionService.checkActivityOperationValidity(id, idInToken, OperationTypeEnum.MODIFY_ACTIVITY);
     if (!activityService.updateLockedState(id, isLocked)) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, id);
     }
@@ -168,7 +168,7 @@ public class ActivityController {
       @RequestParam("isClosed") Boolean isClosed,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
-    permissionService.checkActivityOperationValidity(id, idInToken, OperationTypeEnum.MODIFY);
+    permissionService.checkActivityOperationValidity(id, idInToken, OperationTypeEnum.MODIFY_ACTIVITY);
     if (!activityService.updateClosedState(id, isClosed)) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, id);
     }
@@ -192,7 +192,7 @@ public class ActivityController {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     Long activityId = TypeConversionUtil.convertToLong(activity.id(), true);
     permissionService.checkActivityOperationValidity(
-        activityId, idInToken, OperationTypeEnum.MODIFY);
+        activityId, idInToken, OperationTypeEnum.MODIFY_ACTIVITY);
     // 检查是否涉及sub-issue
     if (activity.parentId() != null) {
       Long parentId = TypeConversionUtil.convertToLong(activity.parentId(), true);
@@ -302,7 +302,7 @@ public class ActivityController {
     throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
 //    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
 //    permissionService.checkActivityOperationValidity(
-//        subIssueId, idInToken, OperationTypeEnum.MODIFY);
+//        subIssueId, idInToken, OperationTypeEnum.MODIFY_ACTIVITY);
 //    var activityPO = activityService.getById(subIssueId);
 //    if (activityPO.getIsPullRequest()) {
 //      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
@@ -403,12 +403,8 @@ public class ActivityController {
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     Long commentId = TypeConversionUtil.convertToLong(comment.id(), true);
-    var commentPO = commentService.getById(commentId);
-    if (commentPO == null) {
-      throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, commentId);
-    }
-    permissionService.checkActivityOperationValidity(
-        commentPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
+    permissionService.checkCommentOperationValidity(
+            commentId, idInToken, OperationTypeEnum.MODIFY_COMMENT);
     if (!commentService.updateById(new CommentPO(comment, idInToken))) {
       throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, comment);
     }
@@ -430,12 +426,8 @@ public class ActivityController {
       @RequestParam("isHidden") Boolean isHidden,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
-    var commentPO = commentService.getById(id);
-    if (commentPO == null) {
-      throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id);
-    }
-    permissionService.checkActivityOperationValidity(
-        commentPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
+    permissionService.checkCommentOperationValidity(
+        id, idInToken, OperationTypeEnum.MODIFY_COMMENT);
     if (!commentService.updateHiddenState(id, isHidden)) {
       throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, id);
     }
@@ -457,12 +449,8 @@ public class ActivityController {
       @RequestParam("isResolved") Boolean isResolved,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
-    var commentPO = commentService.getById(id);
-    if (commentPO == null) {
-      throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id);
-    }
-    permissionService.checkActivityOperationValidity(
-        commentPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
+    permissionService.checkCommentOperationValidity(
+        id, idInToken, OperationTypeEnum.MODIFY_COMMENT);
     if (!commentService.updateResolvedState(id, isResolved)) {
       throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, id);
     }
@@ -483,16 +471,9 @@ public class ActivityController {
   public void deleteCommentFromActivity(
       @RequestParam("id") Long id,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    CommentPO commentPO = commentService.getById(id);
-    if (commentPO == null) {
-      throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, id);
-    }
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
-    // 不是评论的创建者，检查权限
-    if(!idInToken.equals(commentPO.getUserId())) {
-      permissionService.checkActivityOperationValidity(
-        commentPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
-    }
+    permissionService.checkCommentOperationValidity(
+        id, idInToken, OperationTypeEnum.MODIFY_COMMENT);
     if (!commentService.removeById(id)) {
       throw new GenericException(ErrorCodeEnum.COMMENT_DELETE_FAILED, id);
     }
@@ -515,7 +496,7 @@ public class ActivityController {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     Long activityId = TypeConversionUtil.convertToLong(comment.activityId(), true);
     permissionService.checkActivityOperationValidity(
-        activityId, idInToken, OperationTypeEnum.ATTACH);
+        activityId, idInToken, OperationTypeEnum.ATTACH_COMMENT);
     if (comment.replyToId() != null) {
       Long parentId = TypeConversionUtil.convertToLong(comment.replyToId(), true);
       var parentCommentPO = commentService.getById(parentId);
@@ -599,7 +580,7 @@ public class ActivityController {
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(
-        activityId, idInToken, OperationTypeEnum.MODIFY);
+        activityId, idInToken, OperationTypeEnum.MODIFY_ACTIVITY);
     // 检查这个标签是否存在于当前活动对应的仓库中
     var activityPO = activityService.getById(activityId);
     if (activityPO == null) {
@@ -640,7 +621,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_LABEL_NOT_FOUND, id);
     }
     permissionService.checkActivityOperationValidity(
-        activityAssignLabelPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
+        activityAssignLabelPO.getActivityId(), idInToken, OperationTypeEnum.MODIFY_ACTIVITY);
     if (!activityAssignLabelService.removeById(id)) {
       throw new GenericException(
           ErrorCodeEnum.ACTIVITY_REMOVE_LABEL_FAILED, activityAssignLabelPO.getActivityId(), id);
@@ -692,7 +673,7 @@ public class ActivityController {
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(
-        activityId, idInToken, OperationTypeEnum.MODIFY);
+        activityId, idInToken, OperationTypeEnum.MODIFY_ACTIVITY);
     var UserPO = userService.getById(assigneeId);
     if (UserPO == null) {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, assigneeId);
@@ -726,7 +707,7 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_ASSIGNEE_NOT_FOUND, id);
     }
     permissionService.checkActivityOperationValidity(
-        activityDesignateAssigneePO.getActivityId(), idInToken, OperationTypeEnum.MODIFY);
+        activityDesignateAssigneePO.getActivityId(), idInToken, OperationTypeEnum.MODIFY_ACTIVITY);
     if (!activityDesignateAssigneeService.removeById(id)) {
       throw new GenericException(
           ErrorCodeEnum.ACTIVITY_REMOVE_ASSIGNEE_FAILED,
@@ -784,6 +765,25 @@ public class ActivityController {
           @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(id, idInToken, operationType);
+  }
+
+  @GetMapping(ApiPathConstant.ACTIVITY_CHECK_COMMENT_OPERATION_VALIDITY_API_PATH)
+  @Operation(
+      summary = "Check if the operation on a comment is valid",
+      description = "Check if the operation on a comment is valid",
+      tags = {"Activity", "Get Method"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Access denied",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public void checkCommentOperationValidity(
+      @RequestParam Long id,
+      @RequestParam OperationTypeEnum operationType,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+    permissionService.checkCommentOperationValidity(id, idInToken, operationType);
   }
 
   public void checkSubIssueCreationValidity(Long subIssueRepositoryId, Long parentId) {

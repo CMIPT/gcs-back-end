@@ -124,4 +124,6 @@ public class ApiPathConstant {
   public static final String ACTIVITY_PAGE_LABEL_API_PATH = ACTIVITY_API_PREFIX + "/page-label";
   public static final String ACTIVITY_CHECK_OPERATION_VALIDITY_API_PATH =
       ACTIVITY_API_PREFIX + "/check-operation-validity";
+  public static final String ACTIVITY_CHECK_COMMENT_OPERATION_VALIDITY_API_PATH =
+      ACTIVITY_API_PREFIX + "/check-comment-operation-validity";
 }

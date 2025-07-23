@@ -75,7 +75,8 @@ public class JwtFilter extends OncePerRequestFilter {
                   ApiPathConstant.ACTIVITY_PAGE_LABEL_API_PATH,
                   ApiPathConstant.ACTIVITY_PAGE_ASSIGNEE_API_PATH,
                   ApiPathConstant.REPOSITORY_PAGE_LABEL_API_PATH,
-                  ApiPathConstant.ACTIVITY_CHECK_OPERATION_VALIDITY_API_PATH),
+                  ApiPathConstant.ACTIVITY_CHECK_OPERATION_VALIDITY_API_PATH,
+                  ApiPathConstant.ACTIVITY_CHECK_COMMENT_OPERATION_VALIDITY_API_PATH),
           "POST",
               Set.of(
                   ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH,

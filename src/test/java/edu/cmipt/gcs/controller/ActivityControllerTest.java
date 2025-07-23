@@ -21,7 +21,6 @@ import edu.cmipt.gcs.pojo.activity.ActivityPO;
 import edu.cmipt.gcs.pojo.assign.AssigneeVO;
 import edu.cmipt.gcs.pojo.comment.CommentFullInfoVO;
 import edu.cmipt.gcs.pojo.comment.CommentPO;
-import edu.cmipt.gcs.pojo.comment.CommentVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.service.ActivityAssignLabelService;
 import edu.cmipt.gcs.service.ActivityDesignateAssigneeService;
@@ -1076,6 +1075,47 @@ public class ActivityControllerTest {
   }
 
   @Test
+  @Order(Ordered.HIGHEST_PRECEDENCE + 18)
+  public void testCheckActivityOperationValidityValid() throws Exception {
+    mvc.perform(
+            get(ApiPathConstant.ACTIVITY_CHECK_OPERATION_VALIDITY_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", TestConstant.REPOSITORY_ACTIVITY_ID)
+                .param("operationType", "MODIFY_ACTIVITY"))
+        .andExpectAll(status().isOk());
+  }
+
+  @Test
+  public void testCheckActivityOperationValidityInvalid() throws Exception {
+    mvc.perform(
+            get(ApiPathConstant.ACTIVITY_CHECK_OPERATION_VALIDITY_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.OTHER_ACCESS_TOKEN)
+                .param("id", TestConstant.REPOSITORY_ACTIVITY_ID)
+                .param("operationType", "MODIFY_ACTIVITY"))
+        .andExpectAll(status().isForbidden());
+  }
+
+  @Test
+  @Order(Ordered.HIGHEST_PRECEDENCE + 19)
+  public void testCheckCommentOperationValidityValid() throws Exception {
+    mvc.perform(
+            get(ApiPathConstant.ACTIVITY_CHECK_COMMENT_OPERATION_VALIDITY_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("id", TestConstant.COMMENT_ID)
+                .param("operationType", "MODIFY_COMMENT"))
+        .andExpectAll(status().isOk());
+  }
+
+  @Test
+  public void testCheckCommentOperationValidityInvalid() throws Exception {
+    mvc.perform(
+            get(ApiPathConstant.ACTIVITY_CHECK_COMMENT_OPERATION_VALIDITY_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.OTHER_ACCESS_TOKEN)
+                .param("id", TestConstant.COMMENT_ID)
+                .param("operationType", "MODIFY_COMMENT"))
+        .andExpectAll(status().isForbidden());
+  }
+
   @Order(Ordered.LOWEST_PRECEDENCE - 2)
   public void testRemoveSubIssueFromIssueValid() throws Exception {
     mvc.perform(
