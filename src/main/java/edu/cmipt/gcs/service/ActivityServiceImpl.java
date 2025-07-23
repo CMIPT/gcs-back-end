@@ -1,14 +1,29 @@
 package edu.cmipt.gcs.service;
 
+import java.io.Serializable;
+import java.sql.Timestamp;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yulichang.toolkit.JoinWrappers;
+
 import edu.cmipt.gcs.dao.ActivityMapper;
 import edu.cmipt.gcs.dao.CommentMapper;
-import edu.cmipt.gcs.pojo.activity.*;
+import edu.cmipt.gcs.pojo.activity.ActivityFullInfoDTO;
+import edu.cmipt.gcs.pojo.activity.ActivityPO;
+import edu.cmipt.gcs.pojo.activity.ActivityQueryDTO;
 import edu.cmipt.gcs.pojo.assign.ActivityDesignateAssigneePO;
 import edu.cmipt.gcs.pojo.assign.AssigneeDTO;
 import edu.cmipt.gcs.pojo.comment.CommentPO;
@@ -21,16 +36,6 @@ import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.util.RedisUtil;
 import edu.cmipt.gcs.util.TypeConversionUtil;
-import java.io.Serializable;
-import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
@@ -87,8 +92,8 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
             .selectAsClass(ActivityPO.class, ActivityFullInfoDTO.class)
             .selectAs(RepositoryPO::getId, ActivityFullInfoDTO::getRepositoryId)
             .selectAs(RepositoryPO::getRepositoryName, ActivityFullInfoDTO::getRepositoryName)
-            .selectAs(UserPO::getUsername, ActivityFullInfoDTO::getUsername)
-            .leftJoin(UserPO.class, UserPO::getId, ActivityPO::getUserId)
+            .selectAs(UserPO::getUsername, ActivityFullInfoDTO::getCreatorUsername)
+            .leftJoin(UserPO.class, UserPO::getId, ActivityPO::getCreatorId)
             .leftJoin(RepositoryPO.class, RepositoryPO::getId, ActivityPO::getRepositoryId)
             .eq(ActivityPO::getIsPullRequest, activityQueryDTO.isPullRequest());
     // issue的sub-issues可以来自不同仓库
@@ -182,8 +187,14 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
             .selectAsClass(ActivityPO.class, ActivityFullInfoDTO.class)
             .selectAs(RepositoryPO::getId, ActivityFullInfoDTO::getRepositoryId)
             .selectAs(RepositoryPO::getRepositoryName, ActivityFullInfoDTO::getRepositoryName)
-            .selectAs(UserPO::getUsername, ActivityFullInfoDTO::getUsername)
-            .leftJoin(UserPO.class, UserPO::getId, ActivityPO::getUserId)
+            .selectAs(UserPO::getUsername, ActivityFullInfoDTO::getCreatorUsername)
+            .leftJoin(UserPO.class, UserPO::getId, ActivityPO::getCreatorId, ext -> ext
+                .selectAs(UserPO::getUsername, ActivityFullInfoDTO::getCreatorUsername))
+            .leftJoin(UserPO.class, UserPO::getId, ActivityPO::getModifierId, ext -> ext
+                .selectAs(UserPO::getId, ActivityFullInfoDTO::getModifierId)
+                .selectAs(UserPO::getUsername, ActivityFullInfoDTO::getModifierUsername)
+                .selectAs(UserPO::getEmail, ActivityFullInfoDTO::getModifierEmail)
+                .selectAs(UserPO::getAvatarUrl, ActivityFullInfoDTO::getModifierAvatarUrl))
             .leftJoin(RepositoryPO.class, RepositoryPO::getId, ActivityPO::getRepositoryId)
             .eq(ActivityPO::getId, id);
 
@@ -288,7 +299,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
                         activityFullInfoDTO.getRepositoryName(),
                         activityFullInfoDTO.getTitle(),
                         activityFullInfoDTO.getDescription(),
-                        activityFullInfoDTO.getUsername(),
+                        activityFullInfoDTO.getCreatorUsername(),
                         activityFullInfoDTO.getAssignees(),
                         activityFullInfoDTO.getGmtClosed(),
                         issueCountMap.getOrDefault(activityFullInfoDTO.getId(), 0L),

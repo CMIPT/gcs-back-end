@@ -6,7 +6,8 @@ CREATE TABLE public.t_activity (
     title character varying(255) NOT NULL,
     description text default '' NOT NULL,
     is_pull_request boolean NOT NULL, -- false: issue, true: pull_request
-    user_id bigint NOT NULL,
+    creator_id bigint NOT NULL,
+    modifier_id bigint,
     gmt_created timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     gmt_updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     gmt_closed timestamp without time zone,
@@ -23,7 +24,8 @@ COMMENT ON COLUMN public.t_activity.parent_id IS 'ID of the parent activity. NUL
 COMMENT ON COLUMN public.t_activity.title IS 'Title of the activity.';
 COMMENT ON COLUMN public.t_activity.description IS 'Detailed description of the activity.';
 COMMENT ON COLUMN public.t_activity.is_pull_request IS 'Type of the activity. False: issue, True: pull_request.';
-COMMENT ON COLUMN public.t_activity.user_id IS 'ID of the user who created this issue or this pull_request.';
+COMMENT ON COLUMN public.t_activity.creator_id IS 'ID of the user who created this issue or this pull_request.';
+COMMENT ON COLUMN public.t_activity.modifier_id IS 'ID of the user who last modified this issue or this pull_request. NULL if not modified.';
 COMMENT ON COLUMN public.t_activity.gmt_created IS 'Timestamp when the activity was created.';
 COMMENT ON COLUMN public.t_activity.gmt_updated IS 'Timestamp when the activity was last updated.';
 COMMENT ON COLUMN public.t_activity.gmt_closed IS 'Timestamp when the activity was closed. NULL if still open.';

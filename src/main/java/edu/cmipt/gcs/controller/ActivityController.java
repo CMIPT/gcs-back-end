@@ -86,7 +86,7 @@ public class ActivityController {
       try {
         ActivityPO latestActivityPO = activityService.getLatestActivityByRepositoryId(repositoryId);
         int number = (latestActivityPO == null ? 1 : latestActivityPO.getNumber() + 1);
-        var activityPO = new ActivityPO(activity, number, idInToken.toString());
+        var activityPO = new ActivityPO(activity, number, idInToken);
         activityService.save(activityPO);
         return;
       } catch (DuplicateKeyException e) {
@@ -120,9 +120,9 @@ public class ActivityController {
     //    }
     //    String userId = JwtUtil.getId(accessToken);
     //    // only admin can delete activity
-    //    if (!userId.equals(activityPO.getUserId().toString())) {
+    //    if (!userId.equals(activityPO.getCreatorId().toString())) {
     //      logger.info("User[{}] tried to delete activity of user[{}]", userId,
-    // activityPO.getUserId());
+    // activityPO.getCreatorId());
     //      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
     //    }
     //    if (!activityService.removeById(id)) {
@@ -203,7 +203,7 @@ public class ActivityController {
       }
       checkSubIssueCreationValidity(activityPO.getRepositoryId(), parentId);
     }
-    if (!activityService.updateById(new ActivityPO(activity))) {
+    if (!activityService.updateById(new ActivityPO(activity,idInToken))) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, activityId);
     }
   }
@@ -405,7 +405,7 @@ public class ActivityController {
     Long commentId = TypeConversionUtil.convertToLong(comment.id(), true);
     permissionService.checkCommentOperationValidity(
             commentId, idInToken, OperationTypeEnum.MODIFY_COMMENT);
-    if (!commentService.updateById(new CommentPO(comment, idInToken))) {
+    if (!commentService.updateById(new CommentPO(comment, null,idInToken))) {
       throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, comment);
     }
   }

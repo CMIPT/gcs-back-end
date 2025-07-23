@@ -76,7 +76,7 @@ public class PermissionServiceImpl implements PermissionService {
             throw e;
           }
           // It's ACCESS_DENIED, handle specially based on operation type
-          if (operationTypeEnum == OperationTypeEnum.MODIFY_ACTIVITY && idInToken.equals(activityPO.getUserId())) {
+          if (operationTypeEnum == OperationTypeEnum.MODIFY_ACTIVITY && idInToken.equals(activityPO.getCreatorId())) {
               // Activity creator is allowed to modify activity, don't throw exception
               return;
           }
@@ -108,7 +108,7 @@ public class PermissionServiceImpl implements PermissionService {
     try {
       checkActivityOperationValidity(commentPO.getActivityId(), idInToken, operationTypeEnum);
             } catch (GenericException e) {
-        if (ErrorCodeEnum.ACCESS_DENIED.equals(e.getCode()) && idInToken.equals(commentPO.getUserId())) {
+        if (ErrorCodeEnum.ACCESS_DENIED.equals(e.getCode()) && idInToken.equals(commentPO.getCreatorId())) {
           // When ACCESS_DENIED exception occurs, if user is comment creator, allow to modify comment
           return;
         } 

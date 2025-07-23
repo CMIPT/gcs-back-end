@@ -166,15 +166,11 @@ public class ActivityControllerTest {
     String activityQueryDTO =
         """
         {
-            "user": "%s",
-            "userType":"%s",
             "repositoryId": "%s",
             "isPullRequest": false
         }
         """
             .formatted(
-                TestConstant.USERNAME,
-                UserQueryTypeEnum.USERNAME.name(),
                 TestConstant.REPOSITORY_ID);
     var result1 = activityPager.apply(TestConstant.ACCESS_TOKEN, activityQueryDTO);
     if (result1 != null) {
@@ -183,15 +179,11 @@ public class ActivityControllerTest {
     var otherActivityQueryDTO =
         """
         {
-            "user": "%s",
-            "userType":"%s",
             "repositoryId": "%s",
             "isPullRequest": false
         }
         """
             .formatted(
-                TestConstant.OTHER_USERNAME,
-                UserQueryTypeEnum.USERNAME.name(),
                 TestConstant.OTHER_REPOSITORY_ID);
     var result2 = activityPager.apply(TestConstant.OTHER_ACCESS_TOKEN, otherActivityQueryDTO);
     if (result2 != null) {
@@ -201,15 +193,11 @@ public class ActivityControllerTest {
     var otherPrivateActivityQueryDTO =
         """
         {
-            "user": "%s",
-            "userType":"%s",
             "repositoryId": "%s",
             "isPullRequest": false
         }
         """
             .formatted(
-                TestConstant.OTHER_USERNAME,
-                UserQueryTypeEnum.USERNAME.name(),
                 TestConstant.OTHER_PRIVATE_REPOSITORY_ID);
     var result3 =
         activityPager.apply(TestConstant.OTHER_ACCESS_TOKEN, otherPrivateActivityQueryDTO);
@@ -225,8 +213,6 @@ public class ActivityControllerTest {
             TestConstant.ACCESS_TOKEN,
             """
             {
-                "user": "%s",
-                "userType":"%s",
                 "repositoryId": "%s",
                 "author": "%s",
                 "isPullRequest": false,
@@ -235,8 +221,6 @@ public class ActivityControllerTest {
             }
             """
                 .formatted(
-                    TestConstant.USERNAME,
-                    UserQueryTypeEnum.USERNAME.name(),
                     TestConstant.REPOSITORY_ID,
                     TestConstant.USERNAME,
                     ActivityOrderByEnum.GMT_CREATED.name()));
@@ -256,8 +240,6 @@ public class ActivityControllerTest {
                 .content(
                     """
                     {
-                        "user": "%s",
-                        "userType":"%s",
                         "repositoryId": "%s",
                         "author": "%s",
                         "isPullRequest": false,
@@ -266,8 +248,6 @@ public class ActivityControllerTest {
                     }
                     """
                         .formatted(
-                            TestConstant.USERNAME,
-                            UserQueryTypeEnum.USERNAME.name(),
                             TestConstant.REPOSITORY_ID,
                             TestConstant.USERNAME,
                             ActivityOrderByEnum.GMT_CREATED.name())))
@@ -331,7 +311,8 @@ public class ActivityControllerTest {
             jsonPath("$.repositoryId").value(TestConstant.REPOSITORY_ID),
             jsonPath("$.title").isString(),
             jsonPath("$.description").isString(),
-            jsonPath("$.username").value(TestConstant.USERNAME),
+            jsonPath("$.creatorId").value(TestConstant.ID),
+            jsonPath("$.creatorUsername").value(TestConstant.USERNAME),
             jsonPath("$.labels").isArray(),
             jsonPath("$.assignees").isArray(),
             jsonPath("$.commentCnt").value(1),
@@ -348,7 +329,8 @@ public class ActivityControllerTest {
             jsonPath("$.repositoryId").value(TestConstant.REPOSITORY_ID),
             jsonPath("$.title").isString(),
             jsonPath("$.description").isString(),
-            jsonPath("$.username").value(TestConstant.USERNAME),
+            jsonPath("$.creatorId").value(TestConstant.ID),
+            jsonPath("$.creatorUsername").value(TestConstant.USERNAME),
             jsonPath("$.labels").isArray(),
             jsonPath("$.assignees").isArray(),
             jsonPath("$.commentCnt").value(1),
@@ -703,7 +685,7 @@ public class ActivityControllerTest {
     // get the comment id for testing delete own comment in other public repository activity
     var wrapper = new QueryWrapper<CommentPO>()
         .eq("activity_id", Long.valueOf(TestConstant.OTHER_REPOSITORY_ACTIVITY_ID))
-        .eq("user_id", Long.valueOf(TestConstant.ID))
+        .eq("creator_id", Long.valueOf(TestConstant.ID))
         .last("limit 1");
     CommentPO commentPO = commentService.getOne(wrapper);
     TestConstant.OTHER_COMMENT_ID = commentPO.getId().toString();
@@ -726,7 +708,7 @@ public class ActivityControllerTest {
                 jsonPath("$.records.length()").value(1),
                 jsonPath("$.records[0].id").isString(),
                 jsonPath("$.records[0].content").value(TestConstant.COMMENT_CONTENT),
-                jsonPath("$.records[0].userId").value(TestConstant.ID))
+                jsonPath("$.records[0].creatorId").value(TestConstant.ID))
             .andReturn()
             .getResponse()
             .getContentAsString();
@@ -947,7 +929,7 @@ public class ActivityControllerTest {
 //            jsonPath("$.records[0].number").isString(),
 //            jsonPath("$.records[0].title").isString(),
 //            jsonPath("$.records[0].description").isString(),
-//            jsonPath("$.records[0].username").value(TestConstant.USERNAME),
+//            jsonPath("$.records[0].creatorUsername").value(TestConstant.USERNAME),
 //            jsonPath("$.records[0].subIssueTotalCount").value(1),
 //            jsonPath("$.records[0].subIssueCompletedCount").value(0));
   }

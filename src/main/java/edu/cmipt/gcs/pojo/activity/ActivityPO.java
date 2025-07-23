@@ -1,11 +1,13 @@
 package edu.cmipt.gcs.pojo.activity;
 
+import java.sql.Timestamp;
+
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+
 import edu.cmipt.gcs.util.TypeConversionUtil;
-import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,7 +24,8 @@ public class ActivityPO {
   private String title;
   private String description;
   private Boolean isPullRequest;
-  private Long userId;
+  private Long creatorId;
+  private Long modifierId;
   private Timestamp gmtClosed;
   private Timestamp gmtLocked;
 
@@ -34,7 +37,7 @@ public class ActivityPO {
 
   @TableLogic private Timestamp gmtDeleted;
 
-  public ActivityPO(ActivityDTO activityDTO, Integer activityNumber, String userId) {
+  public ActivityPO(ActivityDTO activityDTO, Integer activityNumber, Long creatorId, Long modifierId) {
     this(
         TypeConversionUtil.convertToLong(activityDTO.id()),
         activityNumber,
@@ -43,7 +46,8 @@ public class ActivityPO {
         activityDTO.title(),
         activityDTO.description(),
         activityDTO.isPullRequest(),
-        TypeConversionUtil.convertToLong(userId),
+        creatorId,
+        modifierId,
         null,
         null,
         null,
@@ -51,7 +55,11 @@ public class ActivityPO {
         null);
   }
 
-  public ActivityPO(ActivityDTO activityDTO) {
-    this(activityDTO, null, null);
+  public ActivityPO(ActivityDTO activityDTO,Integer activityNumber, Long creatorId) {
+    this(activityDTO, activityNumber, creatorId, null);
+  }
+
+  public ActivityPO(ActivityDTO activityDTO, Long modifierId) {
+      this(activityDTO, null, null, modifierId);
   }
 }

@@ -17,11 +17,12 @@ import lombok.NoArgsConstructor;
 public class CommentPO {
   private Long id;
   private Long activityId;
-  private Long userId;
+  private Long creatorId;
   private String content;
   private String codePath;
   private Integer codeLine;
   private Long replyToId;
+  private Long modifierId;
   private Timestamp gmtResolved;
   private Timestamp gmtHidden;
 
@@ -33,19 +34,24 @@ public class CommentPO {
 
   @TableLogic private Timestamp gmtDeleted;
 
-  public CommentPO(CommentDTO comment, Long idInToken) {
+  public CommentPO(CommentDTO comment, Long creatorId, Long modifierId) {
     this(
         TypeConversionUtil.convertToLong(comment.id()),
         TypeConversionUtil.convertToLong(comment.activityId()),
-        idInToken,
+        creatorId,
         comment.content(),
         comment.codePath(),
         comment.codeLine(),
         TypeConversionUtil.convertToLong(comment.replyToId()),
+        modifierId,
         null,
         null,
         null,
         null,
         null);
   }
+
+    public CommentPO(CommentDTO comment, Long creatorId) {
+        this(comment, creatorId, null);
+    }
 }
