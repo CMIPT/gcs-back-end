@@ -1,11 +1,10 @@
 package edu.cmipt.gcs.pojo.activity;
 
-import java.sql.Timestamp;
-import java.util.List;
-
 import edu.cmipt.gcs.pojo.assign.AssigneeDTO;
 import edu.cmipt.gcs.pojo.label.LabelDTO;
 import edu.cmipt.gcs.pojo.user.UserPO;
+import java.sql.Timestamp;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

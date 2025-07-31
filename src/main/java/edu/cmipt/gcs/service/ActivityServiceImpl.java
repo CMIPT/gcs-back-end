@@ -1,24 +1,11 @@
 package edu.cmipt.gcs.service;
 
-import java.io.Serializable;
-import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yulichang.toolkit.JoinWrappers;
-
 import edu.cmipt.gcs.dao.ActivityMapper;
 import edu.cmipt.gcs.dao.CommentMapper;
 import edu.cmipt.gcs.pojo.activity.ActivityFullInfoDTO;
@@ -36,6 +23,16 @@ import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.util.RedisUtil;
 import edu.cmipt.gcs.util.TypeConversionUtil;
+import java.io.Serializable;
+import java.sql.Timestamp;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
@@ -129,8 +126,8 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
     if (activityQueryDTO.author() != null) {
       queryWrapper.eq(UserPO::getUsername, activityQueryDTO.author());
     }
-    if (activityQueryDTO.isClosed() != null){
-      if(activityQueryDTO.isClosed()) {
+    if (activityQueryDTO.isClosed() != null) {
+      if (activityQueryDTO.isClosed()) {
         queryWrapper.isNotNull(ActivityPO::getGmtClosed);
       } else {
         queryWrapper.isNull(ActivityPO::getGmtClosed);

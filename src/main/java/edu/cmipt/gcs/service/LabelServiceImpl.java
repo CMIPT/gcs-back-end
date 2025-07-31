@@ -62,7 +62,12 @@ public class LabelServiceImpl extends ServiceImpl<LabelMapper, LabelPO> implemen
   }
 
   @Override
-  public Page<LabelPO> pageLabelsByRepositoryId(Long repositoryId, Boolean isAsc, LabelOrderByEnum orderBy, Integer pageNum, Integer pageSize) {
+  public Page<LabelPO> pageLabelsByRepositoryId(
+      Long repositoryId,
+      Boolean isAsc,
+      LabelOrderByEnum orderBy,
+      Integer pageNum,
+      Integer pageSize) {
     Page<LabelPO> labelPage = new Page<>(pageNum, pageSize);
     var wrapper = new QueryWrapper<LabelPO>();
     wrapper.eq("repository_id", repositoryId);

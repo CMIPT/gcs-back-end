@@ -682,12 +682,12 @@ public class RepositoryControllerTest {
 
   @Test
   public void testCheckLabelNameValidityInvalid() throws Exception {
-      mvc.perform(
-              get(ApiPathConstant.REPOSITORY_CHECK_LABEL_NAME_VALIDITY_API_PATH)
-                  .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
-                  .param("repositoryId", TestConstant.REPOSITORY_ID)
-                  .param("labelName", TestConstant.LABEL_NAME))
-          .andExpect(status().isBadRequest());
+    mvc.perform(
+            get(ApiPathConstant.REPOSITORY_CHECK_LABEL_NAME_VALIDITY_API_PATH)
+                .header(HeaderParameter.ACCESS_TOKEN, TestConstant.ACCESS_TOKEN)
+                .param("repositoryId", TestConstant.REPOSITORY_ID)
+                .param("labelName", TestConstant.LABEL_NAME))
+        .andExpect(status().isBadRequest());
   }
 
   @Test

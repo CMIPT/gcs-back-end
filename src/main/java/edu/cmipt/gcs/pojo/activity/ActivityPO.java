@@ -1,13 +1,11 @@
 package edu.cmipt.gcs.pojo.activity;
 
-import java.sql.Timestamp;
-
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-
 import edu.cmipt.gcs.util.TypeConversionUtil;
+import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,7 +35,8 @@ public class ActivityPO {
 
   @TableLogic private Timestamp gmtDeleted;
 
-  public ActivityPO(ActivityDTO activityDTO, Integer activityNumber, Long creatorId, Long modifierId) {
+  public ActivityPO(
+      ActivityDTO activityDTO, Integer activityNumber, Long creatorId, Long modifierId) {
     this(
         TypeConversionUtil.convertToLong(activityDTO.id()),
         activityNumber,
@@ -55,11 +54,11 @@ public class ActivityPO {
         null);
   }
 
-  public ActivityPO(ActivityDTO activityDTO,Integer activityNumber, Long creatorId) {
+  public ActivityPO(ActivityDTO activityDTO, Integer activityNumber, Long creatorId) {
     this(activityDTO, activityNumber, creatorId, null);
   }
 
   public ActivityPO(ActivityDTO activityDTO, Long modifierId) {
-      this(activityDTO, null, null, modifierId);
+    this(activityDTO, null, null, modifierId);
   }
 }

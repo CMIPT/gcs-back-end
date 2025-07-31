@@ -19,7 +19,8 @@ public interface CommentService extends IService<CommentPO> {
 
   boolean updateResolvedState(Long commentId, Boolean isResolved);
 
-  Page<CommentFullInfoDTO> pageCommentFullInfoByActivityId(Integer page, Integer size, Long activityId);
+  Page<CommentFullInfoDTO> pageCommentFullInfoByActivityId(
+      Integer page, Integer size, Long activityId);
 
   Page<CommentFullInfoDTO> pageSubCommentFullInfoByReplyToId(
       Integer page, Integer size, Long replyToId);

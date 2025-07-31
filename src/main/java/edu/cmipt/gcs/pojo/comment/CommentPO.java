@@ -51,7 +51,7 @@ public class CommentPO {
         null);
   }
 
-    public CommentPO(CommentDTO comment, Long creatorId) {
-        this(comment, creatorId, null);
-    }
+  public CommentPO(CommentDTO comment, Long creatorId) {
+    this(comment, creatorId, null);
+  }
 }

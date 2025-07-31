@@ -70,7 +70,7 @@ public class ApiPathConstant {
       REPOSITORY_API_PREFIX + "/update-label";
   public static final String REPOSITORY_PAGE_LABEL_API_PATH = REPOSITORY_API_PREFIX + "/page-label";
   public static final String REPOSITORY_CHECK_LABEL_NAME_VALIDITY_API_PATH =
-        REPOSITORY_API_PREFIX + "/label-name";
+      REPOSITORY_API_PREFIX + "/label-name";
 
   public static final String SSH_KEY_API_PREFIX = ALL_API_PREFIX + "/ssh";
   public static final String SSH_KEY_UPLOAD_SSH_KEY_API_PATH = SSH_KEY_API_PREFIX + "/upload";
@@ -98,7 +98,9 @@ public class ApiPathConstant {
   public static final String ACTIVITY_CREATE_SUB_ISSUE_API_PATH =
       ACTIVITY_API_PREFIX + "/create-sub-issue";
   public static final String ACTIVITY_ADD_SUB_ISSUE_API_PATH =
-      ACTIVITY_API_PREFIX + "/add-sub-issue"; // change an already existing problem into a sub-problem of another problem
+      ACTIVITY_API_PREFIX
+          + "/add-sub-issue"; // change an already existing problem into a sub-problem of another
+                              // problem
   public static final String ACTIVITY_REMOVE_SUB_ISSUE_API_PATH =
       ACTIVITY_API_PREFIX + "/remove-sub-issue";
   public static final String ACTIVITY_CREATE_COMMENT_API_PATH =

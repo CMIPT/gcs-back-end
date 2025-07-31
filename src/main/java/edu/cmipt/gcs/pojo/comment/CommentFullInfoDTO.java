@@ -1,8 +1,7 @@
 package edu.cmipt.gcs.pojo.comment;
 
-import java.sql.Timestamp;
-
 import edu.cmipt.gcs.pojo.user.UserPO;
+import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,4 +24,4 @@ public class CommentFullInfoDTO {
   private Timestamp gmtCreated;
   private Timestamp gmtUpdated;
   private Timestamp gmtDeleted;
-} 
+}

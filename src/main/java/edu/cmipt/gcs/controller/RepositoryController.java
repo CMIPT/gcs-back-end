@@ -579,12 +579,10 @@ public class RepositoryController {
     permissionService.checkRepositoryOperationValidity(
         repositoryId, idInToken, OperationTypeEnum.MODIFY_REPOSITORY);
     String labelName = label.name();
-    checkLabelNameValidity(
-        labelName, repositoryId, accessToken);
+    checkLabelNameValidity(labelName, repositoryId, accessToken);
     if (!labelService.save(new LabelPO(idInToken, label))) {
       logger.error("Failed to create label in repository[{}]", repositoryId);
-      throw new GenericException(
-          ErrorCodeEnum.LABEL_CREATE_FAILED, labelName, repositoryId);
+      throw new GenericException(ErrorCodeEnum.LABEL_CREATE_FAILED, labelName, repositoryId);
     }
   }
 
@@ -611,7 +609,7 @@ public class RepositoryController {
     permissionService.checkRepositoryOperationValidity(
         labelPO.getRepositoryId(), idInToken, OperationTypeEnum.MODIFY_REPOSITORY);
     // if the label name is changed after ignoring the case, check the validity of the new name
-    if(label.name() != null && !label.name().equalsIgnoreCase(labelPO.getName())) {
+    if (label.name() != null && !label.name().equalsIgnoreCase(labelPO.getName())) {
       checkLabelNameValidity(label.name(), labelPO.getRepositoryId(), accessToken);
     }
     if (!labelService.updateById(new LabelPO(idInToken, label))) {
@@ -671,34 +669,32 @@ public class RepositoryController {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkRepositoryOperationValidity(
         repositoryId, idInToken, OperationTypeEnum.READ);
-    var iPage = labelService.pageLabelsByRepositoryId(repositoryId,isAsc,orderBy,page,size);
+    var iPage = labelService.pageLabelsByRepositoryId(repositoryId, isAsc, orderBy, page, size);
     return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(LabelVO::new).toList());
   }
 
   @GetMapping(ApiPathConstant.REPOSITORY_CHECK_LABEL_NAME_VALIDITY_API_PATH)
   @Operation(
-          summary = "Check label name validity",
-          description = "Check if the label name is valid",
-          tags = {"Repository", "Get Method"})
+      summary = "Check label name validity",
+      description = "Check if the label name is valid",
+      tags = {"Repository", "Get Method"})
   @ApiResponses({
-          @ApiResponse(responseCode = "200", description = "Success"),
-          @ApiResponse(
-                  responseCode = "400",
-                  description = "Label name is invalid",
-                  content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Label name is invalid",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
   })
   public void checkLabelNameValidity(
-          @RequestParam("labelName")
+      @RequestParam("labelName")
           @Size(
-                  min = ValidationConstant.MIN_LABEL_NAME_LENGTH,
-                  max = ValidationConstant.MAX_LABEL_NAME_LENGTH,
-                  message = "{Size.repositoryController#checkLabelNameValidity.labelName}")
-          @NotBlank(
-                  message =
-                          "{NotBlank.repositoryController#LabelNameValidity.labelName}")
+              min = ValidationConstant.MIN_LABEL_NAME_LENGTH,
+              max = ValidationConstant.MAX_LABEL_NAME_LENGTH,
+              message = "{Size.repositoryController#checkLabelNameValidity.labelName}")
+          @NotBlank(message = "{NotBlank.repositoryController#LabelNameValidity.labelName}")
           String labelName,
-          @RequestParam("repositoryId") Long repositoryId,
-          @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+      @RequestParam("repositoryId") Long repositoryId,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkRepositoryOperationValidity(
         repositoryId, idInToken, OperationTypeEnum.READ);

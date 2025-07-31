@@ -146,7 +146,8 @@ public class ActivityController {
       @RequestParam("isLocked") Boolean isLocked,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
-    permissionService.checkActivityOperationValidity(id, idInToken, OperationTypeEnum.MODIFY_ACTIVITY);
+    permissionService.checkActivityOperationValidity(
+        id, idInToken, OperationTypeEnum.MODIFY_ACTIVITY);
     if (!activityService.updateLockedState(id, isLocked)) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, id);
     }
@@ -168,7 +169,8 @@ public class ActivityController {
       @RequestParam("isClosed") Boolean isClosed,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
-    permissionService.checkActivityOperationValidity(id, idInToken, OperationTypeEnum.MODIFY_ACTIVITY);
+    permissionService.checkActivityOperationValidity(
+        id, idInToken, OperationTypeEnum.MODIFY_ACTIVITY);
     if (!activityService.updateClosedState(id, isClosed)) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, id);
     }
@@ -203,7 +205,7 @@ public class ActivityController {
       }
       checkSubIssueCreationValidity(activityPO.getRepositoryId(), parentId);
     }
-    if (!activityService.updateById(new ActivityPO(activity,idInToken))) {
+    if (!activityService.updateById(new ActivityPO(activity, idInToken))) {
       throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, activityId);
     }
   }
@@ -257,10 +259,10 @@ public class ActivityController {
       throws InterruptedException {
     // do not support issue module now
     throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
-//    if (activity.isPullRequest() || activity.parentId() == null) {
-//      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
-//    }
-//    createActivity(activity, accessToken);
+    //    if (activity.isPullRequest() || activity.parentId() == null) {
+    //      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
+    //    }
+    //    createActivity(activity, accessToken);
   }
 
   @PostMapping(ApiPathConstant.ACTIVITY_ADD_SUB_ISSUE_API_PATH)
@@ -280,8 +282,8 @@ public class ActivityController {
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     // do not support issue module now
     throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
-//    ActivityDTO activity = new ActivityDTO(subIssueId, parentId);
-//    updateActivityContent(activity, accessToken);
+    //    ActivityDTO activity = new ActivityDTO(subIssueId, parentId);
+    //    updateActivityContent(activity, accessToken);
   }
 
   @DeleteMapping(ApiPathConstant.ACTIVITY_REMOVE_SUB_ISSUE_API_PATH)
@@ -300,16 +302,16 @@ public class ActivityController {
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     // do not support issue module now
     throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
-//    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
-//    permissionService.checkActivityOperationValidity(
-//        subIssueId, idInToken, OperationTypeEnum.MODIFY_ACTIVITY);
-//    var activityPO = activityService.getById(subIssueId);
-//    if (activityPO.getIsPullRequest()) {
-//      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
-//    }
-//    if (!activityService.removeSubIssueById(subIssueId)) {
-//      throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, subIssueId);
-//    }
+    //    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+    //    permissionService.checkActivityOperationValidity(
+    //        subIssueId, idInToken, OperationTypeEnum.MODIFY_ACTIVITY);
+    //    var activityPO = activityService.getById(subIssueId);
+    //    if (activityPO.getIsPullRequest()) {
+    //      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
+    //    }
+    //    if (!activityService.removeSubIssueById(subIssueId)) {
+    //      throw new GenericException(ErrorCodeEnum.ACTIVITY_UPDATE_FAILED, subIssueId);
+    //    }
   }
 
   @GetMapping(ApiPathConstant.ACTIVITY_PAGE_SUB_ISSUE_API_PATH)
@@ -332,17 +334,19 @@ public class ActivityController {
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     // do not support issue module now
     throw new GenericException(ErrorCodeEnum.OPERATION_NOT_IMPLEMENTED);
-//    if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
-//      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
-//    }
-//    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
-//    permissionService.checkActivityOperationValidity(parentId, idInToken, OperationTypeEnum.READ);
-//    var activityPO = activityService.getById(parentId);
-//    if (activityPO.getIsPullRequest()) {
-//      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
-//    }
-//    var iPage = activityService.pageSubIssueByParentId(parentId, page, size);
-//    return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(IssueVO::new).toList());
+    //    if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
+    //      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+    //    }
+    //    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+    //    permissionService.checkActivityOperationValidity(parentId, idInToken,
+    // OperationTypeEnum.READ);
+    //    var activityPO = activityService.getById(parentId);
+    //    if (activityPO.getIsPullRequest()) {
+    //      throw new GenericException(ErrorCodeEnum.WRONG_ISSUE_INFORMATION);
+    //    }
+    //    var iPage = activityService.pageSubIssueByParentId(parentId, page, size);
+    //    return new PageVO<>(iPage.getTotal(),
+    // iPage.getRecords().stream().map(IssueVO::new).toList());
   }
 
   @GetMapping(ApiPathConstant.ACTIVITY_GET_ACTIVITY_API_PATH)
@@ -404,8 +408,8 @@ public class ActivityController {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     Long commentId = TypeConversionUtil.convertToLong(comment.id(), true);
     permissionService.checkCommentOperationValidity(
-            commentId, idInToken, OperationTypeEnum.MODIFY_COMMENT);
-    if (!commentService.updateById(new CommentPO(comment, null,idInToken))) {
+        commentId, idInToken, OperationTypeEnum.MODIFY_COMMENT);
+    if (!commentService.updateById(new CommentPO(comment, null, idInToken))) {
       throw new GenericException(ErrorCodeEnum.COMMENT_UPDATE_FAILED, comment);
     }
   }
@@ -506,10 +510,11 @@ public class ActivityController {
       }
       var activityPO = activityService.getById(activityId);
       // 只有pr部分的code review的评论可以回复
-      if (!activityPO.getIsPullRequest()|| comment.codeLine() == null|| comment.codePath() == null) {
+      if (!activityPO.getIsPullRequest()
+          || comment.codeLine() == null
+          || comment.codePath() == null) {
         throw new GenericException(ErrorCodeEnum.COMMENT_CREATE_FAILED, comment);
       }
-
     }
     if (!commentService.save(new CommentPO(comment, idInToken))) {
       throw new GenericException(ErrorCodeEnum.COMMENT_CREATE_FAILED, comment);
@@ -538,8 +543,10 @@ public class ActivityController {
     }
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
-    Page<CommentFullInfoDTO> iPage = commentService.pageCommentFullInfoByActivityId(page, size, activityId);
-    return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(CommentFullInfoVO::new).toList());
+    Page<CommentFullInfoDTO> iPage =
+        commentService.pageCommentFullInfoByActivityId(page, size, activityId);
+    return new PageVO<>(
+        iPage.getTotal(), iPage.getRecords().stream().map(CommentFullInfoVO::new).toList());
   }
 
   @GetMapping(ApiPathConstant.ACTIVITY_PAGE_SUB_COMMENT_API_PATH)
@@ -566,7 +573,8 @@ public class ActivityController {
     permissionService.checkActivityOperationValidity(activityId, idInToken, OperationTypeEnum.READ);
     Page<CommentFullInfoDTO> iPage =
         commentService.pageSubCommentFullInfoByReplyToId(page, size, replyToId);
-    return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(CommentFullInfoVO::new).toList());
+    return new PageVO<>(
+        iPage.getTotal(), iPage.getRecords().stream().map(CommentFullInfoVO::new).toList());
   }
 
   @PostMapping(ApiPathConstant.ACTIVITY_ADD_LABEL_API_PATH)
@@ -597,8 +605,9 @@ public class ActivityController {
     if (LabelPO == null || !repositoryId.equals(LabelPO.getRepositoryId())) {
       throw new GenericException(ErrorCodeEnum.LABEL_NOT_FOUND, labelId);
     }
-    try{
-      if(!activityAssignLabelService.save(new ActivityAssignLabelPO(idInToken, activityId, labelId))) {
+    try {
+      if (!activityAssignLabelService.save(
+          new ActivityAssignLabelPO(idInToken, activityId, labelId))) {
         throw new GenericException(ErrorCodeEnum.ACTIVITY_ADD_LABEL_FAILED, activityId, labelId);
       }
     } catch (DuplicateKeyException e) {
@@ -685,11 +694,14 @@ public class ActivityController {
       throw new GenericException(ErrorCodeEnum.USER_NOT_FOUND, assigneeId);
     }
     try {
-      if(!activityDesignateAssigneeService.save(new ActivityDesignateAssigneePO(idInToken, activityId, assigneeId))) {
-        throw new GenericException(ErrorCodeEnum.ACTIVITY_ADD_ASSIGNEE_FAILED, activityId, assigneeId);
+      if (!activityDesignateAssigneeService.save(
+          new ActivityDesignateAssigneePO(idInToken, activityId, assigneeId))) {
+        throw new GenericException(
+            ErrorCodeEnum.ACTIVITY_ADD_ASSIGNEE_FAILED, activityId, assigneeId);
       }
     } catch (DuplicateKeyException e) {
-      throw new GenericException(ErrorCodeEnum.ACTIVITY_ASSIGNEE_ALREADY_EXISTS, activityId, assigneeId);
+      throw new GenericException(
+          ErrorCodeEnum.ACTIVITY_ASSIGNEE_ALREADY_EXISTS, activityId, assigneeId);
     }
   }
 
@@ -759,16 +771,16 @@ public class ActivityController {
       summary = "Check if the operation on an activity is valid",
       description = "Check if the operation on an activity is valid",
       tags = {"Activity", "Get Method"})
-    @ApiResponses({
+  @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Success"),
     @ApiResponse(
         description = "Access denied",
         content = @Content(schema = @Schema(implementation = ErrorVO.class)))
-    })
+  })
   public void checkActivityOperationValidity(
-          @RequestParam Long id,
-          @RequestParam OperationTypeEnum operationType,
-          @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+      @RequestParam Long id,
+      @RequestParam OperationTypeEnum operationType,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
     Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     permissionService.checkActivityOperationValidity(id, idInToken, operationType);
   }
@@ -802,8 +814,8 @@ public class ActivityController {
     var subIssueRepositoryPO = repositoryService.getById(subIssueRepositoryId);
     var parentRepositoryPO = repositoryService.getById(parentActivityPO.getRepositoryId());
     if (subIssueRepositoryPO == null
-            || parentRepositoryPO == null
-            || !parentRepositoryPO.getUserId().equals(subIssueRepositoryPO.getUserId())) {
+        || parentRepositoryPO == null
+        || !parentRepositoryPO.getUserId().equals(subIssueRepositoryPO.getUserId())) {
       throw new GenericException(ErrorCodeEnum.SUB_ISSUE_CREATE_FAILED, subIssueRepositoryId);
     }
   }

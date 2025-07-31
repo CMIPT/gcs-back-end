@@ -32,8 +32,12 @@ public record ActivityFullInfoVO(
         activityDetailDTO.getTitle(),
         activityDetailDTO.getDescription(),
         activityDetailDTO.getLabels().stream().map(LabelVO::new).toList(),
-        Optional.ofNullable(activityDetailDTO.getCreator()).map(UserVO::new).orElse(null),  // 使用 Optional
-        Optional.ofNullable(activityDetailDTO.getModifier()).map(UserVO::new).orElse(null),   // 使用 Optional
+        Optional.ofNullable(activityDetailDTO.getCreator())
+            .map(UserVO::new)
+            .orElse(null), // 使用 Optional
+        Optional.ofNullable(activityDetailDTO.getModifier())
+            .map(UserVO::new)
+            .orElse(null), // 使用 Optional
         activityDetailDTO.getAssignees().stream().map(AssigneeVO::new).toList(),
         activityDetailDTO.getCommentCnt().toString(),
         String.valueOf(activityDetailDTO.getGmtCreated()),

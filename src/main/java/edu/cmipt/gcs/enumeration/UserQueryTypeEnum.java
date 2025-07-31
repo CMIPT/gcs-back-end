@@ -1,6 +1,5 @@
 package edu.cmipt.gcs.enumeration;
 
-import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.service.UserService;
 import edu.cmipt.gcs.util.JwtUtil;
@@ -15,7 +14,7 @@ public enum UserQueryTypeEnum {
   public UserPO getOne(UserService service, String user) {
     switch (this) {
       case ID:
-          return service.getById(TypeConversionUtil.convertToLong(user, true));
+        return service.getById(TypeConversionUtil.convertToLong(user, true));
       case TOKEN:
         Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(user), true);
         return service.getById(idInToken);

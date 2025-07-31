@@ -6,17 +6,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 public record IssueVO(
-        @Schema(description = "id") String id,
-        @Schema(description = "Activity Number") String number,
-        @Schema(description = "Repository Id") String repositoryId,
-        @Schema(description = "Repository Name") String repositoryName,
-        @Schema(description = "Activity Title") String title,
-        @Schema(description = "Activity Description") String description,
-        @Schema(description = "Creator Info")UserVO creator,
-        @Schema(description = "Activity Assignees") List<AssigneeVO> assignees,
-        @Schema(description = "Closed timestamp, seconds since epoch") String gmtClosed,
-        @Schema(description = "Sub Issue Total Count") String subIssueTotalCount,
-        @Schema(description = "Sub Issue Completed Count") String subIssueCompletedCount) {
+    @Schema(description = "id") String id,
+    @Schema(description = "Activity Number") String number,
+    @Schema(description = "Repository Id") String repositoryId,
+    @Schema(description = "Repository Name") String repositoryName,
+    @Schema(description = "Activity Title") String title,
+    @Schema(description = "Activity Description") String description,
+    @Schema(description = "Creator Info") UserVO creator,
+    @Schema(description = "Activity Assignees") List<AssigneeVO> assignees,
+    @Schema(description = "Closed timestamp, seconds since epoch") String gmtClosed,
+    @Schema(description = "Sub Issue Total Count") String subIssueTotalCount,
+    @Schema(description = "Sub Issue Completed Count") String subIssueCompletedCount) {
   public IssueVO(IssueDTO issueDTO) {
     this(
         issueDTO.getId().toString(),

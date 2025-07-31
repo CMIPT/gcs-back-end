@@ -114,7 +114,7 @@ public class CacheAspect {
       String id;
       if (joinPoint.getSignature().getName().equals("removeById")) {
         id = joinPoint.getArgs()[0].toString();
-      } else{
+      } else {
         var po = joinPoint.getArgs()[0];
         id = po.getClass().getMethod("getId").invoke(po).toString();
       }
@@ -134,15 +134,15 @@ public class CacheAspect {
   }
 
   @AfterReturning(
-          pointcut = "execution(* edu.cmipt.gcs.service.ActivityServiceImpl.updateLockedState(..)) || " +
-          "execution(* edu.cmipt.gcs.service.ActivityServiceImpl.updateClosedState(..)) || " +
-          "execution(* edu.cmipt.gcs.service.CommentServiceImpl.updateHiddenState(..)) || " +
-          "execution(* edu.cmipt.gcs.service.CommentServiceImpl.updateResolvedState(..))",
-          returning = "result")
-  public void updateOneStateAdvice(JoinPoint joinPoint, Object result){
-    if((boolean) result)
-    {
-      String id =joinPoint.getArgs()[0].toString();
+      pointcut =
+          "execution(* edu.cmipt.gcs.service.ActivityServiceImpl.updateLockedState(..)) || "
+              + "execution(* edu.cmipt.gcs.service.ActivityServiceImpl.updateClosedState(..)) || "
+              + "execution(* edu.cmipt.gcs.service.CommentServiceImpl.updateHiddenState(..)) || "
+              + "execution(* edu.cmipt.gcs.service.CommentServiceImpl.updateResolvedState(..))",
+      returning = "result")
+  public void updateOneStateAdvice(JoinPoint joinPoint, Object result) {
+    if ((boolean) result) {
+      String id = joinPoint.getArgs()[0].toString();
       String cacheKey = RedisUtil.generateKey(joinPoint.getTarget(), id);
       redisTemplate.delete(cacheKey);
       logger.debug("Cache deleted, key: {}", cacheKey);
