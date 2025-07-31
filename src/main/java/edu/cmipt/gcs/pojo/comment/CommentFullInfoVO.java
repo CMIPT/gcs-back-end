@@ -1,15 +1,16 @@
 package edu.cmipt.gcs.pojo.comment;
 
+import edu.cmipt.gcs.pojo.user.UserVO;
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.util.Optional;
 
 @Schema(description = "Comment Full Info Value Object")
 public record CommentFullInfoVO(
     @Schema(description = "Comment ID") String id,
     @Schema(description = "Activity ID") String activityId,
-    @Schema(description = "Creator ID") String creatorId,
-    @Schema(description = "Creator Username") String creatorUsername,
-    @Schema(description = "Modifier ID") String modifierId,
-    @Schema(description = "Modifier Username") String modifierUsername,
+    @Schema(description = "Creator Info") UserVO creator,
+    @Schema(description = "Modifier Info") UserVO modifier,
     @Schema(description = "The content of comment") String content,
     @Schema(description = "Name of the file where the comment is made. NULL if not applicable") String codePath,
     @Schema(description = "Selected line from code") Integer codeLine,
@@ -23,10 +24,8 @@ public record CommentFullInfoVO(
     this(
         commentFullInfoDTO.getId().toString(),
         commentFullInfoDTO.getActivityId().toString(),
-        commentFullInfoDTO.getCreatorId().toString(),
-        commentFullInfoDTO.getCreatorUsername(),
-        String.valueOf(commentFullInfoDTO.getModifierId()),
-        commentFullInfoDTO.getModifierUsername(),
+        Optional.ofNullable(commentFullInfoDTO.getCreator()).map(UserVO::new).orElse(null),  // 使用 Optional
+        Optional.ofNullable(commentFullInfoDTO.getModifier()).map(UserVO::new).orElse(null),   // 使用 Optional
         commentFullInfoDTO.getContent(),
         commentFullInfoDTO.getCodePath(),
         commentFullInfoDTO.getCodeLine(),

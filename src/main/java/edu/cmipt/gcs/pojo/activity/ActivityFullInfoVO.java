@@ -2,8 +2,10 @@ package edu.cmipt.gcs.pojo.activity;
 
 import edu.cmipt.gcs.pojo.assign.AssigneeVO;
 import edu.cmipt.gcs.pojo.label.LabelVO;
+import edu.cmipt.gcs.pojo.user.UserVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
+import java.util.Optional;
 
 public record ActivityFullInfoVO(
     @Schema(description = "id") String id,
@@ -13,10 +15,8 @@ public record ActivityFullInfoVO(
     @Schema(description = "Activity Title") String title,
     @Schema(description = "Activity Description") String description,
     @Schema(description = "Activity Labels") List<LabelVO> labels,
-    @Schema(description = "Creator Id") String creatorId,
-    @Schema(description = "Creator Username") String creatorUsername,
-    @Schema(description = "Modifier Id") String modifierId,
-    @Schema(description = "Modifier Username") String modifierUsername,
+    @Schema(description = "Creator Info") UserVO creator,
+    @Schema(description = "Modifier Info") UserVO modifier,
     @Schema(description = "Activity Assignees") List<AssigneeVO> assignees,
     @Schema(description = "The count of comment") String commentCnt,
     @Schema(description = "Created timestamp, seconds since epoch") String gmtCreated,
@@ -32,10 +32,8 @@ public record ActivityFullInfoVO(
         activityDetailDTO.getTitle(),
         activityDetailDTO.getDescription(),
         activityDetailDTO.getLabels().stream().map(LabelVO::new).toList(),
-        activityDetailDTO.getCreatorId().toString(),
-        activityDetailDTO.getCreatorUsername(),
-        String.valueOf(activityDetailDTO.getModifierId()),
-        activityDetailDTO.getModifierUsername(),
+        Optional.ofNullable(activityDetailDTO.getCreator()).map(UserVO::new).orElse(null),  // 使用 Optional
+        Optional.ofNullable(activityDetailDTO.getModifier()).map(UserVO::new).orElse(null),   // 使用 Optional
         activityDetailDTO.getAssignees().stream().map(AssigneeVO::new).toList(),
         activityDetailDTO.getCommentCnt().toString(),
         String.valueOf(activityDetailDTO.getGmtCreated()),

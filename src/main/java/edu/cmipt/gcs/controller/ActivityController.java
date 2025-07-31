@@ -504,6 +504,12 @@ public class ActivityController {
       if (parentCommentPO == null || !activityId.equals(parentCommentPO.getActivityId())) {
         throw new GenericException(ErrorCodeEnum.COMMENT_NOT_FOUND, parentId);
       }
+      var activityPO = activityService.getById(activityId);
+      // 只有pr部分的code review的评论可以回复
+      if (!activityPO.getIsPullRequest()|| comment.codeLine() == null|| comment.codePath() == null) {
+        throw new GenericException(ErrorCodeEnum.COMMENT_CREATE_FAILED, comment);
+      }
+
     }
     if (!commentService.save(new CommentPO(comment, idInToken))) {
       throw new GenericException(ErrorCodeEnum.COMMENT_CREATE_FAILED, comment);

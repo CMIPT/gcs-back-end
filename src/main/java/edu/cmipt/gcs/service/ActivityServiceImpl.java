@@ -92,8 +92,10 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
             .selectAsClass(ActivityPO.class, ActivityFullInfoDTO.class)
             .selectAs(RepositoryPO::getId, ActivityFullInfoDTO::getRepositoryId)
             .selectAs(RepositoryPO::getRepositoryName, ActivityFullInfoDTO::getRepositoryName)
-            .selectAs(UserPO::getUsername, ActivityFullInfoDTO::getCreatorUsername)
+            .selectAssociation("t1", UserPO.class, ActivityFullInfoDTO::getCreator)
+            .selectAssociation("t2", UserPO.class, ActivityFullInfoDTO::getModifier)
             .leftJoin(UserPO.class, UserPO::getId, ActivityPO::getCreatorId)
+            .leftJoin(UserPO.class, UserPO::getId, ActivityPO::getModifierId)
             .leftJoin(RepositoryPO.class, RepositoryPO::getId, ActivityPO::getRepositoryId)
             .eq(ActivityPO::getIsPullRequest, activityQueryDTO.isPullRequest());
     // issue的sub-issues可以来自不同仓库
@@ -187,14 +189,10 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
             .selectAsClass(ActivityPO.class, ActivityFullInfoDTO.class)
             .selectAs(RepositoryPO::getId, ActivityFullInfoDTO::getRepositoryId)
             .selectAs(RepositoryPO::getRepositoryName, ActivityFullInfoDTO::getRepositoryName)
-            .selectAs(UserPO::getUsername, ActivityFullInfoDTO::getCreatorUsername)
-            .leftJoin(UserPO.class, UserPO::getId, ActivityPO::getCreatorId, ext -> ext
-                .selectAs(UserPO::getUsername, ActivityFullInfoDTO::getCreatorUsername))
-            .leftJoin(UserPO.class, UserPO::getId, ActivityPO::getModifierId, ext -> ext
-                .selectAs(UserPO::getId, ActivityFullInfoDTO::getModifierId)
-                .selectAs(UserPO::getUsername, ActivityFullInfoDTO::getModifierUsername)
-                .selectAs(UserPO::getEmail, ActivityFullInfoDTO::getModifierEmail)
-                .selectAs(UserPO::getAvatarUrl, ActivityFullInfoDTO::getModifierAvatarUrl))
+            .selectAssociation("t1", UserPO.class, ActivityFullInfoDTO::getCreator)
+            .selectAssociation("t2", UserPO.class, ActivityFullInfoDTO::getModifier)
+            .leftJoin(UserPO.class, UserPO::getId, ActivityPO::getCreatorId)
+            .leftJoin(UserPO.class, UserPO::getId, ActivityPO::getModifierId)
             .leftJoin(RepositoryPO.class, RepositoryPO::getId, ActivityPO::getRepositoryId)
             .eq(ActivityPO::getId, id);
 
@@ -299,7 +297,7 @@ public class ActivityServiceImpl extends ServiceImpl<ActivityMapper, ActivityPO>
                         activityFullInfoDTO.getRepositoryName(),
                         activityFullInfoDTO.getTitle(),
                         activityFullInfoDTO.getDescription(),
-                        activityFullInfoDTO.getCreatorUsername(),
+                        activityFullInfoDTO.getCreator(),
                         activityFullInfoDTO.getAssignees(),
                         activityFullInfoDTO.getGmtClosed(),
                         issueCountMap.getOrDefault(activityFullInfoDTO.getId(), 0L),

@@ -5,6 +5,7 @@ import java.util.List;
 
 import edu.cmipt.gcs.pojo.assign.AssigneeDTO;
 import edu.cmipt.gcs.pojo.label.LabelDTO;
+import edu.cmipt.gcs.pojo.user.UserPO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,12 +20,8 @@ public class ActivityFullInfoDTO {
   private String repositoryName;
   private String title;
   private String description;
-  private Long creatorId;
-  private String creatorUsername;
-  private Long modifierId;
-  private String modifierUsername;
-  private String modifierEmail;
-  private String modifierAvatarUrl;
+  private UserPO creator;
+  private UserPO modifier;
   private List<LabelDTO> labels;
   private List<AssigneeDTO> assignees;
   private Long commentCnt;

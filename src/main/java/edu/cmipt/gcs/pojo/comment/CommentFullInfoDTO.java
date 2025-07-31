@@ -2,6 +2,7 @@ package edu.cmipt.gcs.pojo.comment;
 
 import java.sql.Timestamp;
 
+import edu.cmipt.gcs.pojo.user.UserPO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,9 +14,8 @@ public class CommentFullInfoDTO {
   private Long id;
   private Long activityId;
   private Long creatorId;
-  private String creatorUsername;
-  private Long modifierId;
-  private String modifierUsername;
+  private UserPO creator;
+  private UserPO modifier;
   private String content;
   private String codePath;
   private Integer codeLine;

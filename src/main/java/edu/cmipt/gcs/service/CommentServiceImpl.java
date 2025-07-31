@@ -122,11 +122,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, CommentPO>
    public Page<CommentFullInfoDTO> pageCommentFullInfoByActivityId(Integer page, Integer size, Long activityId) {
     var wrapper = JoinWrappers.lambda(CommentPO.class)
         .selectAsClass(CommentPO.class, CommentFullInfoDTO.class)
-        .leftJoin(UserPO.class, UserPO::getId, CommentPO::getCreatorId,ext -> ext
-        .selectAs(UserPO::getUsername, CommentFullInfoDTO::getCreatorUsername))
-        .leftJoin(UserPO.class, UserPO::getId, CommentPO::getModifierId, ext -> ext
-        .selectAs(UserPO::getId, CommentFullInfoDTO::getModifierId)
-        .selectAs(UserPO::getUsername, CommentFullInfoDTO::getModifierUsername))
+        .selectAssociation("t1",UserPO.class,CommentFullInfoDTO::getCreator)
+        .selectAssociation("t2",UserPO.class,CommentFullInfoDTO::getModifier)
+        .leftJoin(UserPO.class, UserPO::getId, CommentPO::getCreatorId)
+        .leftJoin(UserPO.class, UserPO::getId, CommentPO::getModifierId)
         .eq(CommentPO::getActivityId, activityId)
         .isNull(CommentPO::getReplyToId) // 默认查询根评论,子评论通过另外的 API查询
         .orderBy(true, true, CommentPO::getGmtCreated);
@@ -139,11 +138,10 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, CommentPO>
       Integer page, Integer size, Long replyToId) {
     var wrapper = JoinWrappers.lambda(CommentPO.class)
         .selectAsClass(CommentPO.class, CommentFullInfoDTO.class)
-        .leftJoin(UserPO.class, UserPO::getId, CommentPO::getCreatorId,ext -> ext
-                .selectAs(UserPO::getUsername, CommentFullInfoDTO::getCreatorUsername))
-        .leftJoin(UserPO.class, UserPO::getId, CommentPO::getModifierId, ext -> ext
-                .selectAs(UserPO::getId, CommentFullInfoDTO::getModifierId)
-                .selectAs(UserPO::getUsername, CommentFullInfoDTO::getModifierUsername))
+        .selectAssociation("t1", UserPO.class, CommentFullInfoDTO::getCreator)
+        .selectAssociation("t2", UserPO.class, CommentFullInfoDTO::getModifier)
+        .leftJoin(UserPO.class, UserPO::getId, CommentPO::getCreatorId)
+        .leftJoin(UserPO.class, UserPO::getId, CommentPO::getModifierId)
         .eq(CommentPO::getReplyToId, replyToId)
         .orderBy(true, true, CommentPO::getGmtCreated);
     return commentMapper.selectJoinPage(new Page<>(page, size), CommentFullInfoDTO.class, wrapper);

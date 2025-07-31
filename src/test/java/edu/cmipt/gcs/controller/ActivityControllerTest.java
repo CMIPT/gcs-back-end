@@ -311,8 +311,8 @@ public class ActivityControllerTest {
             jsonPath("$.repositoryId").value(TestConstant.REPOSITORY_ID),
             jsonPath("$.title").isString(),
             jsonPath("$.description").isString(),
-            jsonPath("$.creatorId").value(TestConstant.ID),
-            jsonPath("$.creatorUsername").value(TestConstant.USERNAME),
+            jsonPath("$.creator.id").value(TestConstant.ID),
+            jsonPath("$.creator.username").value(TestConstant.USERNAME),
             jsonPath("$.labels").isArray(),
             jsonPath("$.assignees").isArray(),
             jsonPath("$.commentCnt").value(1),
@@ -329,8 +329,8 @@ public class ActivityControllerTest {
             jsonPath("$.repositoryId").value(TestConstant.REPOSITORY_ID),
             jsonPath("$.title").isString(),
             jsonPath("$.description").isString(),
-            jsonPath("$.creatorId").value(TestConstant.ID),
-            jsonPath("$.creatorUsername").value(TestConstant.USERNAME),
+            jsonPath("$.creator.id").value(TestConstant.ID),
+            jsonPath("$.creator.username").value(TestConstant.USERNAME),
             jsonPath("$.labels").isArray(),
             jsonPath("$.assignees").isArray(),
             jsonPath("$.commentCnt").value(1),
@@ -708,7 +708,7 @@ public class ActivityControllerTest {
                 jsonPath("$.records.length()").value(1),
                 jsonPath("$.records[0].id").isString(),
                 jsonPath("$.records[0].content").value(TestConstant.COMMENT_CONTENT),
-                jsonPath("$.records[0].creatorId").value(TestConstant.ID))
+                jsonPath("$.records[0].creator.id").value(TestConstant.ID))
             .andReturn()
             .getResponse()
             .getContentAsString();
@@ -929,7 +929,7 @@ public class ActivityControllerTest {
 //            jsonPath("$.records[0].number").isString(),
 //            jsonPath("$.records[0].title").isString(),
 //            jsonPath("$.records[0].description").isString(),
-//            jsonPath("$.records[0].creatorUsername").value(TestConstant.USERNAME),
+//            jsonPath("$.records[0].creator.username").value(TestConstant.USERNAME),
 //            jsonPath("$.records[0].subIssueTotalCount").value(1),
 //            jsonPath("$.records[0].subIssueCompletedCount").value(0));
   }
