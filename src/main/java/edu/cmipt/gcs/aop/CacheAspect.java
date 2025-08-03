@@ -3,6 +3,7 @@ package edu.cmipt.gcs.aop;
 import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.util.RedisUtil;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -105,11 +106,11 @@ public class CacheAspect {
 
   @AfterReturning(
       pointcut =
-          "execution(* edu.cmipt.gcs.service.*ServiceImpl.updateById(..)) || "
-              + "execution(* edu.cmipt.gcs.service.*ServiceImpl.removeById(java.io.Serializable))",
+          "execution(* edu.cmipt.gcs.service.*ServiceImpl.updateById(..)) || execution(*"
+              + " edu.cmipt.gcs.service.*ServiceImpl.removeBy*(..))",
       returning = "result")
   public void updateOrRemoveAdvice(JoinPoint joinPoint, Object result) throws Throwable {
-    if ((boolean) result) {
+    if (result instanceof Boolean) {
       String id;
       if (joinPoint.getSignature().getName().equals("removeById")) {
         id = joinPoint.getArgs()[0].toString();
@@ -117,6 +118,31 @@ public class CacheAspect {
         var po = joinPoint.getArgs()[0];
         id = po.getClass().getMethod("getId").invoke(po).toString();
       }
+      String cacheKey = RedisUtil.generateKey(joinPoint.getTarget(), id);
+      redisTemplate.delete(cacheKey);
+      logger.debug("Cache deleted, key: {}", cacheKey);
+    } else if (result instanceof List<?> idList && !idList.isEmpty()) {
+      for (Object id : idList) {
+        if (id == null) continue;
+        String cacheKey = RedisUtil.generateKey(joinPoint.getTarget(), id.toString());
+        redisTemplate.delete(cacheKey);
+        logger.debug("Cache deleted, key: {}", cacheKey);
+      }
+    } else {
+      logger.debug("No IDs to remove from cache, skipping cache deletion.");
+    }
+  }
+
+  @AfterReturning(
+      pointcut =
+          "execution(* edu.cmipt.gcs.service.ActivityServiceImpl.updateLockedState(..)) || "
+              + "execution(* edu.cmipt.gcs.service.ActivityServiceImpl.updateClosedState(..)) || "
+              + "execution(* edu.cmipt.gcs.service.CommentServiceImpl.updateHiddenState(..)) || "
+              + "execution(* edu.cmipt.gcs.service.CommentServiceImpl.updateResolvedState(..))",
+      returning = "result")
+  public void updateOneStateAdvice(JoinPoint joinPoint, Object result) {
+    if ((boolean) result) {
+      String id = joinPoint.getArgs()[0].toString();
       String cacheKey = RedisUtil.generateKey(joinPoint.getTarget(), id);
       redisTemplate.delete(cacheKey);
       logger.debug("Cache deleted, key: {}", cacheKey);

@@ -16,3 +16,10 @@ COMMENT ON COLUMN public.t_user_star_repository.gmt_created IS 'Timestamp when t
 COMMENT ON COLUMN public.t_user_star_repository.gmt_updated IS 'Timestamp when the relationship was last updated.';
 COMMENT ON COLUMN public.t_user_star_repository.gmt_deleted IS 'Timestamp when the relationship was deleted.
 If set to NULL, it indicates that this relationship has not been deleted.';
+
+-- The constraint of t_user_star_repository is added to the table.
+ALTER TABLE ONLY public.t_user_star_repository
+    ADD CONSTRAINT pk_user_star_repository PRIMARY KEY (id);
+CREATE UNIQUE INDEX uniq_user_id_repository_id_when_gmt_deleted_null
+    ON public.t_user_star_repository(user_id, repository_id)
+    WHERE gmt_deleted IS NULL;

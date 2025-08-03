@@ -67,7 +67,7 @@ public class JwtUtil {
   }
 
   public static String generateToken(String id, TokenTypeEnum tokenType) {
-    return generateToken(Long.valueOf(id), tokenType);
+    return generateToken(TypeConversionUtil.convertToLong(id, true), tokenType);
   }
 
   public static String getId(String token) {
@@ -129,7 +129,7 @@ public class JwtUtil {
   }
 
   public static void blacklistToken(String id) {
-    blacklistToken(Long.valueOf(id));
+    blacklistToken(TypeConversionUtil.convertToLong(id, true));
   }
 
   private static String generateRedisKey(Long id, TokenTypeEnum tokenType) {

@@ -15,6 +15,7 @@ import edu.cmipt.gcs.pojo.user.UserPO;
 import edu.cmipt.gcs.util.GitoliteUtil;
 import edu.cmipt.gcs.util.RedisUtil;
 import java.io.Serializable;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,20 @@ public class UserCollaborateRepositoryServiceImpl
         new QueryWrapper<UserCollaborateRepositoryPO>()
             .eq("collaborator_id", collaboratorId)
             .eq("repository_id", repositoryId));
+  }
+
+  @Override
+  public List<Long> removeByRepositoryId(Long repositoryId) {
+    List<Long> collaboratorIds =
+        super.list(
+                new QueryWrapper<UserCollaborateRepositoryPO>()
+                    .select("collaborator_id")
+                    .eq("repository_id", repositoryId))
+            .stream()
+            .map(UserCollaborateRepositoryPO::getCollaboratorId)
+            .toList();
+    super.remove(new QueryWrapper<UserCollaborateRepositoryPO>().eq("repository_id", repositoryId));
+    return collaboratorIds;
   }
 
   @Override
@@ -92,9 +107,11 @@ public class UserCollaborateRepositoryServiceImpl
   @Override
   public Page<CollaboratorDTO> pageCollaboratorsByRepositoryId(
       Long repositoryId,
-      Page<CollaboratorDTO> page,
+      Integer pageNum,
+      Integer pageSize,
       CollaboratorOrderByEnum orderBy,
       Boolean isAsc) {
+    Page<CollaboratorDTO> page = new Page<>(pageNum, pageSize);
     var queryWrapper =
         JoinWrappers.lambda(UserPO.class)
             .selectAsClass(UserCollaborateRepositoryPO.class, CollaboratorDTO.class)

@@ -9,6 +9,7 @@ CREATE TABLE public.t_ssh_key (
 );
 
 COMMENT ON TABLE public.t_ssh_key IS 'Table for storing ssh public key.';
+
 COMMENT ON COLUMN public.t_ssh_key.id IS 'Primary key of the ssh_key table.';
 COMMENT ON COLUMN public.t_ssh_key.user_id IS 'ID of the user who owns the ssh key.';
 COMMENT ON COLUMN public.t_ssh_key.name IS 'Name of the ssh key.';
@@ -17,3 +18,13 @@ COMMENT ON COLUMN public.t_ssh_key.gmt_created IS 'Timestamp when the ssh_key re
 COMMENT ON COLUMN public.t_ssh_key.gmt_updated IS 'Timestamp when the ssh_key record was last updated.';
 COMMENT ON COLUMN public.t_ssh_key.gmt_deleted IS 'Timestamp when the ssh_key record was deleted.
 If set to NULL, it indicates that the ssh_key record has not been deleted.';
+
+-- The constraint of t_ssh_key is added to the table.
+ALTER TABLE ONLY public.t_ssh_key
+    ADD CONSTRAINT pk_ssh_key PRIMARY KEY (id);
+CREATE UNIQUE INDEX uniq_public_key_user_id_when_gmt_deleted_null
+    ON public.t_ssh_key(public_key, user_id)
+    WHERE gmt_deleted IS NULL;
+CREATE UNIQUE INDEX uniq_name_user_id_when_gmt_deleted_null
+    ON public.t_ssh_key(name, user_id)
+    WHERE gmt_deleted IS NULL;

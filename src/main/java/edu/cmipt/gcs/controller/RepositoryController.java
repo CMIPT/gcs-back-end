@@ -8,15 +8,14 @@ import edu.cmipt.gcs.constant.ApplicationConstant;
 import edu.cmipt.gcs.constant.GitConstant;
 import edu.cmipt.gcs.constant.HeaderParameter;
 import edu.cmipt.gcs.constant.ValidationConstant;
-import edu.cmipt.gcs.enumeration.AddCollaboratorTypeEnum;
-import edu.cmipt.gcs.enumeration.CollaboratorOrderByEnum;
-import edu.cmipt.gcs.enumeration.ErrorCodeEnum;
-import edu.cmipt.gcs.enumeration.RepositoryOrderByEnum;
-import edu.cmipt.gcs.enumeration.UserQueryTypeEnum;
+import edu.cmipt.gcs.enumeration.*;
 import edu.cmipt.gcs.exception.GenericException;
 import edu.cmipt.gcs.pojo.collaboration.CollaboratorVO;
 import edu.cmipt.gcs.pojo.collaboration.UserCollaborateRepositoryPO;
 import edu.cmipt.gcs.pojo.error.ErrorVO;
+import edu.cmipt.gcs.pojo.label.LabelDTO;
+import edu.cmipt.gcs.pojo.label.LabelPO;
+import edu.cmipt.gcs.pojo.label.LabelVO;
 import edu.cmipt.gcs.pojo.other.PageVO;
 import edu.cmipt.gcs.pojo.repository.CommitAuthorVO;
 import edu.cmipt.gcs.pojo.repository.CommitDetailVO;
@@ -27,11 +26,10 @@ import edu.cmipt.gcs.pojo.repository.RepositoryDetailVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryFileVO;
 import edu.cmipt.gcs.pojo.repository.RepositoryPO;
 import edu.cmipt.gcs.pojo.repository.RepositoryVO;
-import edu.cmipt.gcs.service.RepositoryService;
-import edu.cmipt.gcs.service.UserCollaborateRepositoryService;
-import edu.cmipt.gcs.service.UserService;
+import edu.cmipt.gcs.service.*;
 import edu.cmipt.gcs.util.JwtUtil;
 import edu.cmipt.gcs.util.RedisUtil;
+import edu.cmipt.gcs.util.TypeConversionUtil;
 import edu.cmipt.gcs.validation.group.CreateGroup;
 import edu.cmipt.gcs.validation.group.UpdateGroup;
 import io.swagger.v3.oas.annotations.Operation;
@@ -96,6 +94,8 @@ public class RepositoryController {
   @Autowired private UserService userService;
   @Autowired private UserCollaborateRepositoryService userCollaborateRepositoryService;
   @Autowired private RedisTemplate<String, Object> redisTemplate;
+  @Autowired private LabelService labelService;
+  @Autowired private PermissionService permissionService;
 
   @PostMapping(ApiPathConstant.REPOSITORY_CREATE_REPOSITORY_API_PATH)
   @Operation(
@@ -111,7 +111,7 @@ public class RepositoryController {
   public void createRepository(
       @Validated(CreateGroup.class) @RequestBody RepositoryDTO repository,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long userId = Long.valueOf(JwtUtil.getId(accessToken));
+    Long userId = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     checkRepositoryNameValidity(repository.repositoryName(), accessToken);
     String username = userService.getById(userId).getUsername();
     var repositoryPO = new RepositoryPO(repository, userId.toString(), username, true);
@@ -325,22 +325,16 @@ public class RepositoryController {
   public void updateRepository(
       @Validated(UpdateGroup.class) @RequestBody RepositoryDTO repository,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long id = null;
-    try {
-      id = Long.valueOf(repository.id());
-    } catch (NumberFormatException e) {
-      logger.error(e.getMessage());
-      throw new GenericException(ErrorCodeEnum.MESSAGE_CONVERSION_ERROR);
-    }
+    Long id = TypeConversionUtil.convertToLong(repository.id(), true);
     var repositoryPO = repositoryService.getById(id);
     if (repositoryPO == null) {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, id);
     }
     Long userId = repositoryPO.getUserId();
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     if (!idInToken.equals(userId)) {
       logger.info(
-          "User[{}] tried to update repository of user[{}]", userId, repositoryPO.getUserId());
+          "User[{}] tried to update repository of user[{}]", idInToken, repositoryPO.getUserId());
       checkVisibility(
           repositoryPO, idInToken, new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, id));
       throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
@@ -379,7 +373,7 @@ public class RepositoryController {
               message = "{Pattern.repositoryController#checkRepositoryNameValidity.repositoryName}")
           String repositoryName,
       @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     if (repositoryService.getOneByUserIdAndRepositoryName(idInToken, repositoryName) != null) {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_ALREADY_EXISTS, repositoryName);
     }
@@ -459,7 +453,7 @@ public class RepositoryController {
     }
     Long repositoryId = collaboration.getRepositoryId();
     var repositoryPO = repositoryService.getById(repositoryId);
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     if (!idInToken.equals(repositoryPO.getUserId())) {
       logger.info(
           "User[{}] tried to remove collaborator from repository[{}] whose creator is [{}]",
@@ -504,14 +498,14 @@ public class RepositoryController {
     if (repository == null) {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
     }
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     checkVisibility(
         repository,
         idInToken,
         new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId));
     var iPage =
         userCollaborateRepositoryService.pageCollaboratorsByRepositoryId(
-            repositoryId, new Page<>(page, size), orderBy, isAsc);
+            repositoryId, page, size, orderBy, isAsc);
     return new PageVO<>(
         iPage.getTotal(), iPage.getRecords().stream().map(CollaboratorVO::new).toList());
   }
@@ -564,6 +558,149 @@ public class RepositoryController {
                       repositoryPO, userPO.getUsername(), userPO.getAvatarUrl());
                 })
             .toList());
+  }
+
+  @PostMapping(ApiPathConstant.REPOSITORY_CREATE_LABEL_API_PATH)
+  @Operation(
+      summary = "Create a label",
+      description = "Create a label in the repository",
+      tags = {"Repository", "Post Method"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Label create failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public void createLabel(
+      @RequestBody LabelDTO label,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long repositoryId = TypeConversionUtil.convertToLong(label.repositoryId(), true);
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+    permissionService.checkRepositoryOperationValidity(
+        repositoryId, idInToken, OperationTypeEnum.MODIFY_REPOSITORY);
+    String labelName = label.name();
+    checkLabelNameValidity(labelName, repositoryId, accessToken);
+    if (!labelService.save(new LabelPO(idInToken, label))) {
+      logger.error("Failed to create label in repository[{}]", repositoryId);
+      throw new GenericException(ErrorCodeEnum.LABEL_CREATE_FAILED, labelName, repositoryId);
+    }
+  }
+
+  @PostMapping(ApiPathConstant.REPOSITORY_UPDATE_LABEL_API_PATH)
+  @Operation(
+      summary = "Update a label",
+      description = "Update a label in the repository",
+      tags = {"Repository", "Post Method"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Label update failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public void updateLabel(
+      @RequestBody LabelDTO label,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long id = TypeConversionUtil.convertToLong(label.id(), true);
+    var labelPO = labelService.getById(id);
+    if (labelPO == null) {
+      throw new GenericException(ErrorCodeEnum.LABEL_NOT_FOUND, id);
+    }
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+    permissionService.checkRepositoryOperationValidity(
+        labelPO.getRepositoryId(), idInToken, OperationTypeEnum.MODIFY_REPOSITORY);
+    // if the label name is changed after ignoring the case, check the validity of the new name
+    if (label.name() != null && !label.name().equalsIgnoreCase(labelPO.getName())) {
+      checkLabelNameValidity(label.name(), labelPO.getRepositoryId(), accessToken);
+    }
+    if (!labelService.updateById(new LabelPO(idInToken, label))) {
+      logger.error("Failed to update label[{}]", id);
+      throw new GenericException(ErrorCodeEnum.LABEL_UPDATE_FAILED, label);
+    }
+  }
+
+  @DeleteMapping(ApiPathConstant.REPOSITORY_DELETE_LABEL_API_PATH)
+  @Operation(
+      summary = "Delete a label",
+      description = "Delete a label from a repository",
+      tags = {"Repository", "Delete Method"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "Label delete failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public void deleteLabel(
+      @RequestParam("id") Long id,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    var labelPO = labelService.getById(id);
+    if (labelPO == null) {
+      throw new GenericException(ErrorCodeEnum.LABEL_NOT_FOUND, id);
+    }
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+    permissionService.checkRepositoryOperationValidity(
+        labelPO.getRepositoryId(), idInToken, OperationTypeEnum.MODIFY_REPOSITORY);
+    if (!labelService.removeById(id)) {
+      logger.error("Failed to delete label[{}]", id);
+      throw new GenericException(ErrorCodeEnum.LABEL_DELETE_FAILED, id);
+    }
+  }
+
+  @GetMapping(ApiPathConstant.REPOSITORY_PAGE_LABEL_API_PATH)
+  @Operation(
+      summary = "Page label",
+      description = "Page labels of a repository",
+      tags = {"Repository", "Get Method"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        description = "page labels failed",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public PageVO<LabelVO> pageLabel(
+      @RequestParam("repositoryId") Long repositoryId,
+      @RequestParam("page") @Min(1) Integer page,
+      @RequestParam("size") @Min(1) Integer size,
+      @RequestParam("orderBy") LabelOrderByEnum orderBy,
+      @RequestParam("isAsc") Boolean isAsc,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    if (1L * page * size > ApplicationConstant.MAX_PAGE_TOTAL_COUNT) {
+      throw new GenericException(ErrorCodeEnum.ACCESS_DENIED);
+    }
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+    permissionService.checkRepositoryOperationValidity(
+        repositoryId, idInToken, OperationTypeEnum.READ);
+    var iPage = labelService.pageLabelsByRepositoryId(repositoryId, isAsc, orderBy, page, size);
+    return new PageVO<>(iPage.getTotal(), iPage.getRecords().stream().map(LabelVO::new).toList());
+  }
+
+  @GetMapping(ApiPathConstant.REPOSITORY_CHECK_LABEL_NAME_VALIDITY_API_PATH)
+  @Operation(
+      summary = "Check label name validity",
+      description = "Check if the label name is valid",
+      tags = {"Repository", "Get Method"})
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Success"),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Label name is invalid",
+        content = @Content(schema = @Schema(implementation = ErrorVO.class)))
+  })
+  public void checkLabelNameValidity(
+      @RequestParam("labelName")
+          @Size(
+              min = ValidationConstant.MIN_LABEL_NAME_LENGTH,
+              max = ValidationConstant.MAX_LABEL_NAME_LENGTH,
+              message = "{Size.repositoryController#checkLabelNameValidity.labelName}")
+          @NotBlank(message = "{NotBlank.repositoryController#LabelNameValidity.labelName}")
+          String labelName,
+      @RequestParam("repositoryId") Long repositoryId,
+      @RequestHeader(HeaderParameter.ACCESS_TOKEN) String accessToken) {
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
+    permissionService.checkRepositoryOperationValidity(
+        repositoryId, idInToken, OperationTypeEnum.READ);
+    if (labelService.getOneByNameAndRepositoryId(labelName, repositoryId) != null) {
+      throw new GenericException(ErrorCodeEnum.LABEL_NAME_ALREADY_EXISTS, labelName, repositoryId);
+    }
   }
 
   /**
@@ -1004,7 +1141,7 @@ public class RepositoryController {
     if (repositoryPO == null) {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, notFoundMessage);
     }
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     checkVisibility(
         repositoryPO,
         idInToken,
@@ -1054,7 +1191,7 @@ public class RepositoryController {
     if (repositoryPO == null) {
       throw new GenericException(ErrorCodeEnum.REPOSITORY_NOT_FOUND, repositoryId);
     }
-    Long idInToken = Long.valueOf(JwtUtil.getId(accessToken));
+    Long idInToken = TypeConversionUtil.convertToLong(JwtUtil.getId(accessToken), true);
     Long repositoryUserId = repositoryPO.getUserId();
     if (!idInToken.equals(repositoryUserId)) {
       logger.info(

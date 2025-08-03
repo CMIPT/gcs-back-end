@@ -27,7 +27,6 @@ public class UserCollaborateRepositoryPO {
   @TableLogic private Timestamp gmtDeleted;
 
   public UserCollaborateRepositoryPO(Long collaboratorId, Long repositoryId) {
-    this.collaboratorId = collaboratorId;
-    this.repositoryId = repositoryId;
+    this(null, collaboratorId, repositoryId, null, null, null);
   }
 }

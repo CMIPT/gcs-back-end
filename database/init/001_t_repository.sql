@@ -1,7 +1,7 @@
 CREATE TABLE public.t_repository (
   id bigint NOT NULL,
   repository_name character varying(255) NOT NULL,
-  repository_description character varying(255) NOT NULL,
+  repository_description character varying(255) DEFAULT '' NOT NULL,
   is_private boolean DEFAULT false,
   user_id bigint NOT NULL,
   star integer DEFAULT 0 NOT NULL,
@@ -30,3 +30,10 @@ COMMENT ON COLUMN public.t_repository.gmt_created IS 'Timestamp when the reposit
 COMMENT ON COLUMN public.t_repository.gmt_updated IS 'Timestamp when the repository was last updated.';
 COMMENT ON COLUMN public.t_repository.gmt_deleted IS 'Timestamp when the repository was deleted.
 If set to NULL, it indicates that the repository has not been deleted.';
+
+-- -- The constraint of t_repository is added to the table.
+ALTER TABLE ONLY public.t_repository
+    ADD CONSTRAINT pk_repository PRIMARY KEY (id);
+CREATE UNIQUE INDEX unique_repository_name_user_id_when_gmt_deleted_null
+    ON public.t_repository(LOWER(repository_name), user_id)
+    WHERE gmt_deleted IS NULL;

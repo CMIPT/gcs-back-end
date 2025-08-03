@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import edu.cmipt.gcs.util.TypeConversionUtil;
 import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,18 +29,14 @@ public class SshKeyPO {
   @TableLogic private Timestamp gmtDeleted;
 
   public SshKeyPO(SshKeyDTO sshKeyDTO, String userId) {
-    try {
-      this.id = Long.valueOf(sshKeyDTO.id());
-    } catch (NumberFormatException e) {
-      this.id = null;
-    }
-    try {
-      this.userId = Long.valueOf(userId);
-    } catch (NumberFormatException e) {
-      this.userId = null;
-    }
-    this.name = sshKeyDTO.name();
-    this.publicKey = sshKeyDTO.publicKey();
+    this(
+        TypeConversionUtil.convertToLong(sshKeyDTO.id()),
+        TypeConversionUtil.convertToLong(userId),
+        sshKeyDTO.name(),
+        sshKeyDTO.publicKey(),
+        null,
+        null,
+        null);
   }
 
   public SshKeyPO(SshKeyDTO sshKeyDTO) {

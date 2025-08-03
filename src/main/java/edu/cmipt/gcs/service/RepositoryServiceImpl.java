@@ -11,7 +11,7 @@ import edu.cmipt.gcs.util.RedisUtil;
 import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +21,24 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
     implements RepositoryService {
   private static final Logger logger = LoggerFactory.getLogger(RepositoryServiceImpl.class);
 
-  @Autowired private UserService userService;
-  @Autowired private RedisTemplate<String, Object> redisTemplate;
+  private final UserService userService;
+  private final RedisTemplate<String, Object> redisTemplate;
+  private final ActivityService activityService;
+  private final LabelService labelService;
+  private final UserCollaborateRepositoryService userCollaborateRepositoryService;
+
+  public RepositoryServiceImpl(
+      @Lazy UserCollaborateRepositoryService userCollaborateRepositoryService,
+      LabelService labelService,
+      ActivityService activityService,
+      UserService userService,
+      RedisTemplate<String, Object> redisTemplate) {
+    this.userCollaborateRepositoryService = userCollaborateRepositoryService;
+    this.labelService = labelService;
+    this.activityService = activityService;
+    this.userService = userService;
+    this.redisTemplate = redisTemplate;
+  }
 
   @Override
   public RepositoryPO getById(Serializable id) {
@@ -75,6 +91,12 @@ public class RepositoryServiceImpl extends ServiceImpl<RepositoryMapper, Reposit
     if (repositoryPO == null) {
       repositoryPO = super.getById(id);
     }
+    // 递归删除该仓库的所有活动、标签、合作者
+    // 这里忽略返回值，由CacheAspect处理缓存删除
+    activityService.removeByRepositoryId(repositoryPO.getId());
+    labelService.removeByRepositoryId(repositoryPO.getId());
+    userCollaborateRepositoryService.removeByRepositoryId(repositoryPO.getId());
+
     if (!super.removeById(id)) {
       logger.error("Failed to remove repository from database");
       return false;
