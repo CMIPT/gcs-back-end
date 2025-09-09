@@ -26,5 +26,5 @@ CREATE UNIQUE INDEX uniq_public_key_user_id_when_gmt_deleted_null
     ON public.t_ssh_key(public_key, user_id)
     WHERE gmt_deleted IS NULL;
 CREATE UNIQUE INDEX uniq_name_user_id_when_gmt_deleted_null
-    ON public.t_ssh_key(name, user_id)
+    ON public.t_ssh_key(Lower(name), user_id)
     WHERE gmt_deleted IS NULL;

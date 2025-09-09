@@ -24,8 +24,8 @@ If set to NULL, it indicates that the user information has not been deleted.';
 ALTER TABLE ONLY public.t_user
     ADD CONSTRAINT pk_user PRIMARY KEY (id);
 CREATE UNIQUE INDEX uniq_username_when_gmt_deleted_null
-    ON public.t_user(username)
+    ON public.t_user(Lower(username))
     WHERE gmt_deleted IS NULL;
 CREATE UNIQUE INDEX uniq_email_when_gmt_deleted_null
-    ON public.t_user(email)
+    ON public.t_user(Lower(email))
     WHERE gmt_deleted IS NULL;
